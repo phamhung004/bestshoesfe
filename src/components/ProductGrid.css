@@ -1,0 +1,19 @@
+.product-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.product-row {
+  display: flex;
+  gap: 25px;
+  width: 100%;
+}
+
+/* Responsive design - stack on smaller screens */
+@media (max-width: 1024px) {
+  .product-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+}

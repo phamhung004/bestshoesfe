@@ -46,6 +46,7 @@
 .footer-brand {
   border: 1px solid #2C3333;
   padding: 24px;
+  
   display: flex;
   align-items: center;
   justify-content: center;

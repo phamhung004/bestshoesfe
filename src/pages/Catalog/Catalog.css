@@ -1,0 +1,58 @@
+.catalog-container {
+  width: 100%;
+  padding: 0;
+}
+
+.catalog-content {
+  display: flex;
+  gap: 25px;
+  padding: 50px;
+  min-height: calc(100vh - 200px); /* Adjust based on header/footer height */
+}
+
+.catalog-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+}
+
+.catalog-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.catalog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.catalog-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 10%;
+  color: #2C3333;
+  margin: 0;
+}
+
+.catalog-login-panel {
+  width: 320px;
+  flex-shrink: 0;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .catalog-content {
+    flex-direction: column;
+    padding: 25px;
+  }
+
+  .catalog-sidebar,
+  .catalog-login-panel {
+    width: 100%;
+    order: -1;
+  }
+}
