@@ -1,0 +1,60 @@
+.cart-page {
+  padding: 25px;
+  background: white;
+}
+
+.cart-breadcrumb {
+  font-family: 'Bebas Neue', sans-serif;
+  color: #2C3333;
+  margin-bottom: 10px;
+}
+
+.cart-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  margin: 10px 0 24px 0;
+  color: #2C3333;
+}
+
+.cart-content {
+  display: flex;
+  gap: 25px;
+  align-items: flex-start;
+}
+
+.cart-items {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cart-summary {
+  width: 290px;
+  border: 1px solid #2C3333;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.summary-label { font-family: 'Roboto Slab', serif; color:#7a7a7a; }
+.summary-value { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color:#2C3333; }
+
+.summary-actions { display:flex; gap:10px; justify-content: flex-end; }
+.btn { padding: 12px 18px; cursor: pointer; border:1px solid #2C3333; background:white; font-family:'Bebas Neue', sans-serif; }
+.btn.checkout { background:#2C3333; color:white; border-color:#2C3333; }
+.btn.cancel { background:white; color:#2C3333; }
+
+@media (max-width: 900px) {
+  .cart-content { flex-direction: column; }
+  .cart-summary { width: 100%; order: 2; }
+}
+
+

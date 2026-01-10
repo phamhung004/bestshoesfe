@@ -1,0 +1,28 @@
+.cart-item {
+  display: flex;
+  gap: 20px;
+  border: 1px solid #2C3333;
+  padding: 10px;
+  align-items: center;
+}
+.ci-image { width: 146px; }
+.ci-placeholder { width: 100%; height: 95px; background:#D9D9D9; border:1px solid #bdbdbd; }
+.ci-details { flex: 1; display:flex; flex-direction:column; gap:8px; }
+.ci-title { font-family:'Bebas Neue', sans-serif; font-size:24px; color:#2C3333; }
+.ci-meta { display:flex; gap:12px; color:#7a7a7a; font-family:'Roboto Slab', serif; }
+.ci-bottom { display:flex; gap:12px; align-items:center; margin-top:6px; }
+.ci-price { font-family:'Bebas Neue', sans-serif; font-size:24px; color:#2C3333; margin-right:8px; }
+.ci-qty { display:flex; align-items:center; gap:8px; }
+.qty-btn { border:1px solid #AEAEAE; background:white; padding:6px 10px; cursor:pointer; }
+.qty-val { font-family:'Bebas Neue', sans-serif; font-size:16px; }
+.ci-remove { margin-left:12px; background:none; border:none; color:#BE2A2A; cursor:pointer; }
+.ci-subtotal { width: 190px; text-align:right; }
+.ci-sub-label { font-family:'Roboto Slab', serif; color:#7a7a7a; }
+.ci-sub-value { font-family:'Bebas Neue', sans-serif; font-size:24px; color:#2C3333; }
+
+@media (max-width: 900px) {
+  .cart-item { flex-direction: column; align-items:flex-start; }
+  .ci-subtotal { width:100%; text-align:left; }
+}
+
+
