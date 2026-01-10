@@ -1,0 +1,95 @@
+/* Membership Section Styles */
+
+.membership-section {
+  border-bottom: 1px solid #2C3333;
+  background: #2C3333;
+}
+
+.membership-container {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.membership-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 48px;
+  padding: 48px;
+  background: #D9D9D9;
+  border: 1px solid white;
+  transition: all 0.3s ease;
+}
+
+.membership-content:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.membership-text {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.membership-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  letter-spacing: 0.05em;
+  color: white;
+  margin: 0;
+}
+
+.membership-description {
+  font-family: 'Roboto Slab', serif;
+  font-size: 24px;
+  line-height: 1.5em;
+  color: white;
+  margin: 0;
+}
+
+.membership-button {
+  background: white;
+  color: #2C3333;
+  padding: 15px 24px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 0.1em;
+  border: 1px solid #2C3333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+}
+
+.membership-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(44, 51, 51, 0.3);
+}
+
+.membership-button:active {
+  transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .membership-content {
+    padding: 32px;
+    gap: 32px;
+  }
+  
+  .membership-title {
+    font-size: 36px;
+  }
+  
+  .membership-description {
+    font-size: 18px;
+  }
+  
+  .membership-button {
+    width: 100%;
+  }
+}
+

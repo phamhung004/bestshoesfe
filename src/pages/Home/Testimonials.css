@@ -1,0 +1,138 @@
+/* Testimonials Section Styles */
+
+.testimonials-section {
+  border-bottom: 1px solid #2C3333;
+}
+
+.testimonials-container {
+  display: flex;
+  gap: 24px;
+}
+
+.testimonials-header {
+  width: 325px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px;
+}
+
+.testimonials-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 117px;
+  line-height: 0.85em;
+  letter-spacing: 0.05em;
+  color: #2C3333;
+  margin: 0;
+}
+
+.testimonials-intro {
+  font-family: 'Roboto Slab', serif;
+  font-size: 16px;
+  line-height: 1.875em;
+  color: #2C3333;
+  margin: 0;
+}
+
+.testimonials-grid-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.testimonial-card {
+  border: 1px solid #2C3333;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  transition: all 0.3s ease;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(44, 51, 51, 0.1);
+}
+
+.testimonial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.testimonial-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 0.1em;
+  color: #2C3333;
+}
+
+.testimonial-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rating-value {
+  font-family: 'Roboto Slab', serif;
+  font-size: 16px;
+  color: #2C3333;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 4px;
+}
+
+.testimonial-text {
+  font-family: 'Roboto Slab', serif;
+  font-size: 16px;
+  line-height: 1.875em;
+  color: #2C3333;
+  margin: 0;
+}
+
+.testimonials-illustration {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.testimonial-illustration-img {
+  width: 45px;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .testimonials-container {
+    flex-direction: column;
+  }
+  
+  .testimonials-header {
+    width: 100%;
+  }
+  
+  .testimonials-title {
+    font-size: 80px;
+  }
+}
+
+@media (max-width: 768px) {
+  .testimonials-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .testimonials-title {
+    font-size: 60px;
+  }
+}
+
