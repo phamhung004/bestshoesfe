@@ -1,0 +1,62 @@
+.payment-page { padding:25px; background:white; }
+.breadcrumb { font-family:'Bebas Neue', sans-serif; color:#2C3333; margin-bottom:10px; }
+.payment-title { font-family:'Bebas Neue', sans-serif; font-size:48px; margin:10px 0 24px 0; color:#2C3333; }
+.payment-top { display:flex; justify-content:flex-end; margin-bottom:12px; }
+.total-panel { text-align:center; padding:20px; border:1px solid #2C3333; width:240px; box-sizing:border-box; }
+.total-label { font-family:'Bebas Neue', sans-serif; color:#7a7a7a; }
+.total-value {
+  font-family:'Bebas Neue', sans-serif;
+  font-size: clamp(48px, 8vw, 128px);
+  color:#179FED;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.payment-grid { display:flex; gap:25px; align-items:flex-start; }
+.methods-column { flex:1; border:1px solid #2C3333; padding:20px; }
+.section-title { font-family:'Bebas Neue', sans-serif; font-size:24px; color:#2C3333; margin-bottom:12px; }
+.methods-list { display:flex; flex-direction:column; gap:12px; }
+.method-card { display:flex; justify-content:space-between; align-items:center; border:1px solid #2C3333; padding:12px; cursor:pointer; }
+.method-card.selected { background:#2C3333; color:white; }
+.method-left { display:flex; gap:12px; align-items:center; }
+.method-illustration { width:62px; height:62px; background:#DCDCDC; border:1px solid #bdbdbd; }
+.method-illustration.debit { background:#179FED; }
+.method-info .method-name { font-family:'Bebas Neue', sans-serif; font-size:18px; }
+.method-info .method-desc { font-family:'Roboto Slab', serif; color:#ffffff; opacity:0.9; font-size:14px; }
+.method-action { width:35px; height:35px; }
+.debit-details { margin-top:18px; border-top:1px solid #EEE; padding-top:12px; }
+.field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.field input, .field select { padding:10px; border:1px solid #AEAEAE; font-family:'Roboto Slab', serif; }
+.card-row { display:flex; gap:8px; align-items:center; }
+.card-icon { width:35px; height:21px; background:#FFF; border:1px solid #AEAEAE; }
+.field-row { display:flex; gap:8px; }
+.field.small { flex:1; }
+
+.payment-summary { width:420px; border:1px solid #2C3333; padding:20px; display:flex; flex-direction:column; gap:12px; }
+.review-item { display:flex; justify-content:space-between; align-items:center; gap:12px; border:1px solid #EEE; padding:10px; }
+.rev-left { display:flex; gap:12px; align-items:center; }
+.rev-thumb { width:66px; height:66px; background:#D9D9D9; border:1px solid #bdbdbd; }
+.rev-meta { display:flex; flex-direction:column; gap:6px; }
+.rev-name { font-family:'Bebas Neue', sans-serif; color:#2C3333; }
+.rev-sub { font-family:'Roboto Slab', serif; color:#7a7a7a; }
+.rev-price { font-family:'Bebas Neue', sans-serif; color:#2C3333; }
+.discount .discount-row { display:flex; gap:8px; align-items:center; margin-top:8px; }
+.discount input { flex:1; padding:10px; border:1px solid #AEAEAE; }
+.apply { padding:10px 12px; border:1px solid #AEAEAE; background:white; cursor:pointer; }
+.totals { display:flex; flex-direction:column; gap:8px; border-top:1px solid #EEE; padding-top:12px; }
+.tot-row { display:flex; justify-content:space-between; align-items:center; font-family:'Roboto Slab', serif; color:#7a7a7a; }
+.tot-row.total { font-family:'Bebas Neue', sans-serif; color:#2C3333; font-size:20px; }
+.actions-row { display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+.btn { padding:12px 18px; border:1px solid #2C3333; background:white; font-family:'Bebas Neue', sans-serif; cursor:pointer; }
+.btn.pay { background:#2C3333; color:white; }
+.btn.back { background:white; color:#2C3333; }
+
+@media (max-width: 900px) {
+  .payment-grid { flex-direction:column; }
+  .payment-summary { width:100%; }
+  .total-value { font-size:64px; }
+}
+
+
