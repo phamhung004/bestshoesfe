@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import './Header.css'
 
 function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [activeNav, setActiveNav] = useState('Home')
+  const location = useLocation()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,11 +16,19 @@ function Header() {
   }, [])
 
   const navItems = [
-    { id: 'Home', label: 'Home', href: '#' },
-    { id: 'About', label: 'About', href: '#about' },
-    { id: 'Catalog', label: 'Catalog', href: '#catalog' },
-    { id: 'Contact', label: 'Contact', href: '#contact' }
+    { id: 'Home', label: 'Home', href: '/' },
+    { id: 'About', label: 'About', href: '/#about' },
+    { id: 'Catalog', label: 'Catalog', href: '/catalog' },
+    { id: 'Contact', label: 'Contact', href: '/#contact' }
   ]
+
+  const getActiveNav = () => {
+    if (location.pathname === '/catalog') return 'Catalog'
+    if (location.pathname === '/') return 'Home'
+    return 'Home'
+  }
+
+  const activeNav = getActiveNav()
 
   return (
     <header className={`header ${isScrolled ? 'header-scrolled' : ''}`}>
@@ -47,13 +56,12 @@ function Header() {
               if (item.id === 'About') {
                 return (
                   <div key={item.id} className="flex items-center gap-6">
-                    <a
-                      href={item.href}
+                    <Link
+                      to={item.href}
                       className={`nav-link ${activeNav === item.id ? 'nav-link-active' : ''}`}
-                      onClick={() => setActiveNav(item.id)}
                     >
                       {item.label}
-                    </a>
+                    </Link>
                     <div className="nav-divider"></div>
                     <h1 className="logo-text">
                       BESTSHOES
@@ -63,14 +71,13 @@ function Header() {
                 )
               }
               return (
-                <a
+                <Link
                   key={item.id}
-                  href={item.href}
+                  to={item.href}
                   className={`nav-link ${activeNav === item.id ? 'nav-link-active' : ''}`}
-                  onClick={() => setActiveNav(item.id)}
                 >
                   {item.label}
-                </a>
+                </Link>
               )
             })}
           </nav>
@@ -133,17 +140,14 @@ function Header() {
             </div>
             <nav className="mobile-menu-nav">
               {navItems.map((item) => (
-                <a
+                <Link
                   key={item.id}
-                  href={item.href}
+                  to={item.href}
                   className={`mobile-nav-link ${activeNav === item.id ? 'mobile-nav-link-active' : ''}`}
-                  onClick={() => {
-                    setActiveNav(item.id)
-                    setIsMenuOpen(false)
-                  }}
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   {item.label}
-                </a>
+                </Link>
               ))}
             </nav>
           </div>

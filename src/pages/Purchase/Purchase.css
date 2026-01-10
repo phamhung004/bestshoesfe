@@ -1,0 +1,9 @@
+.purchase-page {
+  width: 100%;
+  background: white;
+}
+
+/* Ensure the page content flows properly */
+.purchase-page > * {
+  width: 100%;
+}

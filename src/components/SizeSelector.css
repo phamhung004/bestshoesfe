@@ -1,0 +1,41 @@
+.size-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.size-row {
+  display: flex;
+  gap: 15px;
+}
+
+.size-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+  border: 1px solid #2C3333;
+  background: white;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 10%;
+  color: #2C3333;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.size-button:hover {
+  background: #f0f0f0;
+}
+
+.size-button-selected {
+  background: #2C3333;
+  color: white;
+}
+
+.size-button-selected:hover {
+  background: #1a1a1a;
+}

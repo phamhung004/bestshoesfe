@@ -1,0 +1,30 @@
+.color-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.color-options {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.color-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.color-button:hover {
+  border-color: #2C3333;
+  transform: scale(1.1);
+}
+
+.color-button-selected {
+  border-color: #2C3333;
+  transform: scale(1.1);
+}
