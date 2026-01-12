@@ -1,0 +1,157 @@
+.admin-sidebar {
+  width: 280px;
+  min-height: 100vh;
+  background: white;
+  border-right: 1px solid #2C3333;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 25px 20px;
+  border-bottom: 1px solid #2C3333;
+  background: #2C3333;
+  color: white;
+}
+
+.sidebar-title {
+  font-family: 'Titan One', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.sidebar-nav {
+  padding: 20px 0;
+  flex: 1;
+}
+
+.menu-item-container {
+  margin-bottom: 8px;
+}
+
+.menu-item {
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+.menu-item:hover {
+  background: rgba(44, 51, 51, 0.05);
+}
+
+.menu-item-active {
+  background: #2C3333;
+  color: white;
+}
+
+.menu-item-active:hover {
+  background: #2C3333;
+}
+
+.menu-item-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-icon {
+  font-size: 20px;
+  width: 24px;
+  text-align: center;
+}
+
+.menu-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.menu-arrow {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+  transform: rotate(-90deg);
+}
+
+.menu-arrow.expanded {
+  transform: rotate(0deg);
+}
+
+.submenu {
+  margin-left: 20px;
+  margin-top: 8px;
+  border-left: 1px solid #EEE;
+  padding-left: 20px;
+}
+
+.submenu-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: 'Titan One', sans-serif;
+  font-size: 14px;
+  color: #7a7a7a;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.submenu-item:hover {
+  background: rgba(44, 51, 51, 0.05);
+  color: #2C3333;
+}
+
+.submenu-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.submenu-item-active {
+  background: #179FED;
+  color: white;
+}
+
+.submenu-item-active:hover {
+  background: #179FED;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    width: 100%;
+    min-height: auto;
+    border-right: none;
+    border-bottom: 1px solid #2C3333;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    overflow-x: auto;
+    padding: 10px 20px;
+  }
+
+  .menu-item-container {
+    flex-shrink: 0;
+    margin-bottom: 0;
+    margin-right: 8px;
+  }
+
+  .menu-item {
+    padding: 8px 12px;
+    min-width: 120px;
+  }
+
+  .menu-label {
+    font-size: 14px;
+  }
+
+  .submenu {
+    display: none;
+  }
+}
