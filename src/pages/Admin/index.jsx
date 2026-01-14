@@ -1,10 +1,37 @@
 import React, { useState } from 'react';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeader from './components/AdminHeader';
+import BrandList from './components/BrandList';
+import BrandForm from './components/BrandForm';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('statistics');
+  const [showBrandForm, setShowBrandForm] = useState(false);
+  const [editingBrand, setEditingBrand] = useState(null);
+  const [refreshBrandList, setRefreshBrandList] = useState(false);
+
+  const handleAddBrand = () => {
+    setEditingBrand(null);
+    setShowBrandForm(true);
+  };
+
+  const handleEditBrand = (brand) => {
+    setEditingBrand(brand);
+    setShowBrandForm(true);
+  };
+
+  const handleSaveBrand = () => {
+    setShowBrandForm(false);
+    setEditingBrand(null);
+    // Trigger refresh cho BrandList
+    setRefreshBrandList(prev => !prev);
+  };
+
+  const handleCancelBrandForm = () => {
+    setShowBrandForm(false);
+    setEditingBrand(null);
+  };
 
   const renderContent = () => {
     switch (activeSection) {
@@ -236,6 +263,15 @@ const AdminDashboard = () => {
           </div>
         );
 
+      case 'product-management/brands':
+        return (
+          <BrandList
+            onEdit={handleEditBrand}
+            onAdd={handleAddBrand}
+            refreshTrigger={refreshBrandList}
+          />
+        );
+
       default:
         return (
           <div className="admin-content-section">
@@ -255,6 +291,15 @@ const AdminDashboard = () => {
           {renderContent()}
         </main>
       </div>
+
+      {showBrandForm && (
+        <BrandForm
+          brand={editingBrand}
+          onSave={handleSaveBrand}
+          onCancel={handleCancelBrandForm}
+          isEditing={!!editingBrand}
+        />
+      )}
     </div>
   );
 };

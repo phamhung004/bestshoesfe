@@ -20,7 +20,11 @@ const AdminSidebar = ({ activeSection, onSectionChange }) => {
       type: 'parent',
       children: [
         { id: 'products', label: 'Sản phẩm' },
+        { id: 'brands', label: 'Thương hiệu' },
+        { id: 'categories', label: 'Danh mục' },
         { id: 'colors', label: 'Màu sắc' },
+        { id: 'sizes', label: 'Kích cỡ' },
+        { id: 'materials', label: 'Chất liệu' },
         { id: 'sizes', label: 'Kích cỡ' },
         { id: 'materials', label: 'Chất liệu' }
       ]
