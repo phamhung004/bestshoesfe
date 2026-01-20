@@ -6,8 +6,12 @@ const ProductCard = ({ product }) => {
     <div className="product-card">
       {/* Product Image */}
       <div className="product-image">
-        {/* Placeholder for product image */}
-        <div className="image-placeholder"></div>
+        {/* Render actual product image when available */}
+        {product.imageUrl ? (
+          <img src={product.imageUrl} alt={product.name} />
+        ) : (
+          <div className="image-placeholder"></div>
+        )}
       </div>
 
       {/* Product Info */}

@@ -1,61 +1,98 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
+import { productVariantAPI, productImageAPI } from '../services/api';
 import './ProductGrid.css';
 
-// Sample product data matching the Figma design
-const products = [
-  {
-    id: 1,
-    name: 'WELL SHOES SNEAKERS WHITE - 001',
-    price: '100'
-  },
-  {
-    id: 2,
-    name: 'WELL SHOES SNEAKERS WHITE - 002',
-    price: '100'
-  },
-  {
-    id: 3,
-    name: 'hS Sneakers blue gaya - 001',
-    price: '100'
-  },
-  {
-    id: 4,
-    name: 'WS High SNEAKERS Tosca - 002',
-    price: '100'
-  },
-  {
-    id: 5,
-    name: 'Casual Sneakers blue - 010',
-    price: '100'
-  },
-  {
-    id: 6,
-    name: 'Casual Sneakers brown - 015',
-    price: '100'
-  },
-  {
-    id: 7,
-    name: 'OF Sneakers great worst',
-    price: '100'
-  },
-  {
-    id: 8,
-    name: 'White sneakers alakazam',
-    price: '100'
-  },
-  {
-    id: 9,
-    name: 'sport street white - 001',
-    price: '100'
-  }
-];
-
 const ProductGrid = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await productVariantAPI.getActiveWithDetails();
+
+        // Collect variant IDs and fetch images in batch
+        const variantIds = response.map((v) => v.variantId).filter(Boolean);
+        const images = variantIds.length ? await productImageAPI.getByVariantIds(variantIds) : [];
+
+        // Build map: variantId => [images]
+        const imagesByVariant = images.reduce((acc, img) => {
+          const vid = img.variantId;
+          if (!acc[vid]) acc[vid] = [];
+          acc[vid].push(img);
+          return acc;
+        }, {});
+
+        // Transform the API response to match ProductCard expectations
+        const transformedProducts = response.map((variant) => {
+          const imgs = imagesByVariant[variant.variantId] || [];
+          const primary = imgs.find((i) => i.isPrimary === true || i.isPrimary === 1);
+          const imageUrl = primary ? primary.imageUrl : (imgs[0] ? imgs[0].imageUrl : null);
+
+          return {
+            id: variant.variantId,
+            name: variant.product?.name || 'Unknown Product',
+            price: variant.price ? Number(variant.price).toFixed(2) : '0.00',
+            variantId: variant.variantId,
+            productId: variant.product?.productId,
+            size: variant.size?.sizeName,
+            color: variant.color?.colorName,
+            brand: variant.product?.brand?.name,
+            category: variant.product?.category?.name,
+            imageUrl,
+          };
+        });
+
+        setProducts(transformedProducts);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('Failed to load products. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   // Group products into rows of 3
   const productRows = [];
   for (let i = 0; i < products.length; i += 3) {
     productRows.push(products.slice(i, i + 3));
+  }
+
+  if (loading) {
+    return (
+      <div className="product-grid">
+        <div className="loading-container">
+          <p>Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="product-grid">
+        <div className="error-container">
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="product-grid">
+        <div className="empty-container">
+          <p>No products available.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
