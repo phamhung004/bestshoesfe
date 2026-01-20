@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AdminSidebar.css';
 
 const AdminSidebar = ({ activeSection, onSectionChange }) => {
@@ -23,8 +23,6 @@ const AdminSidebar = ({ activeSection, onSectionChange }) => {
         { id: 'brands', label: 'Thương hiệu' },
         { id: 'categories', label: 'Danh mục' },
         { id: 'colors', label: 'Màu sắc' },
-        { id: 'sizes', label: 'Kích cỡ' },
-        { id: 'materials', label: 'Chất liệu' },
         { id: 'sizes', label: 'Kích cỡ' },
         { id: 'materials', label: 'Chất liệu' }
       ]
@@ -52,6 +50,17 @@ const AdminSidebar = ({ activeSection, onSectionChange }) => {
       label: 'Trả hàng',
       icon: '↩️',
       type: 'single'
+    },
+    {
+      id: 'sales-management',
+      label: 'Giảm giá',
+      icon: '📦',
+      type: 'parent',
+      children: [
+        { id: 'promotions', label: 'Đợt giảm giá' },
+        { id: 'coupons', label: 'Mã giảm giá' }
+        
+      ]
     }
   ];
 
@@ -61,6 +70,18 @@ const AdminSidebar = ({ activeSection, onSectionChange }) => {
       [itemId]: !prev[itemId]
     }));
   };
+
+  // Auto-expand parent menus when activeSection is inside them
+  useEffect(() => {
+    const newExpanded = { ...expandedItems };
+    menuItems.forEach((item) => {
+      if (item.type === 'parent') {
+        newExpanded[item.id] = activeSection.startsWith(`${item.id}/`);
+      }
+    });
+    setExpandedItems(newExpanded);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection]);
 
   const handleItemClick = (itemId, type, parentId = null) => {
     if (type === 'parent') {
@@ -97,7 +118,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }) => {
               </div>
             </div>
 
-            {item.type === 'parent' && expandedItems[item.id] && (
+        {item.type === 'parent' && expandedItems[item.id] && (
               <div className="submenu">
                 {item.children.map((child) => (
                   <div

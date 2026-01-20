@@ -71,6 +71,75 @@ export const brandAPI = {
   }),
 };
 
+// Category API functions
+export const categoryAPI = {
+  getAll: () => apiCall('/categories'),
+  getById: (id) => apiCall(`/categories/${id}`),
+  create: (category) => apiCall('/categories', {
+    method: 'POST',
+    body: JSON.stringify(category),
+  }),
+  update: (id, category) => apiCall(`/categories/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(category),
+  }),
+  delete: (id) => apiCall(`/categories/${id}`, { method: 'DELETE' }),
+  toggleStatus: (id) => apiCall(`/categories/${id}/toggle-status`, { method: 'PATCH' }),
+  search: (name) => apiCall(`/categories/search?name=${encodeURIComponent(name)}`),
+};
+
+// Material API functions
+export const materialAPI = {
+  getAll: () => apiCall('/materials'),
+  getById: (id) => apiCall(`/materials/${id}`),
+  create: (material) => apiCall('/materials', {
+    method: 'POST',
+    body: JSON.stringify(material),
+  }),
+  update: (id, material) => apiCall(`/materials/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(material),
+  }),
+  delete: (id) => apiCall(`/materials/${id}`, { method: 'DELETE' }),
+  toggleStatus: (id) => apiCall(`/materials/${id}/toggle-status`, { method: 'PATCH' }),
+};
+
+// Size API functions
+export const sizeAPI = {
+  getAll: () => apiCall('/sizes'),
+  getById: (id) => apiCall(`/sizes/${id}`),
+  create: (size) => apiCall('/sizes', {
+    method: 'POST',
+    body: JSON.stringify(size),
+  }),
+  update: (id, size) => apiCall(`/sizes/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(size),
+  }),
+  delete: (id) => apiCall(`/sizes/${id}`, { method: 'DELETE' }),
+  toggleStatus: (id) => apiCall(`/sizes/${id}/toggle-status`, { method: 'PATCH' }),
+};
+
+// Color API functions
+export const colorAPI = {
+  getAll: () => apiCall('/colors'),
+  getById: (id) => apiCall(`/colors/${id}`),
+  create: (color) => apiCall('/colors', {
+    method: 'POST',
+    body: JSON.stringify(color),
+  }),
+  update: (id, color) => apiCall(`/colors/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(color),
+  }),
+  delete: (id) => apiCall(`/colors/${id}`, { method: 'DELETE' }),
+  toggleStatus: (id) => apiCall(`/colors/${id}/toggle-status`, { method: 'PATCH' }),
+};
+
 export default {
   brandAPI,
+  categoryAPI,
+  materialAPI,
+  sizeAPI,
+  colorAPI,
 };

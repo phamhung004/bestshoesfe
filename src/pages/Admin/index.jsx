@@ -3,6 +3,14 @@ import AdminSidebar from './components/AdminSidebar';
 import AdminHeader from './components/AdminHeader';
 import BrandList from './components/BrandList';
 import BrandForm from './components/BrandForm';
+import CategoryList from './components/CategoryList';
+import CategoryForm from './components/CategoryForm';
+import MaterialList from './components/MaterialList';
+import MaterialForm from './components/MaterialForm';
+import SizeList from './components/SizeList';
+import SizeForm from './components/SizeForm';
+import ColorList from './components/ColorList';
+import ColorForm from './components/ColorForm';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -10,6 +18,22 @@ const AdminDashboard = () => {
   const [showBrandForm, setShowBrandForm] = useState(false);
   const [editingBrand, setEditingBrand] = useState(null);
   const [refreshBrandList, setRefreshBrandList] = useState(false);
+  // Category state
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [refreshCategoryList, setRefreshCategoryList] = useState(false);
+  // Material state
+  const [showMaterialForm, setShowMaterialForm] = useState(false);
+  const [editingMaterial, setEditingMaterial] = useState(null);
+  const [refreshMaterialList, setRefreshMaterialList] = useState(false);
+  // Size state
+  const [showSizeForm, setShowSizeForm] = useState(false);
+  const [editingSize, setEditingSize] = useState(null);
+  const [refreshSizeList, setRefreshSizeList] = useState(false);
+  // Color state
+  const [showColorForm, setShowColorForm] = useState(false);
+  const [editingColor, setEditingColor] = useState(null);
+  const [refreshColorList, setRefreshColorList] = useState(false);
 
   const handleAddBrand = () => {
     setEditingBrand(null);
@@ -19,6 +43,82 @@ const AdminDashboard = () => {
   const handleEditBrand = (brand) => {
     setEditingBrand(brand);
     setShowBrandForm(true);
+  };
+
+  // Category handlers
+  const handleAddCategory = () => {
+    setEditingCategory(null);
+    setShowCategoryForm(true);
+  };
+  const handleEditCategory = (category) => {
+    setEditingCategory(category);
+    setShowCategoryForm(true);
+  };
+  const handleSaveCategory = () => {
+    setShowCategoryForm(false);
+    setEditingCategory(null);
+    setRefreshCategoryList(prev => !prev);
+  };
+  const handleCancelCategoryForm = () => {
+    setShowCategoryForm(false);
+    setEditingCategory(null);
+  };
+
+  // Material handlers
+  const handleAddMaterial = () => {
+    setEditingMaterial(null);
+    setShowMaterialForm(true);
+  };
+  const handleEditMaterial = (material) => {
+    setEditingMaterial(material);
+    setShowMaterialForm(true);
+  };
+  const handleSaveMaterial = () => {
+    setShowMaterialForm(false);
+    setEditingMaterial(null);
+    setRefreshMaterialList(prev => !prev);
+  };
+  const handleCancelMaterialForm = () => {
+    setShowMaterialForm(false);
+    setEditingMaterial(null);
+  };
+
+  // Size handlers
+  const handleAddSize = () => {
+    setEditingSize(null);
+    setShowSizeForm(true);
+  };
+  const handleEditSize = (size) => {
+    setEditingSize(size);
+    setShowSizeForm(true);
+  };
+  const handleSaveSize = () => {
+    setShowSizeForm(false);
+    setEditingSize(null);
+    setRefreshSizeList(prev => !prev);
+  };
+  const handleCancelSizeForm = () => {
+    setShowSizeForm(false);
+    setEditingSize(null);
+  };
+
+  // Color handlers
+  const handleAddColor = () => {
+    setEditingColor(null);
+    setShowColorForm(true);
+  };
+  const handleEditColor = (color) => {
+    setEditingColor(color);
+    setShowColorForm(true);
+  };
+  const handleSaveColor = () => {
+    setShowColorForm(false);
+    setEditingColor(null);
+    setRefreshColorList(prev => !prev);
+  };
+  const handleCancelColorForm = () => {
+    setShowColorForm(false);
+    setEditingColor(null);
   };
 
   const handleSaveBrand = () => {
@@ -122,97 +222,29 @@ const AdminDashboard = () => {
 
       case 'product-management/colors':
         return (
-          <div className="admin-content-section">
-            <div className="section-header">
-              <h2 className="section-title">Quản lý màu sắc</h2>
-              <button className="btn-primary">Thêm màu sắc mới</button>
-            </div>
-            <div className="color-grid">
-              <div className="color-item">
-                <div className="color-preview" style={{ backgroundColor: '#FFFFFF' }}></div>
-                <div className="color-info">
-                  <div className="color-name">Trắng</div>
-                  <div className="color-code">#FFFFFF</div>
-                </div>
-                <div className="color-actions">
-                  <button className="btn-edit">Sửa</button>
-                  <button className="btn-delete">Xóa</button>
-                </div>
-              </div>
-              <div className="color-item">
-                <div className="color-preview" style={{ backgroundColor: '#000000' }}></div>
-                <div className="color-info">
-                  <div className="color-name">Đen</div>
-                  <div className="color-code">#000000</div>
-                </div>
-                <div className="color-actions">
-                  <button className="btn-edit">Sửa</button>
-                  <button className="btn-delete">Xóa</button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ColorList
+            onEdit={handleEditColor}
+            onAdd={handleAddColor}
+            refreshTrigger={refreshColorList}
+          />
         );
 
       case 'product-management/sizes':
         return (
-          <div className="admin-content-section">
-            <div className="section-header">
-              <h2 className="section-title">Quản lý kích cỡ</h2>
-              <button className="btn-primary">Thêm kích cỡ mới</button>
-            </div>
-            <div className="size-grid">
-              <div className="size-item">
-                <div className="size-value">36</div>
-                <div className="size-actions">
-                  <button className="btn-edit">Sửa</button>
-                  <button className="btn-delete">Xóa</button>
-                </div>
-              </div>
-              <div className="size-item">
-                <div className="size-value">37</div>
-                <div className="size-actions">
-                  <button className="btn-edit">Sửa</button>
-                  <button className="btn-delete">Xóa</button>
-                </div>
-              </div>
-              <div className="size-item">
-                <div className="size-value">38</div>
-                <div className="size-actions">
-                  <button className="btn-edit">Sửa</button>
-                  <button className="btn-delete">Xóa</button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <SizeList
+            onEdit={handleEditSize}
+            onAdd={handleAddSize}
+            refreshTrigger={refreshSizeList}
+          />
         );
 
       case 'product-management/materials':
         return (
-          <div className="admin-content-section">
-            <div className="section-header">
-              <h2 className="section-title">Quản lý chất liệu</h2>
-              <button className="btn-primary">Thêm chất liệu mới</button>
-            </div>
-            <div className="material-grid">
-              <div className="material-item">
-                <div className="material-name">Da tổng hợp</div>
-                <div className="material-description">Chất liệu bền, dễ vệ sinh</div>
-                <div className="material-actions">
-                  <button className="btn-edit">Sửa</button>
-                  <button className="btn-delete">Xóa</button>
-                </div>
-              </div>
-              <div className="material-item">
-                <div className="material-name">Vải canvas</div>
-                <div className="material-description">Thân thiện với môi trường</div>
-                <div className="material-actions">
-                  <button className="btn-edit">Sửa</button>
-                  <button className="btn-delete">Xóa</button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <MaterialList
+            onEdit={handleEditMaterial}
+            onAdd={handleAddMaterial}
+            refreshTrigger={refreshMaterialList}
+          />
         );
 
       case 'in-store-sales':
@@ -271,6 +303,14 @@ const AdminDashboard = () => {
             refreshTrigger={refreshBrandList}
           />
         );
+      case 'product-management/categories':
+        return (
+          <CategoryList
+            onEdit={handleEditCategory}
+            onAdd={handleAddCategory}
+            refreshTrigger={refreshCategoryList}
+          />
+        );
 
       default:
         return (
@@ -298,6 +338,38 @@ const AdminDashboard = () => {
           onSave={handleSaveBrand}
           onCancel={handleCancelBrandForm}
           isEditing={!!editingBrand}
+        />
+      )}
+      {showCategoryForm && (
+        <CategoryForm
+          category={editingCategory}
+          onSave={handleSaveCategory}
+          onCancel={handleCancelCategoryForm}
+          isEditing={!!editingCategory}
+        />
+      )}
+      {showMaterialForm && (
+        <MaterialForm
+          material={editingMaterial}
+          onSave={handleSaveMaterial}
+          onCancel={handleCancelMaterialForm}
+          isEditing={!!editingMaterial}
+        />
+      )}
+      {showSizeForm && (
+        <SizeForm
+          size={editingSize}
+          onSave={handleSaveSize}
+          onCancel={handleCancelSizeForm}
+          isEditing={!!editingSize}
+        />
+      )}
+      {showColorForm && (
+        <ColorForm
+          color={editingColor}
+          onSave={handleSaveColor}
+          onCancel={handleCancelColorForm}
+          isEditing={!!editingColor}
         />
       )}
     </div>
