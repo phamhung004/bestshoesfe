@@ -1,15 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SizeSelector.css';
 
-const SizeSelector = () => {
-  const [selectedSize, setSelectedSize] = useState(null);
+const SizeSelector = ({ sizes = [], selectedSize, onSizeChange }) => {
+  const [internalSelectedSize, setInternalSelectedSize] = useState(selectedSize || null);
 
-  const sizesRow1 = [35, 36, 37, 38, 39, 40];
-  const sizesRow2 = [42, 43, 44, 45, 46];
+  useEffect(() => {
+    setInternalSelectedSize(selectedSize || null);
+  }, [selectedSize]);
+
+  // If no sizes provided, use default
+  const defaultSizes = ['38', '39', '40', '41', '42', '43'];
+  const availableSizes = sizes.length > 0 ? sizes : defaultSizes;
 
   const handleSizeSelect = (size) => {
-    setSelectedSize(size);
+    setInternalSelectedSize(size);
+    if (onSizeChange) {
+      onSizeChange(size);
+    }
   };
+
+  // Split sizes into rows for layout
+  const midPoint = Math.ceil(availableSizes.length / 2);
+  const sizesRow1 = availableSizes.slice(0, midPoint);
+  const sizesRow2 = availableSizes.slice(midPoint);
 
   return (
     <div className="size-selector">
@@ -17,24 +30,26 @@ const SizeSelector = () => {
         {sizesRow1.map((size) => (
           <button
             key={size}
-            className={`size-button ${selectedSize === size ? 'size-button-selected' : ''}`}
+            className={`size-button ${internalSelectedSize === size ? 'size-button-selected' : ''}`}
             onClick={() => handleSizeSelect(size)}
           >
             {size}
           </button>
         ))}
       </div>
-      <div className="size-row">
-        {sizesRow2.map((size) => (
-          <button
-            key={size}
-            className={`size-button ${selectedSize === size ? 'size-button-selected' : ''}`}
-            onClick={() => handleSizeSelect(size)}
-          >
-            {size}
-          </button>
-        ))}
-      </div>
+      {sizesRow2.length > 0 && (
+        <div className="size-row">
+          {sizesRow2.map((size) => (
+            <button
+              key={size}
+              className={`size-button ${internalSelectedSize === size ? 'size-button-selected' : ''}`}
+              onClick={() => handleSizeSelect(size)}
+            >
+              {size}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

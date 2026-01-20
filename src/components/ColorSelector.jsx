@@ -1,32 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ColorSelector.css';
 
-const ColorSelector = () => {
-  const [selectedColor, setSelectedColor] = useState(null);
+const ColorSelector = ({ colors = [], selectedColor, onColorChange }) => {
+  const [internalSelectedColor, setInternalSelectedColor] = useState(selectedColor || null);
 
-  const colors = [
-    { name: 'red', hex: '#BE2A2A' },
-    { name: 'blue', hex: '#2576C1' },
-    { name: 'pink', hex: '#E675F9' },
-    { name: 'green', hex: '#31DC43' },
-    { name: 'yellow', hex: '#EEE864' },
-    { name: 'orange', hex: '#E84B09' }
-  ];
+  useEffect(() => {
+    setInternalSelectedColor(selectedColor || null);
+  }, [selectedColor]);
+
+  // Color mapping for common colors
+  const colorMap = {
+    'White': '#FFFFFF',
+    'Black': '#000000',
+    'Grey': '#808080',
+    'Gray': '#808080',
+    'Green': '#4CAF50',
+    'Blue': '#2196F3',
+    'Red': '#F44336',
+    'Yellow': '#FFEB3B',
+    'Pink': '#E91E63',
+    'Purple': '#9C27B0',
+    'Orange': '#FF9800',
+    'Brown': '#795548'
+  };
+
+  // If no colors provided, use default
+  const defaultColors = ['White', 'Black', 'Grey', 'Green'];
+  const availableColors = colors.length > 0 ? colors : defaultColors;
 
   const handleColorSelect = (colorName) => {
-    setSelectedColor(colorName);
+    setInternalSelectedColor(colorName);
+    if (onColorChange) {
+      onColorChange(colorName);
+    }
+  };
+
+  const getColorHex = (colorName) => {
+    return colorMap[colorName] || '#CCCCCC'; // Default to light gray if not found
   };
 
   return (
     <div className="color-selector">
       <div className="color-options">
-        {colors.map((color) => (
+        {availableColors.map((colorName) => (
           <button
-            key={color.name}
-            className={`color-button ${selectedColor === color.name ? 'color-button-selected' : ''}`}
-            style={{ backgroundColor: color.hex }}
-            onClick={() => handleColorSelect(color.name)}
-            title={color.name}
+            key={colorName}
+            className={`color-button ${internalSelectedColor === colorName ? 'color-button-selected' : ''}`}
+            style={{ backgroundColor: getColorHex(colorName) }}
+            onClick={() => handleColorSelect(colorName)}
+            title={colorName}
           />
         ))}
       </div>

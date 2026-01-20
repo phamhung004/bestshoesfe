@@ -1,7 +1,15 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './ProductCard.css';
 
 const ProductCard = ({ product }) => {
+  const navigate = useNavigate();
+
+  const handlePurchase = () => {
+    // Navigate to purchase page with product ID
+    navigate(`/purchase/${product.productId}`);
+  };
+
   return (
     <div className="product-card">
       {/* Product Image */}
@@ -21,7 +29,7 @@ const ProductCard = ({ product }) => {
 
         {/* Action Buttons */}
         <div className="product-actions">
-          <button className="purchase-button">
+          <button className="purchase-button" onClick={handlePurchase}>
             <span className="purchase-text">Purchase</span>
           </button>
           <button className="favorite-button">
