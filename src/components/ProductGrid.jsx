@@ -3,7 +3,7 @@ import ProductCard from './ProductCard';
 import { productVariantAPI, productImageAPI } from '../services/api';
 import './ProductGrid.css';
 
-const ProductGrid = () => {
+const ProductGrid = ({ filters = {} }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,7 +12,16 @@ const ProductGrid = () => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await productVariantAPI.getActiveWithDetails();
+
+        // Decide which endpoint to call: filtered or all active
+        const hasAnyFilter = filters && Object.keys(filters).some(k => {
+          const v = filters[k];
+          return Array.isArray(v) ? v.length > 0 : v !== undefined && v !== null;
+        });
+
+        const response = hasAnyFilter
+          ? await productVariantAPI.getByFilters(filters)
+          : await productVariantAPI.getActiveWithDetails();
 
         // Collect variant IDs and fetch images in batch
         const variantIds = response.map((v) => v.variantId).filter(Boolean);
@@ -57,7 +66,7 @@ const ProductGrid = () => {
     };
 
     fetchProducts();
-  }, []);
+  }, [JSON.stringify(filters)]);
 
   // Group products into rows of 3
   const productRows = [];

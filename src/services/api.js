@@ -216,12 +216,22 @@ export const productVariantAPI = {
   // Get variants by filters (for catalog filtering)
   getByFilters: (filters = {}) => {
     const params = new URLSearchParams();
-    if (filters.categoryId) params.append('categoryId', filters.categoryId);
-    if (filters.brandId) params.append('brandId', filters.brandId);
-    if (filters.materialId) params.append('materialId', filters.materialId);
-    if (filters.sizeId) params.append('sizeId', filters.sizeId);
-    if (filters.colorId) params.append('colorId', filters.colorId);
-    return apiCall(`/product-variants/filter?${params.toString()}`);
+    const appendArrayParam = (key, value) => {
+      if (Array.isArray(value)) {
+        value.forEach(v => params.append(key, v));
+      } else if (value !== undefined && value !== null) {
+        params.append(key, value);
+      }
+    };
+
+    appendArrayParam('categoryId', filters.categoryId);
+    appendArrayParam('brandId', filters.brandId);
+    appendArrayParam('materialId', filters.materialId);
+    appendArrayParam('sizeId', filters.sizeId);
+    appendArrayParam('colorId', filters.colorId);
+
+    const query = params.toString();
+    return apiCall(`/product-variants/filter${query ? `?${query}` : ''}`);
   },
 
   // Create new product variant

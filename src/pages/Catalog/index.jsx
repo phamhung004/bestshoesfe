@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import FilterSidebar from '../../components/FilterSidebar';
 import ProductGrid from '../../components/ProductGrid';
 import LoginPanel from '../../components/LoginPanel';
@@ -6,12 +6,25 @@ import SortControls from '../../components/SortControls';
 import './Catalog.css';
 
 const Catalog = () => {
+  // Lifted filter state here so both sidebar and grid share it
+  const [filters, setFilters] = useState({
+    categoryId: [],
+    brandId: [],
+    materialId: [],
+    sizeId: [],
+    colorId: [],
+  });
+
+  const handleApplyFilters = (newFilters) => {
+    setFilters(newFilters);
+  };
+
   return (
     <div className="catalog-container">
       <div className="catalog-content">
         {/* Left Sidebar - Filters */}
         <div className="catalog-sidebar">
-          <FilterSidebar />
+          <FilterSidebar onApply={handleApplyFilters} />
         </div>
 
         {/* Main Content */}
@@ -20,7 +33,7 @@ const Catalog = () => {
             <h1 className="catalog-title">Explore</h1>
             <SortControls />
           </div>
-          <ProductGrid />
+          <ProductGrid filters={filters} />
         </div>
 
         {/* Right Sidebar - Login */}

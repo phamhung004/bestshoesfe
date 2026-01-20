@@ -19,17 +19,19 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-white">
       {!isAdminRoute && <Header />}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/catalog" element={<Catalog />} />
-        <Route path="/purchase/:productId" element={<Purchase />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/payment" element={<Payment />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/cart" element={<Cart/>} />
-        <Route path="/admin" element={<AdminDashboard />} />
-      </Routes>
+      <div className="main-container">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/catalog" element={<Catalog />} />
+          <Route path="/purchase/:productId" element={<Purchase />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/cart" element={<Cart/>} />
+          <Route path="/admin" element={<AdminDashboard />} />
+        </Routes>
+      </div>
       {!isAdminRoute && <Footer />}
     </div>
   )

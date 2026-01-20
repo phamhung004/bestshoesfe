@@ -5,6 +5,9 @@
   gap: 15px;
   padding: 25px;
   background: white;
+  width: 320px;
+  min-height: 400px;
+  flex-shrink: 0;
 }
 
 .product-image {
@@ -101,4 +104,47 @@
   font-size: 25.64px;
   color: #2C3333;
   line-height: 1;
+}
+
+/* Responsive design for product cards */
+@media (max-width: 1200px) {
+  .product-card {
+    width: 280px;
+    min-height: 380px;
+    padding: 20px;
+  }
+
+  .product-image {
+    height: 180px;
+  }
+
+  .product-title,
+  .product-price {
+    font-size: 28px;
+  }
+
+  .purchase-text {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-card {
+    width: 100%;
+    max-width: 320px;
+    min-height: 350px;
+  }
+
+  .product-image {
+    height: 160px;
+  }
+
+  .product-title,
+  .product-price {
+    font-size: 24px;
+  }
+
+  .purchase-text {
+    font-size: 18px;
+  }
 }

@@ -1,53 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './FilterSidebar.css';
+import { categoryAPI, sizeAPI, colorAPI } from '../services/api';
 
-const FilterSidebar = () => {
-  const [selectedCategories, setSelectedCategories] = useState([]);
+const noop = () => {};
+
+const FilterSidebar = ({ onApply = noop }) => {
+  const [categories, setCategories] = useState([]);
+  const [sizes, setSizes] = useState([]);
+  const [colors, setColors] = useState([]);
+
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
+  const [selectedSizeIds, setSelectedSizeIds] = useState([]);
+  const [selectedColorIds, setSelectedColorIds] = useState([]);
   const [selectedGenders, setSelectedGenders] = useState([]);
   const [selectedPrices, setSelectedPrices] = useState([]);
-  const [selectedSize, setSelectedSize] = useState(38);
 
-  const colors = [
-    { name: 'red', hex: '#BE2A2A' },
-    { name: 'blue', hex: '#2576C1' },
-    { name: 'pink', hex: '#E675F9' },
-    { name: 'green', hex: '#31DC43' },
-    { name: 'yellow', hex: '#EEE864' },
-    { name: 'orange', hex: '#E84B09' }
-  ];
+  useEffect(() => {
+    const loadLookups = async () => {
+      try {
+        const [cats, szs, cols] = await Promise.all([
+          categoryAPI.getAll(),
+          sizeAPI.getAll(),
+          colorAPI.getAll(),
+        ]);
+        setCategories(cats || []);
+        setSizes(szs || []);
+        setColors(cols || []);
+      } catch (err) {
+        console.error('Failed loading filter lookups', err);
+      }
+    };
+    loadLookups();
+  }, []);
 
-  const categories = ['Casual', 'Sports', 'Formal', 'Sandals', 'Outdoor'];
-  const genders = ['Man', 'Female'];
-  const prices = ['$0 - $50', '$50 - $100', '$100 - $500', '$500 +'];
-
-  const toggleCategory = (category) => {
-    setSelectedCategories(prev =>
-      prev.includes(category)
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
-  };
-
-  const toggleGender = (gender) => {
-    setSelectedGenders(prev =>
-      prev.includes(gender)
-        ? prev.filter(g => g !== gender)
-        : [...prev, gender]
-    );
-  };
-
-  const togglePrice = (price) => {
-    setSelectedPrices(prev =>
-      prev.includes(price)
-        ? prev.filter(p => p !== price)
-        : [...prev, price]
-    );
+  const toggleArrayValue = (arrSetter, arr, value) => {
+    arrSetter(prev => (prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]));
   };
 
   const renderStars = (rating) => {
     return Array(5).fill(0).map((_, i) => (
       <span key={i} className={`star ${i < rating ? 'filled' : ''}`}>★</span>
     ));
+  };
+
+  const handleApply = () => {
+    onApply({
+      categoryId: selectedCategoryIds,
+      sizeId: selectedSizeIds,
+      colorId: selectedColorIds,
+      gender: selectedGenders,
+      priceRange: selectedPrices,
+    });
   };
 
   return (
@@ -64,10 +67,11 @@ const FilterSidebar = () => {
           <div className="color-options">
             {colors.map((color) => (
               <div
-                key={color.name}
-                className="color-circle"
-                style={{ backgroundColor: color.hex }}
-                title={color.name}
+                key={color.colorId || color.name}
+                className={`color-circle ${selectedColorIds.includes(color.colorId) ? 'selected' : ''}`}
+                style={{ backgroundColor: color.colorHex || color.hex || '#ccc' }}
+                title={color.colorName || color.name}
+                onClick={() => toggleArrayValue(setSelectedColorIds, selectedColorIds, color.colorId)}
               />
             ))}
           </div>
@@ -78,14 +82,14 @@ const FilterSidebar = () => {
           <h3 className="filter-section-title">Category</h3>
           <div className="checkbox-options">
             {categories.map((category) => (
-              <label key={category} className="checkbox-option">
+              <label key={category.categoryId} className="checkbox-option">
                 <input
                   type="checkbox"
-                  checked={selectedCategories.includes(category)}
-                  onChange={() => toggleCategory(category)}
+                  checked={selectedCategoryIds.includes(category.categoryId)}
+                  onChange={() => toggleArrayValue(setSelectedCategoryIds, selectedCategoryIds, category.categoryId)}
                 />
                 <span className="checkmark"></span>
-                <span className="option-text">{category}</span>
+                <span className="option-text">{category.name || category.categoryName}</span>
               </label>
             ))}
           </div>
@@ -95,12 +99,12 @@ const FilterSidebar = () => {
         <div className="filter-section">
           <h3 className="filter-section-title">Gender</h3>
           <div className="checkbox-options">
-            {genders.map((gender) => (
+            {['Man', 'Female'].map((gender) => (
               <label key={gender} className="checkbox-option">
                 <input
                   type="checkbox"
                   checked={selectedGenders.includes(gender)}
-                  onChange={() => toggleGender(gender)}
+                  onChange={() => toggleArrayValue(setSelectedGenders, selectedGenders, gender)}
                 />
                 <span className="checkmark"></span>
                 <span className="option-text">{gender}</span>
@@ -112,16 +116,18 @@ const FilterSidebar = () => {
         {/* Size Section */}
         <div className="filter-section">
           <h3 className="filter-section-title">Size</h3>
-          <div className="size-slider-container">
-            <div className="size-slider">
-              <div className="slider-track">
-                <div className="slider-fill"></div>
-                <div className="slider-thumb">
-                  <div className="slider-arrow">▶</div>
-                </div>
-              </div>
-            </div>
-            <div className="size-value">{selectedSize}</div>
+          <div className="checkbox-options">
+            {sizes.map((size) => (
+              <label key={size.sizeId} className="checkbox-option">
+                <input
+                  type="checkbox"
+                  checked={selectedSizeIds.includes(size.sizeId)}
+                  onChange={() => toggleArrayValue(setSelectedSizeIds, selectedSizeIds, size.sizeId)}
+                />
+                <span className="checkmark"></span>
+                <span className="option-text">{size.sizeName || size.name}</span>
+              </label>
+            ))}
           </div>
         </div>
 
@@ -129,12 +135,12 @@ const FilterSidebar = () => {
         <div className="filter-section">
           <h3 className="filter-section-title">Price</h3>
           <div className="checkbox-options">
-            {prices.map((price) => (
+            {['$0 - $50', '$50 - $100', '$100 - $500', '$500 +'].map((price) => (
               <label key={price} className="checkbox-option">
                 <input
                   type="checkbox"
                   checked={selectedPrices.includes(price)}
-                  onChange={() => togglePrice(price)}
+                  onChange={() => toggleArrayValue(setSelectedPrices, selectedPrices, price)}
                 />
                 <span className="checkmark"></span>
                 <span className="option-text">{price}</span>
@@ -157,7 +163,7 @@ const FilterSidebar = () => {
 
         {/* Apply Button */}
         <div className="filter-actions">
-          <button className="apply-button">
+          <button className="apply-button" onClick={handleApply}>
             <span className="apply-text">Apply</span>
           </button>
         </div>

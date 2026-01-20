@@ -1,19 +1,32 @@
 .product-grid {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 30px;
+  width: 100%;
 }
 
 .product-row {
   display: flex;
-  gap: 25px;
+  gap: 30px;
   width: 100%;
+  justify-content: center;
 }
 
 /* Responsive design - stack on smaller screens */
 @media (max-width: 1024px) {
   .product-row {
     flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-grid {
+    gap: 20px;
+  }
+
+  .product-row {
     gap: 15px;
   }
 }
