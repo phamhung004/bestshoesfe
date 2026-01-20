@@ -11,6 +11,8 @@ import SizeList from './components/SizeList';
 import SizeForm from './components/SizeForm';
 import ColorList from './components/ColorList';
 import ColorForm from './components/ColorForm';
+import ProductList from './components/ProductList';
+import ProductForm from './components/ProductForm';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -121,6 +123,32 @@ const AdminDashboard = () => {
     setEditingColor(null);
   };
 
+  // Product handlers
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [refreshProductList, setRefreshProductList] = useState(false);
+
+  const handleAddProduct = () => {
+    setEditingProduct(null);
+    setShowProductForm(true);
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setShowProductForm(true);
+  };
+
+  const handleSaveProduct = () => {
+    setShowProductForm(false);
+    setEditingProduct(null);
+    setRefreshProductList(prev => !prev);
+  };
+
+  const handleCancelProductForm = () => {
+    setShowProductForm(false);
+    setEditingProduct(null);
+  };
+
   const handleSaveBrand = () => {
     setShowBrandForm(false);
     setEditingBrand(null);
@@ -174,50 +202,11 @@ const AdminDashboard = () => {
 
       case 'product-management/products':
         return (
-          <div className="admin-content-section">
-            <div className="section-header">
-              <h2 className="section-title">Quản lý sản phẩm</h2>
-              <button className="btn-primary">Thêm sản phẩm mới</button>
-            </div>
-            <div className="data-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Giá</th>
-                    <th>Tồn kho</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>001</td>
-                    <td>WELL SHOES SNEAKERS WHITE</td>
-                    <td>$100</td>
-                    <td>25</td>
-                    <td><span className="status-active">Còn hàng</span></td>
-                    <td>
-                      <button className="btn-edit">Sửa</button>
-                      <button className="btn-delete">Xóa</button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>002</td>
-                    <td>Casual Sneakers brown</td>
-                    <td>$120</td>
-                    <td>15</td>
-                    <td><span className="status-active">Còn hàng</span></td>
-                    <td>
-                      <button className="btn-edit">Sửa</button>
-                      <button className="btn-delete">Xóa</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <ProductList
+            onEdit={handleEditProduct}
+            onAdd={handleAddProduct}
+            refreshTrigger={refreshProductList}
+          />
         );
 
       case 'product-management/colors':
@@ -370,6 +359,14 @@ const AdminDashboard = () => {
           onSave={handleSaveColor}
           onCancel={handleCancelColorForm}
           isEditing={!!editingColor}
+        />
+      )}
+      {showProductForm && (
+        <ProductForm
+          product={editingProduct}
+          onSave={handleSaveProduct}
+          onCancel={handleCancelProductForm}
+          isEditing={!!editingProduct}
         />
       )}
     </div>
