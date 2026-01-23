@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Minimal global reset to avoid default browser margins creating visible gaps around the admin layout */
+html, body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #ffffff;
+}
+
 /* :root {
   font-family: 'Roboto Slab', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

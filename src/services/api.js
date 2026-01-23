@@ -263,6 +263,53 @@ export const productImageAPI = {
   },
 };
 
+// Coupon API functions
+export const couponAPI = {
+  // Get all coupons
+  getAll: () => apiCall('/coupons'),
+
+  // Get active coupons only
+  getActive: () => apiCall('/coupons/active'),
+
+  // Get coupon by ID
+  getById: (id) => apiCall(`/coupons/${id}`),
+
+  // Get coupon by code
+  getByCode: (code) => apiCall(`/coupons/code/${encodeURIComponent(code)}`),
+
+  // Search coupons
+  search: (query) => apiCall(`/coupons/search?q=${encodeURIComponent(query)}`),
+
+  // Create new coupon
+  create: (coupon) => apiCall('/coupons', {
+    method: 'POST',
+    body: JSON.stringify(coupon),
+  }),
+
+  // Update coupon
+  update: (id, coupon) => apiCall(`/coupons/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(coupon),
+  }),
+
+  // Delete coupon
+  delete: (id) => apiCall(`/coupons/${id}`, {
+    method: 'DELETE',
+  }),
+
+  // Toggle coupon status
+  toggleStatus: (id) => apiCall(`/coupons/${id}/toggle-status`, {
+    method: 'PATCH',
+  }),
+
+  // Validate coupon
+  validate: (code, customerId = null) => {
+    const params = new URLSearchParams();
+    if (customerId) params.append('customerId', customerId);
+    return apiCall(`/coupons/validate/${encodeURIComponent(code)}?${params.toString()}`);
+  },
+};
+
 export default {
   brandAPI,
   categoryAPI,
@@ -272,4 +319,5 @@ export default {
   productAPI,
   productVariantAPI,
   productImageAPI,
+  couponAPI,
 };

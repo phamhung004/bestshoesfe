@@ -1,10 +1,15 @@
 .admin-sidebar {
-  width: 280px;
+  width: 240px;
+  min-width: 240px;
+  max-width: 280px;
+  flex: 0 0 240px; /* fixed sidebar width, prevent shrinking when content changes */
   min-height: 100vh;
+  box-sizing: border-box;
   background: white;
   border-right: 1px solid #2C3333;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .sidebar-header {
@@ -23,8 +28,9 @@
 }
 
 .sidebar-nav {
-  padding: 20px 0;
+  padding: 12px 0;
   flex: 1;
+  overflow-y: auto; /* allow scrolling inside sidebar without affecting layout */
 }
 
 .menu-item-container {
@@ -39,6 +45,10 @@
   background: transparent;
   width: 100%;
   text-align: left;
+}
+
+.menu-item {
+  white-space: nowrap; /* prevent text wrapping that can change layout width */
 }
 
 .menu-item:hover {
@@ -88,6 +98,12 @@
   margin-top: 8px;
   border-left: 1px solid #EEE;
   padding-left: 20px;
+}
+
+.submenu {
+  box-sizing: border-box;
+  width: 100%; /* ensure submenu doesn't expand sidebar width */
+  overflow: hidden;
 }
 
 .submenu-item {

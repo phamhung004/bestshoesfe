@@ -13,6 +13,8 @@ import ColorList from './components/ColorList';
 import ColorForm from './components/ColorForm';
 import ProductList from './components/ProductList';
 import ProductForm from './components/ProductForm';
+import CouponList from './components/CouponList';
+import CouponForm from './components/CouponForm';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -127,6 +129,10 @@ const AdminDashboard = () => {
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [refreshProductList, setRefreshProductList] = useState(false);
+  // Coupon handlers
+  const [showCouponForm, setShowCouponForm] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState(null);
+  const [refreshCouponList, setRefreshCouponList] = useState(false);
 
   const handleAddProduct = () => {
     setEditingProduct(null);
@@ -147,6 +153,28 @@ const AdminDashboard = () => {
   const handleCancelProductForm = () => {
     setShowProductForm(false);
     setEditingProduct(null);
+  };
+
+  // Coupon handlers
+  const handleAddCoupon = () => {
+    setEditingCoupon(null);
+    setShowCouponForm(true);
+  };
+
+  const handleEditCoupon = (coupon) => {
+    setEditingCoupon(coupon);
+    setShowCouponForm(true);
+  };
+
+  const handleSaveCoupon = () => {
+    setShowCouponForm(false);
+    setEditingCoupon(null);
+    setRefreshCouponList(prev => !prev);
+  };
+
+  const handleCancelCouponForm = () => {
+    setShowCouponForm(false);
+    setEditingCoupon(null);
   };
 
   const handleSaveBrand = () => {
@@ -301,6 +329,15 @@ const AdminDashboard = () => {
           />
         );
 
+      case 'sales-management/coupons':
+        return (
+          <CouponList
+            onEdit={handleEditCoupon}
+            onAdd={handleAddCoupon}
+            refreshTrigger={refreshCouponList}
+          />
+        );
+
       default:
         return (
           <div className="admin-content-section">
@@ -367,6 +404,14 @@ const AdminDashboard = () => {
           onSave={handleSaveProduct}
           onCancel={handleCancelProductForm}
           isEditing={!!editingProduct}
+        />
+      )}
+      {showCouponForm && (
+        <CouponForm
+          coupon={editingCoupon}
+          onSave={handleSaveCoupon}
+          onCancel={handleCancelCouponForm}
+          isEditing={!!editingCoupon}
         />
       )}
     </div>

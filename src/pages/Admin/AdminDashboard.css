@@ -13,8 +13,9 @@
 .admin-content {
   flex: 1;
   padding: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
+  /* Use the full available width inside the main area (prevents large centered gaps) */
+  max-width: none;
+  margin: 0;
   width: 100%;
 }
 
