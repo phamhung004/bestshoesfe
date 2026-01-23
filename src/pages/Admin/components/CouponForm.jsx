@@ -161,20 +161,25 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
         endDate: new Date(formData.endDate).toISOString()
       };
 
-      // For demonstration, just show success message instead of API call
+      let result;
       if (isEditing && coupon) {
-        // await couponAPI.update(coupon.couponId, couponData);
+        result = await couponAPI.update(coupon.couponId, couponData);
         alert('Cập nhật mã giảm giá thành công!');
       } else {
-        // await couponAPI.create(couponData);
+        result = await couponAPI.create(couponData);
         alert('Thêm mã giảm giá thành công!');
       }
 
-      onSave();
+      onSave(result);
     } catch (error) {
       console.error('Error saving coupon:', error);
-      if (error.message.includes('Code already exists')) {
-        setErrors({ code: 'Mã giảm giá đã tồn tại. Vui lòng chọn mã khác.' });
+      if (error.response && error.response.data && error.response.data.error) {
+        const errorMessage = error.response.data.error;
+        if (errorMessage.includes('đã tồn tại')) {
+          setErrors({ code: 'Mã giảm giá đã tồn tại. Vui lòng chọn mã khác.' });
+        } else {
+          alert(errorMessage);
+        }
       } else {
         alert('Có lỗi xảy ra. Vui lòng thử lại.');
       }

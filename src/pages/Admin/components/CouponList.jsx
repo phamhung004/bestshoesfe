@@ -2,138 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { couponAPI } from '../../../services/api';
 import './CouponList.css';
 
-// Mock data for demonstration
-const mockCoupons = [
-  {
-    couponId: 1,
-    code: 'SUMMER2024',
-    name: 'Khuyến mãi mùa hè',
-    description: 'Giảm giá đặc biệt cho các sản phẩm mùa hè',
-    type: 'Percentage',
-    value: 20,
-    minimumAmount: 500000,
-    maximumDiscount: null,
-    usageLimit: 100,
-    usedCount: 45,
-    startDate: '2024-06-01T00:00:00.000Z',
-    endDate: '2024-08-31T23:59:59.000Z',
-    status: true,
-    createdAt: '2024-05-15T10:30:00.000Z'
-  },
-  {
-    couponId: 2,
-    code: 'NEWUSER',
-    name: 'Ưu đãi khách hàng mới',
-    description: 'Giảm 50k cho đơn hàng đầu tiên',
-    type: 'Fixed Amount',
-    value: 50000,
-    minimumAmount: null,
-    maximumDiscount: null,
-    usageLimit: null,
-    usedCount: 23,
-    startDate: '2024-01-01T00:00:00.000Z',
-    endDate: '2024-12-31T23:59:59.000Z',
-    status: true,
-    createdAt: '2024-01-01T08:00:00.000Z'
-  },
-  {
-    couponId: 3,
-    code: 'FLASH50',
-    name: 'Flash Sale 50%',
-    description: 'Giảm 50% cho tất cả sản phẩm trong 24h',
-    type: 'Percentage',
-    value: 50,
-    minimumAmount: 200000,
-    maximumDiscount: 200000,
-    usageLimit: 50,
-    usedCount: 50,
-    startDate: '2024-03-15T00:00:00.000Z',
-    endDate: '2024-03-15T23:59:59.000Z',
-    status: false,
-    createdAt: '2024-03-10T09:15:00.000Z'
-  },
-  {
-    couponId: 4,
-    code: 'BLACKFRIDAY',
-    name: 'Black Friday Sale',
-    description: 'Siêu sale Black Friday - giảm đến 70%',
-    type: 'Percentage',
-    value: 70,
-    minimumAmount: 1000000,
-    maximumDiscount: 500000,
-    usageLimit: 200,
-    usedCount: 87,
-    startDate: '2024-11-24T00:00:00.000Z',
-    endDate: '2024-11-30T23:59:59.000Z',
-    status: true,
-    createdAt: '2024-11-01T12:00:00.000Z'
-  },
-  {
-    couponId: 5,
-    code: 'EXPIRED',
-    name: 'Mã hết hạn',
-    description: 'Mã giảm giá đã hết hạn',
-    type: 'Fixed Amount',
-    value: 30000,
-    minimumAmount: null,
-    maximumDiscount: null,
-    usageLimit: null,
-    usedCount: 5,
-    startDate: '2023-12-01T00:00:00.000Z',
-    endDate: '2023-12-31T23:59:59.000Z',
-    status: true,
-    createdAt: '2023-11-15T14:20:00.000Z'
-  },
-  {
-    couponId: 6,
-    code: 'UPCOMING',
-    name: 'Khuyến mãi sắp tới',
-    description: 'Mã giảm giá sẽ có hiệu lực vào tháng tới',
-    type: 'Percentage',
-    value: 15,
-    minimumAmount: 300000,
-    maximumDiscount: null,
-    usageLimit: 150,
-    usedCount: 0,
-    startDate: '2025-01-01T00:00:00.000Z',
-    endDate: '2025-01-31T23:59:59.000Z',
-    status: true,
-    createdAt: '2024-12-01T16:45:00.000Z'
-  },
-  {
-    couponId: 7,
-    code: 'VIP100K',
-    name: 'VIP Member Discount',
-    description: 'Ưu đãi đặc biệt cho thành viên VIP',
-    type: 'Fixed Amount',
-    value: 100000,
-    minimumAmount: 800000,
-    maximumDiscount: null,
-    usageLimit: 25,
-    usedCount: 12,
-    startDate: '2024-07-01T00:00:00.000Z',
-    endDate: '2024-12-31T23:59:59.000Z',
-    status: true,
-    createdAt: '2024-06-20T11:30:00.000Z'
-  },
-  {
-    couponId: 8,
-    code: 'WELCOME10',
-    name: 'Chào mừng khách hàng',
-    description: 'Giảm 10% cho đơn hàng từ 200k',
-    type: 'Percentage',
-    value: 10,
-    minimumAmount: 200000,
-    maximumDiscount: null,
-    usageLimit: null,
-    usedCount: 156,
-    startDate: '2024-04-01T00:00:00.000Z',
-    endDate: '2024-12-31T23:59:59.000Z',
-    status: true,
-    createdAt: '2024-03-25T13:15:00.000Z'
-  }
-];
-
 const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -146,9 +14,7 @@ const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
   const loadCoupons = useCallback(async () => {
     try {
       setLoading(true);
-      // For demonstration, use mock data instead of API call
-      // const data = await couponAPI.getAll();
-      const data = mockCoupons;
+      const data = await couponAPI.getAll();
       setCoupons(data);
       setError(null);
     } catch (err) {
@@ -195,8 +61,7 @@ const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
   const handleDelete = async (couponId, couponCode) => {
     if (window.confirm(`Bạn có chắc chắn muốn xóa mã giảm giá "${couponCode}"?`)) {
       try {
-        // For demonstration, remove from local state instead of API call
-        // await couponAPI.delete(couponId);
+        await couponAPI.delete(couponId);
         setCoupons(prevCoupons => prevCoupons.filter(coupon => coupon.couponId !== couponId));
         alert('Xóa mã giảm giá thành công!');
       } catch (err) {
@@ -208,12 +73,11 @@ const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
 
   const handleToggleStatus = async (couponId, currentStatus) => {
     try {
-      // For demonstration, update local state instead of API call
-      // await couponAPI.toggleStatus(couponId);
+      const updatedCoupon = await couponAPI.toggleStatus(couponId);
       setCoupons(prevCoupons =>
         prevCoupons.map(coupon =>
           coupon.couponId === couponId
-            ? { ...coupon, status: !coupon.status }
+            ? updatedCoupon
             : coupon
         )
       );
