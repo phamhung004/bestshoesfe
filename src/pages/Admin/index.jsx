@@ -15,6 +15,8 @@ import ProductList from './components/ProductList';
 import ProductForm from './components/ProductForm';
 import CouponList from './components/CouponList';
 import CouponForm from './components/CouponForm';
+import PromotionList from './components/PromotionList';
+import PromotionForm from './components/PromotionForm';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -133,6 +135,10 @@ const AdminDashboard = () => {
   const [showCouponForm, setShowCouponForm] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [refreshCouponList, setRefreshCouponList] = useState(false);
+  // Promotion handlers
+  const [showPromotionForm, setShowPromotionForm] = useState(false);
+  const [editingPromotion, setEditingPromotion] = useState(null);
+  const [refreshPromotionList, setRefreshPromotionList] = useState(false);
 
   const handleAddProduct = () => {
     setEditingProduct(null);
@@ -175,6 +181,28 @@ const AdminDashboard = () => {
   const handleCancelCouponForm = () => {
     setShowCouponForm(false);
     setEditingCoupon(null);
+  };
+
+  // Promotion handlers
+  const handleAddPromotion = () => {
+    setEditingPromotion(null);
+    setShowPromotionForm(true);
+  };
+
+  const handleEditPromotion = (promotion) => {
+    setEditingPromotion(promotion);
+    setShowPromotionForm(true);
+  };
+
+  const handleSavePromotion = () => {
+    setShowPromotionForm(false);
+    setEditingPromotion(null);
+    setRefreshPromotionList(prev => !prev);
+  };
+
+  const handleCancelPromotionForm = () => {
+    setShowPromotionForm(false);
+    setEditingPromotion(null);
   };
 
   const handleSaveBrand = () => {
@@ -338,6 +366,15 @@ const AdminDashboard = () => {
           />
         );
 
+      case 'sales-management/promotions':
+        return (
+          <PromotionList
+            onEdit={handleEditPromotion}
+            onAdd={handleAddPromotion}
+            refreshTrigger={refreshPromotionList}
+          />
+        );
+
       default:
         return (
           <div className="admin-content-section">
@@ -412,6 +449,14 @@ const AdminDashboard = () => {
           onSave={handleSaveCoupon}
           onCancel={handleCancelCouponForm}
           isEditing={!!editingCoupon}
+        />
+      )}
+      {showPromotionForm && (
+        <PromotionForm
+          promotion={editingPromotion}
+          onSave={handleSavePromotion}
+          onCancel={handleCancelPromotionForm}
+          isEditing={!!editingPromotion}
         />
       )}
     </div>

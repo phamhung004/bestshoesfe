@@ -310,6 +310,43 @@ export const couponAPI = {
   },
 };
 
+// Promotion API functions
+export const promotionAPI = {
+  // Get all promotions
+  getAll: () => apiCall('/promotions'),
+
+  // Get active promotions only
+  getActive: () => apiCall('/promotions/active'),
+
+  // Get promotion by ID
+  getById: (id) => apiCall(`/promotions/${id}`),
+
+  // Search promotions
+  search: (query) => apiCall(`/promotions/search?q=${encodeURIComponent(query)}`),
+
+  // Create new promotion
+  create: (promotion) => apiCall('/promotions', {
+    method: 'POST',
+    body: JSON.stringify(promotion),
+  }),
+
+  // Update promotion
+  update: (id, promotion) => apiCall(`/promotions/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(promotion),
+  }),
+
+  // Delete promotion
+  delete: (id) => apiCall(`/promotions/${id}`, {
+    method: 'DELETE',
+  }),
+
+  // Toggle promotion status
+  toggleStatus: (id) => apiCall(`/promotions/${id}/toggle-status`, {
+    method: 'PATCH',
+  }),
+};
+
 export default {
   brandAPI,
   categoryAPI,
@@ -320,4 +357,5 @@ export default {
   productVariantAPI,
   productImageAPI,
   couponAPI,
+  promotionAPI,
 };
