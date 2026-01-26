@@ -324,6 +324,31 @@ export const promotionAPI = {
   // Search promotions
   search: (query) => apiCall(`/promotions/search?q=${encodeURIComponent(query)}`),
 
+  // Get promotions by type
+  getByType: (type) => apiCall(`/promotions/type/${encodeURIComponent(type)}`),
+
+  // Get expired promotions
+  getExpired: () => apiCall('/promotions/expired'),
+
+  // Get upcoming promotions
+  getUpcoming: () => apiCall('/promotions/upcoming'),
+
+  // Get currently running promotions
+  getCurrentlyRunning: () => apiCall('/promotions/currently-running'),
+
+  // Get promotions expiring soon
+  getExpiringSoon: (days = 7) => apiCall(`/promotions/expiring-soon?days=${days}`),
+
+  // Get promotion status
+  getStatus: (id) => apiCall(`/promotions/${id}/status`),
+
+  // Validate promotion
+  validate: (id) => apiCall(`/promotions/${id}/validate`),
+
+  // Calculate discount
+  calculateDiscount: (id, originalPrice) =>
+    apiCall(`/promotions/${id}/calculate-discount?originalPrice=${encodeURIComponent(originalPrice)}`),
+
   // Create new promotion
   create: (promotion) => apiCall('/promotions', {
     method: 'POST',
@@ -343,6 +368,16 @@ export const promotionAPI = {
 
   // Toggle promotion status
   toggleStatus: (id) => apiCall(`/promotions/${id}/toggle-status`, {
+    method: 'PATCH',
+  }),
+
+  // Activate promotion
+  activate: (id) => apiCall(`/promotions/${id}/activate`, {
+    method: 'PATCH',
+  }),
+
+  // Deactivate promotion
+  deactivate: (id) => apiCall(`/promotions/${id}/deactivate`, {
     method: 'PATCH',
   }),
 };
