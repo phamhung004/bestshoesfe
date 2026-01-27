@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { brandAPI } from '../../../services/api';
-import './BrandForm.css';
+import React, { useState, useEffect } from "react";
+import { brandAPI } from "../../../../services/api";
+import { useToast } from "../../../../context/useToast";
+import "./BrandForm.css";
 
 const BrandForm = ({ brand, onSave, onCancel, isEditing = false }) => {
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    description: '',
-    logo: '',
-    website: '',
-    originCountry: '',
-    status: true
+    name: "",
+    slug: "",
+    description: "",
+    logo: "",
+    website: "",
+    originCountry: "",
+    status: true,
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -19,24 +21,24 @@ const BrandForm = ({ brand, onSave, onCancel, isEditing = false }) => {
   useEffect(() => {
     if (brand) {
       setFormData({
-        name: brand.name || '',
-        slug: brand.slug || '',
-        description: brand.description || '',
-        logo: brand.logo || '',
-        website: brand.website || '',
-        originCountry: brand.originCountry || '',
-        status: brand.status !== undefined ? brand.status : true
+        name: brand.name || "",
+        slug: brand.slug || "",
+        description: brand.description || "",
+        logo: brand.logo || "",
+        website: brand.website || "",
+        originCountry: brand.originCountry || "",
+        status: brand.status !== undefined ? brand.status : true,
       });
     } else {
       // Reset form for new brand
       setFormData({
-        name: '',
-        slug: '',
-        description: '',
-        logo: '',
-        website: '',
-        originCountry: '',
-        status: true
+        name: "",
+        slug: "",
+        description: "",
+        logo: "",
+        website: "",
+        originCountry: "",
+        status: true,
       });
     }
     setErrors({});
@@ -44,74 +46,78 @@ const BrandForm = ({ brand, onSave, onCancel, isEditing = false }) => {
   }, [brand]);
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : value;
+    const { name, value, type } = e.target;
+    let newValue = value;
+    if (name === "status") {
+      newValue = value === "true";
+    }
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: newValue
+      [name]: newValue,
     }));
 
     // Clear error for this field
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: null
+        [name]: null,
       }));
     }
 
     // Auto-generate slug from name if not manually edited
-    if (name === 'name' && !slugEdited) {
+    if (name === "name" && !slugEdited) {
       const generatedSlug = generateSlug(value);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        slug: generatedSlug
+        slug: generatedSlug,
       }));
     }
   };
 
   const handleSlugChange = (e) => {
     const value = e.target.value;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      slug: value
+      slug: value,
     }));
     setSlugEdited(true);
 
     // Clear error for slug field
     if (errors.slug) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        slug: null
+        slug: null,
       }));
     }
   };
 
   const generateSlug = (name) => {
-    if (!name) return '';
+    if (!name) return "";
     return name
       .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-') // Replace multiple hyphens with single
-      .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+      .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
+      .replace(/\s+/g, "-") // Replace spaces with hyphens
+      .replace(/-+/g, "-") // Replace multiple hyphens with single
+      .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
   };
 
   const validateForm = () => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Tên thương hiệu là bắt buộc';
+      newErrors.name = "Tên thương hiệu là bắt buộc";
     }
 
     if (!formData.slug.trim()) {
-      newErrors.slug = 'Slug là bắt buộc';
+      newErrors.slug = "Slug là bắt buộc";
     } else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
-      newErrors.slug = 'Slug chỉ được chứa chữ cái, số và dấu gạch ngang';
+      newErrors.slug = "Slug chỉ được chứa chữ cái, số và dấu gạch ngang";
     }
 
     if (formData.website && !/^https?:\/\/.+/.test(formData.website)) {
-      newErrors.website = 'Website phải là URL hợp lệ (bắt đầu bằng http:// hoặc https://)';
+      newErrors.website =
+        "Website phải là URL hợp lệ (bắt đầu bằng http:// hoặc https://)";
     }
 
     setErrors(newErrors);
@@ -134,24 +140,25 @@ const BrandForm = ({ brand, onSave, onCancel, isEditing = false }) => {
         description: formData.description.trim(),
         logo: formData.logo.trim(),
         website: formData.website.trim(),
-        originCountry: formData.originCountry.trim()
+        originCountry: formData.originCountry.trim(),
       };
 
       if (isEditing && brand) {
         await brandAPI.update(brand.brandId, brandData);
-        alert('Cập nhật thương hiệu thành công!');
+        showToast("Cập nhật thương hiệu thành công", "success");
       } else {
         await brandAPI.create(brandData);
-        alert('Thêm thương hiệu thành công!');
+        showToast("Thêm thương hiệu thành công", "success");
       }
 
       onSave();
     } catch (error) {
-      console.error('Error saving brand:', error);
-      if (error.message.includes('Slug already exists')) {
-        setErrors({ slug: 'Slug đã tồn tại. Vui lòng chọn slug khác.' });
+      console.error("Error saving brand:", error);
+      if (error.message.includes("Slug already exists")) {
+        setErrors({ slug: "Slug đã tồn tại. Vui lòng chọn slug khác." });
+        showToast("Slug đã tồn tại", "error");
       } else {
-        alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        showToast(error.message || "Không thể lưu thương hiệu", "error");
       }
     } finally {
       setLoading(false);
@@ -163,9 +170,9 @@ const BrandForm = ({ brand, onSave, onCancel, isEditing = false }) => {
       <div className="brand-form-container">
         <div className="brand-form-header">
           <h2 className="form-title">
-            {isEditing ? 'Chỉnh sửa thương hiệu' : 'Thêm thương hiệu mới'}
+            {isEditing ? "✏️ Chỉnh sửa thương hiệu" : "➕ Thêm thương hiệu mới"}
           </h2>
-          <button onClick={onCancel} className="btn-close">
+          <button onClick={onCancel} className="btn-close" title="Đóng">
             ✕
           </button>
         </div>
@@ -182,10 +189,13 @@ const BrandForm = ({ brand, onSave, onCancel, isEditing = false }) => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className={`form-input ${errors.name ? 'error' : ''}`}
+                className={`form-input ${errors.name ? "error" : ""}`}
                 placeholder="Nhập tên thương hiệu"
+                autoFocus
               />
-              {errors.name && <span className="error-message">{errors.name}</span>}
+              {errors.name && (
+                <span className="error-message">⚠️ {errors.name}</span>
+              )}
             </div>
 
             <div className="form-group">
@@ -198,12 +208,15 @@ const BrandForm = ({ brand, onSave, onCancel, isEditing = false }) => {
                 name="slug"
                 value={formData.slug}
                 onChange={handleSlugChange}
-                className={`form-input ${errors.slug ? 'error' : ''}`}
+                className={`form-input ${errors.slug ? "error" : ""}`}
                 placeholder="slug-url-friendly"
               />
-              {errors.slug && <span className="error-message">{errors.slug}</span>}
+              {errors.slug && (
+                <span className="error-message">⚠️ {errors.slug}</span>
+              )}
               <small className="form-hint">
-                Slug sẽ được sử dụng trong URL. Chỉ chứa chữ cái, số và dấu gạch ngang.
+                💡 Slug sẽ được sử dụng trong URL. Chỉ chứa chữ cái, số và dấu
+                gạch ngang.
               </small>
             </div>
 
@@ -242,8 +255,8 @@ const BrandForm = ({ brand, onSave, onCancel, isEditing = false }) => {
                     alt="Logo preview"
                     className="preview-image"
                     onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'block';
+                      e.target.style.display = "none";
+                      e.target.nextSibling.style.display = "block";
                     }}
                   />
                   <span className="preview-error">Không thể tải ảnh</span>
@@ -261,10 +274,12 @@ const BrandForm = ({ brand, onSave, onCancel, isEditing = false }) => {
                 name="website"
                 value={formData.website}
                 onChange={handleInputChange}
-                className={`form-input ${errors.website ? 'error' : ''}`}
+                className={`form-input ${errors.website ? "error" : ""}`}
                 placeholder="https://www.example.com"
               />
-              {errors.website && <span className="error-message">{errors.website}</span>}
+              {errors.website && (
+                <span className="error-message">⚠️ {errors.website}</span>
+              )}
             </div>
 
             <div className="form-group">
@@ -282,26 +297,33 @@ const BrandForm = ({ brand, onSave, onCancel, isEditing = false }) => {
               />
             </div>
 
-            <div className="form-group checkbox-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  name="status"
-                  checked={formData.status}
-                  onChange={handleInputChange}
-                  className="form-checkbox"
-                />
-                <span className="checkbox-text">Kích hoạt thương hiệu</span>
+            <div className="form-group">
+              <label htmlFor="status" className="form-label">
+                Trạng thái
               </label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status.toString()}
+                onChange={handleInputChange}
+                className="form-input"
+              >
+                <option value="true">Hoạt động</option>
+                <option value="false">Không hoạt động</option>
+              </select>
             </div>
           </div>
 
           <div className="form-actions">
             <button type="button" onClick={onCancel} className="btn-cancel">
-              Hủy
+              Hủy bỏ
             </button>
             <button type="submit" disabled={loading} className="btn-submit">
-              {loading ? 'Đang lưu...' : (isEditing ? 'Cập nhật' : 'Thêm mới')}
+              {loading
+                ? "⏳ Đang lưu..."
+                : isEditing
+                  ? "✏️ Cập nhật"
+                  : "✅ Thêm mới"}
             </button>
           </div>
         </form>

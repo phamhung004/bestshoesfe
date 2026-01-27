@@ -34,10 +34,16 @@ const apiCall = async (endpoint, options = {}) => {
 // Brand API functions
 export const brandAPI = {
   // Get all brands
-  getAll: () => apiCall('/brands'),
+  getAll: (pageNum = 0, pageSize = 10) => apiCall('/brands/list', { 
+    method: 'POST',
+    body: JSON.stringify({ pageNum, pageSize })
+  }),
 
   // Get active brands only
-  getActive: () => apiCall('/brands/active'),
+  getActive: (pageNum = 0, pageSize = 10) => apiCall('/brands/active', { 
+    method: 'POST',
+    body: JSON.stringify({ pageNum, pageSize })
+  }),
 
   // Get brand by ID
   getById: (id) => apiCall(`/brands/${id}`),
@@ -49,7 +55,7 @@ export const brandAPI = {
   search: (name) => apiCall(`/brands/search?name=${encodeURIComponent(name)}`),
 
   // Create new brand
-  create: (brand) => apiCall('/brands', {
+  create: (brand) => apiCall('/brands/create', {
     method: 'POST',
     body: JSON.stringify(brand),
   }),
@@ -73,9 +79,12 @@ export const brandAPI = {
 
 // Category API functions
 export const categoryAPI = {
-  getAll: () => apiCall('/categories'),
+  getAll: (pageNum = 0, pageSize = 10) => apiCall('/categories/list', { 
+    method: 'POST',
+    body: JSON.stringify({ pageNum, pageSize })
+  }),
   getById: (id) => apiCall(`/categories/${id}`),
-  create: (category) => apiCall('/categories', {
+  create: (category) => apiCall('/categories/create', {
     method: 'POST',
     body: JSON.stringify(category),
   }),
@@ -90,9 +99,12 @@ export const categoryAPI = {
 
 // Material API functions
 export const materialAPI = {
-  getAll: () => apiCall('/materials'),
+  getAll: (pageNum = 0, pageSize = 10) => apiCall('/materials/list', { 
+    method: 'POST',
+    body: JSON.stringify({ pageNum, pageSize })
+  }),
   getById: (id) => apiCall(`/materials/${id}`),
-  create: (material) => apiCall('/materials', {
+  create: (material) => apiCall('/materials/create', {
     method: 'POST',
     body: JSON.stringify(material),
   }),
@@ -106,7 +118,10 @@ export const materialAPI = {
 
 // Size API functions
 export const sizeAPI = {
-  getAll: () => apiCall('/sizes'),
+  getAll: (pageNum = 0, pageSize = 10) => apiCall('/sizes/list', { 
+    method: 'POST',
+    body: JSON.stringify({ pageNum, pageSize })
+  }),
   getById: (id) => apiCall(`/sizes/${id}`),
   create: (size) => apiCall('/sizes', {
     method: 'POST',
@@ -122,7 +137,10 @@ export const sizeAPI = {
 
 // Color API functions
 export const colorAPI = {
-  getAll: () => apiCall('/colors'),
+  getAll: (pageNum = 0, pageSize = 10) => apiCall('/colors/list', { 
+    method: 'POST',
+    body: JSON.stringify({ pageNum, pageSize })
+  }),
   getById: (id) => apiCall(`/colors/${id}`),
   create: (color) => apiCall('/colors', {
     method: 'POST',
@@ -139,16 +157,25 @@ export const colorAPI = {
 // Product API functions
 export const productAPI = {
   // Get all products
-  getAll: () => apiCall('/products'),
+  getAll: (pageNum = 0, pageSize = 10) => apiCall('/products/list', { 
+    method: 'POST',
+    body: JSON.stringify({ pageNum, pageSize })
+  }),
 
   // Get active products only
-  getActive: () => apiCall('/products/active'),
+  getActive: (pageNum = 0, pageSize = 10) => apiCall('/products/active', { 
+    method: 'POST',
+    body: JSON.stringify({ pageNum, pageSize })
+  }),
 
   // Get active products with all details loaded
-  getActiveWithDetails: () => apiCall('/products/active/details'),
+  getActiveWithDetails: (pageNum = 0, pageSize = 10) => apiCall('/products/active/details', { 
+    method: 'POST',
+    body: JSON.stringify({ pageNum, pageSize })
+  }),
 
   // Get product by ID
-  getById: (id) => apiCall(`/products/${id}`),
+  getById: (id) => apiCall(`/products/${id}`, { method: 'GET' }),
 
   // Get products by category
   getByCategory: (categoryId) => apiCall(`/products/category/${categoryId}`),
@@ -169,7 +196,7 @@ export const productAPI = {
   },
 
   // Create new product
-  create: (product) => apiCall('/products', {
+  create: (product) => apiCall('/products/create', {
     method: 'POST',
     body: JSON.stringify(product),
   }),
