@@ -16,7 +16,19 @@ const apiCall = async (endpoint, options = {}) => {
     const response = await fetch(url, config);
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      let errorData = {};
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        // If response body is not JSON, just use status
+      }
+      
+      const error = new Error(`HTTP error! status: ${response.status}`);
+      error.response = {
+        status: response.status,
+        data: errorData
+      };
+      throw error;
     }
 
     // For DELETE requests, don't try to parse JSON if no content

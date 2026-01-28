@@ -95,16 +95,26 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
       newErrors.code = 'Mã giảm giá là bắt buộc';
     } else if (!/^[A-Z0-9]+$/.test(formData.code)) {
       newErrors.code = 'Mã giảm giá chỉ được chứa chữ cái in hoa và số';
+    } else if (formData.code.length < 3 || formData.code.length > 50) {
+      newErrors.code = 'Mã giảm giá phải có độ dài từ 3 đến 50 ký tự';
     }
 
     if (!formData.name.trim()) {
       newErrors.name = 'Tên mã giảm giá là bắt buộc';
+    } else if (formData.name.length > 255) {
+      newErrors.name = 'Tên mã giảm giá không được vượt quá 255 ký tự';
+    }
+
+    if (formData.description && formData.description.length > 1000) {
+      newErrors.description = 'Mô tả không được vượt quá 1000 ký tự';
     }
 
     if (!formData.value || formData.value <= 0) {
       newErrors.value = 'Giá trị giảm giá phải lớn hơn 0';
     } else if (formData.type === 'Percentage' && formData.value > 100) {
       newErrors.value = 'Phần trăm giảm giá không được vượt quá 100%';
+    } else if (formData.type === 'Fixed Amount' && formData.value > 10000000) {
+      newErrors.value = 'Số tiền giảm giá tối đa là 10,000,000 VND';
     }
 
     if (formData.minimumAmount && formData.minimumAmount < 0) {
@@ -135,6 +145,17 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
       }
     }
 
+    // Check if start date is in the future (at least 1 minute from now)
+    if (formData.startDate && !isEditing) {
+      const start = new Date(formData.startDate);
+      const now = new Date();
+      const oneMinuteLater = new Date(now.getTime() + 60000);
+      
+      if (start < oneMinuteLater) {
+        newErrors.startDate = 'Ngày bắt đầu phải ít nhất 1 phút trong tương lai';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -148,17 +169,23 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
 
     setLoading(true);
     try {
+      // Get current user ID from localStorage or sessionStorage
+      const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || '{}');
+      const createdBy = user.userId || user.id || 1; // Default to 1 if no user ID
+
       const couponData = {
-        ...formData,
         code: formData.code.trim().toUpperCase(),
         name: formData.name.trim(),
         description: formData.description.trim(),
+        type: formData.type,
         value: parseFloat(formData.value),
         minimumAmount: formData.minimumAmount ? parseFloat(formData.minimumAmount) : null,
         maximumDiscount: formData.maximumDiscount ? parseFloat(formData.maximumDiscount) : null,
         usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null,
         startDate: new Date(formData.startDate).toISOString(),
-        endDate: new Date(formData.endDate).toISOString()
+        endDate: new Date(formData.endDate).toISOString(),
+        status: formData.status,
+        createdBy: createdBy
       };
 
       let result;
@@ -173,15 +200,23 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
       onSave(result);
     } catch (error) {
       console.error('Error saving coupon:', error);
+      let errorMessage = 'Có lỗi xảy ra. Vui lòng thử lại.';
+      
+      // Check if error has response data from our API
       if (error.response && error.response.data && error.response.data.error) {
-        const errorMessage = error.response.data.error;
-        if (errorMessage.includes('đã tồn tại')) {
-          setErrors({ code: 'Mã giảm giá đã tồn tại. Vui lòng chọn mã khác.' });
-        } else {
-          alert(errorMessage);
-        }
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      if (errorMessage.includes('đã tồn tại')) {
+        setErrors({ code: 'Mã giảm giá đã tồn tại. Vui lòng chọn mã khác.' });
+      } else if (errorMessage.includes('quá khứ')) {
+        setErrors({ startDate: 'Ngày bắt đầu không được là ngày trong quá khứ' });
+      } else if (errorMessage.includes('phải lớn hơn 0')) {
+        setErrors({ value: 'Giá trị giảm giá phải lớn hơn 0' });
       } else {
-        alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        alert(errorMessage);
       }
     } finally {
       setLoading(false);
