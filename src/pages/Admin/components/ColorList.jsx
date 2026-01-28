@@ -1,25 +1,30 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { colorAPI } from '../../../services/api';
-import './BrandList.css';
+import React, { useState, useEffect, useCallback } from "react";
+import { colorAPI } from "../../../services/api";
+import "./Brand/BrandList.css";
 
 const ColorList = ({ onEdit, onAdd, refreshTrigger }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
 
   const loadItems = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await colorAPI.getAll();
-      setItems(data);
+      const response = await colorAPI.getAll(currentPage, pageSize);
+      // Backend returns: { status: 0, message: "...", data: { content: [...], ... } }
+      const itemsList =
+        response?.data?.content || response?.content || response || [];
+      setItems(Array.isArray(itemsList) ? itemsList : []);
       setError(null);
     } catch (err) {
-      setError('Không thể tải màu sắc');
-      console.error('Error loading colors:', err);
+      setError("Không thể tải màu sắc");
+      console.error("Error loading colors:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
     loadItems();
@@ -30,9 +35,9 @@ const ColorList = ({ onEdit, onAdd, refreshTrigger }) => {
       try {
         await colorAPI.delete(id);
         await loadItems();
-        alert('Xóa thành công');
+        alert("Xóa thành công");
       } catch (err) {
-        alert('Không thể xóa màu.');
+        alert("Không thể xóa màu.");
       }
     }
   };
@@ -42,17 +47,27 @@ const ColorList = ({ onEdit, onAdd, refreshTrigger }) => {
       await colorAPI.toggleStatus(id);
       await loadItems();
     } catch (err) {
-      alert('Không thể thay đổi trạng thái.');
+      alert("Không thể thay đổi trạng thái.");
     }
   };
 
-  if (loading) return <div className="brand-list-loading"><p>Đang tải...</p></div>;
-  if (error) return <div className="brand-list-error"><p>{error}</p></div>;
+  if (loading)
+    return (
+      <div className="brand-list-loading">
+        <p>Đang tải...</p>
+      </div>
+    );
+  if (error)
+    return (
+      <div className="brand-list-error">
+        <p>{error}</p>
+      </div>
+    );
 
   const formatColorCode = (code) => {
-    if (!code) return '';
+    if (!code) return "";
     const trimmed = String(code).trim();
-    if (trimmed.startsWith('#')) return trimmed;
+    if (trimmed.startsWith("#")) return trimmed;
     return `#${trimmed}`;
   };
 
@@ -64,7 +79,9 @@ const ColorList = ({ onEdit, onAdd, refreshTrigger }) => {
           <div className="brand-count">Tổng: {items.length}</div>
         </div>
         <div className="header-right">
-          <button onClick={onAdd} className="btn-primary">Thêm màu mới</button>
+          <button onClick={onAdd} className="btn-primary">
+            Thêm màu mới
+          </button>
         </div>
       </div>
 
@@ -81,8 +98,12 @@ const ColorList = ({ onEdit, onAdd, refreshTrigger }) => {
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 ? <tr><td colSpan="6">Chưa có màu</td></tr> : (
-              items.map(it => {
+            {items.length === 0 ? (
+              <tr>
+                <td colSpan="6">Chưa có màu</td>
+              </tr>
+            ) : (
+              items.map((it) => {
                 const displayCode = formatColorCode(it.colorCode);
                 return (
                   <tr key={it.colorId}>
@@ -90,23 +111,29 @@ const ColorList = ({ onEdit, onAdd, refreshTrigger }) => {
                     <td>
                       <div
                         className="color-swatch"
-                        title={displayCode || 'Không có mã màu'}
+                        title={displayCode || "Không có mã màu"}
                         style={{
-                          backgroundColor: displayCode || 'transparent',
-                          border: displayCode ? '1px solid rgba(0,0,0,0.12)' : '1px dashed #e5e7eb'
+                          backgroundColor: displayCode || "transparent",
+                          border: displayCode
+                            ? "1px solid rgba(0,0,0,0.12)"
+                            : "1px dashed #e5e7eb",
                         }}
                       />
                     </td>
                     <td>{it.colorName}</td>
-                    <td>{displayCode || 'N/A'}</td>
+                    <td>{displayCode || "N/A"}</td>
                     <td>
-                      <button onClick={() => handleToggle(it.colorId)} className={`status-toggle ${it.status ? 'active' : 'inactive'}`}>
-                        {it.status ? 'Hoạt động' : 'Ẩn'}
+                      <button
+                        onClick={() => handleToggle(it.colorId)}
+                        className={`status-toggle ${it.status ? "active" : "inactive"}`}
+                      >
+                        {it.status ? "Hoạt động" : "Ẩn"}
                       </button>
                     </td>
                     <td>
-                      <button onClick={() => onEdit(it)} className="btn-edit">✏️</button>
-                      <button onClick={() => handleDelete(it.colorId, it.colorName)} className="btn-delete">🗑️</button>
+                      <button onClick={() => onEdit(it)} className="btn-edit">
+                        ✏️ Sửa
+                      </button>
                     </td>
                   </tr>
                 );
@@ -120,5 +147,3 @@ const ColorList = ({ onEdit, onAdd, refreshTrigger }) => {
 };
 
 export default ColorList;
-
-

@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { sizeAPI } from "../../../services/api";
-import "./Brand/BrandList.css";
+import { useNavigate } from "react-router-dom";
+import { materialAPI } from "../../../../services/api";
+import { useToast } from "../../../../context/useToast";
+import "../Brand/BrandList.css";
 
-const SizeList = ({ onEdit, onAdd, refreshTrigger }) => {
+const MaterialList = ({ onEdit, onAdd, refreshTrigger }) => {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,15 +16,15 @@ const SizeList = ({ onEdit, onAdd, refreshTrigger }) => {
   const loadItems = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await sizeAPI.getAll(currentPage, pageSize);
+      const response = await materialAPI.getAll(currentPage, pageSize);
       // Backend returns: { status: 0, message: "...", data: { content: [...], ... } }
       const itemsList =
         response?.data?.content || response?.content || response || [];
       setItems(Array.isArray(itemsList) ? itemsList : []);
       setError(null);
     } catch (err) {
-      setError("Không thể tải kích cỡ");
-      console.error("Error loading sizes:", err);
+      setError("Không thể tải chất liệu");
+      console.error("Error loading materials:", err);
     } finally {
       setLoading(false);
     }
@@ -31,23 +35,24 @@ const SizeList = ({ onEdit, onAdd, refreshTrigger }) => {
   }, [loadItems, refreshTrigger]);
 
   const handleDelete = async (id, name) => {
-    if (window.confirm(`Xóa kích cỡ "${name}"?`)) {
+    if (window.confirm(`Xóa chất liệu "${name}"?`)) {
       try {
-        await sizeAPI.delete(id);
+        await materialAPI.delete(id);
         await loadItems();
-        alert("Xóa thành công");
+        showToast("Xóa chất liệu thành công", "success");
       } catch (err) {
-        alert("Không thể xóa kích cỡ.");
+        showToast("Không thể xóa chất liệu.", "error");
       }
     }
   };
 
   const handleToggle = async (id) => {
     try {
-      await sizeAPI.toggleStatus(id);
+      await materialAPI.toggleStatus(id);
       await loadItems();
+      showToast("Cập nhật trạng thái thành công", "success");
     } catch (err) {
-      alert("Không thể thay đổi trạng thái.");
+      showToast("Không thể thay đổi trạng thái.", "error");
     }
   };
 
@@ -68,12 +73,12 @@ const SizeList = ({ onEdit, onAdd, refreshTrigger }) => {
     <div className="brand-list">
       <div className="brand-list-header">
         <div className="header-left">
-          <h2 className="section-title">Kích cỡ</h2>
+          <h2 className="section-title">Chất liệu</h2>
           <div className="brand-count">Tổng: {items.length}</div>
         </div>
         <div className="header-right">
           <button onClick={onAdd} className="btn-primary">
-            Thêm kích cỡ mới
+            Thêm chất liệu mới
           </button>
         </div>
       </div>
@@ -83,7 +88,8 @@ const SizeList = ({ onEdit, onAdd, refreshTrigger }) => {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Tên kích cỡ</th>
+              <th>Mã</th>
+              <th>Tên</th>
               <th>Trạng thái</th>
               <th>Thao tác</th>
             </tr>
@@ -91,16 +97,17 @@ const SizeList = ({ onEdit, onAdd, refreshTrigger }) => {
           <tbody>
             {items.length === 0 ? (
               <tr>
-                <td colSpan="4">Chưa có kích cỡ</td>
+                <td colSpan="5">Chưa có chất liệu</td>
               </tr>
             ) : (
               items.map((it) => (
-                <tr key={it.sizeId}>
-                  <td>{it.sizeId}</td>
-                  <td>{it.sizeName}</td>
+                <tr key={it.materialId}>
+                  <td>{it.materialId}</td>
+                  <td>{it.materialCode || "N/A"}</td>
+                  <td>{it.materialName}</td>
                   <td>
                     <button
-                      onClick={() => handleToggle(it.sizeId)}
+                      onClick={() => handleToggle(it.materialId)}
                       className={`status-toggle ${it.status ? "active" : "inactive"}`}
                     >
                       {it.status ? "Hoạt động" : "Ẩn"}
@@ -121,4 +128,4 @@ const SizeList = ({ onEdit, onAdd, refreshTrigger }) => {
   );
 };
 
-export default SizeList;
+export default MaterialList;
