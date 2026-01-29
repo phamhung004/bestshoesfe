@@ -43,7 +43,11 @@ const AdminSidebar = ({ activeSection, onSectionChange }) => {
       id: 'user-management',
       label: 'Quản lý người dùng',
       icon: '👥',
-      type: 'single'
+      type: 'parent',
+      children: [
+        { id: 'customers', label: 'Khách hàng' },
+        { id: 'employees', label: 'Nhân viên' }
+      ]
     },
     {
       id: 'returns',
@@ -59,7 +63,7 @@ const AdminSidebar = ({ activeSection, onSectionChange }) => {
       children: [
         { id: 'promotions', label: 'Đợt giảm giá' },
         { id: 'coupons', label: 'Mã giảm giá' }
-        
+
       ]
     }
   ];
@@ -93,50 +97,50 @@ const AdminSidebar = ({ activeSection, onSectionChange }) => {
   };
 
   return (
-    <div className="admin-sidebar">
-      <div className="sidebar-header">
-        <h2 className="sidebar-title">ADMIN PANEL</h2>
-      </div>
+      <div className="admin-sidebar">
+        <div className="sidebar-header">
+          <h2 className="sidebar-title">ADMIN PANEL</h2>
+        </div>
 
-      <nav className="sidebar-nav">
-        {menuItems.map((item) => (
-          <div key={item.id} className="menu-item-container">
-            <div
-              className={`menu-item ${item.type === 'parent' ? 'menu-item-parent' : ''} ${
-                activeSection === item.id || activeSection.startsWith(`${item.id}/`) ? 'menu-item-active' : ''
-              }`}
-              onClick={() => handleItemClick(item.id, item.type)}
-            >
-              <div className="menu-item-content">
-                <span className="menu-icon">{item.icon}</span>
-                <span className="menu-label">{item.label}</span>
-                {item.type === 'parent' && (
-                  <span className={`menu-arrow ${expandedItems[item.id] ? 'expanded' : ''}`}>
+        <nav className="sidebar-nav">
+          {menuItems.map((item) => (
+              <div key={item.id} className="menu-item-container">
+                <div
+                    className={`menu-item ${item.type === 'parent' ? 'menu-item-parent' : ''} ${
+                        activeSection === item.id || activeSection.startsWith(`${item.id}/`) ? 'menu-item-active' : ''
+                    }`}
+                    onClick={() => handleItemClick(item.id, item.type)}
+                >
+                  <div className="menu-item-content">
+                    <span className="menu-icon">{item.icon}</span>
+                    <span className="menu-label">{item.label}</span>
+                    {item.type === 'parent' && (
+                        <span className={`menu-arrow ${expandedItems[item.id] ? 'expanded' : ''}`}>
                     ▼
                   </span>
+                    )}
+                  </div>
+                </div>
+
+                {item.type === 'parent' && expandedItems[item.id] && (
+                    <div className="submenu">
+                      {item.children.map((child) => (
+                          <div
+                              key={child.id}
+                              className={`submenu-item ${
+                                  activeSection === `${item.id}/${child.id}` ? 'submenu-item-active' : ''
+                              }`}
+                              onClick={() => handleItemClick(child.id, 'child', item.id)}
+                          >
+                            <span className="submenu-label">{child.label}</span>
+                          </div>
+                      ))}
+                    </div>
                 )}
               </div>
-            </div>
-
-        {item.type === 'parent' && expandedItems[item.id] && (
-              <div className="submenu">
-                {item.children.map((child) => (
-                  <div
-                    key={child.id}
-                    className={`submenu-item ${
-                      activeSection === `${item.id}/${child.id}` ? 'submenu-item-active' : ''
-                    }`}
-                    onClick={() => handleItemClick(child.id, 'child', item.id)}
-                  >
-                    <span className="submenu-label">{child.label}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </nav>
-    </div>
+          ))}
+        </nav>
+      </div>
   );
 };
 
