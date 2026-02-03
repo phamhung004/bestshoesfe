@@ -22,11 +22,12 @@ import AdminRouter from "./pages/Admin/AdminRouter";
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isHomePage = location.pathname === "/";
 
   return (
     <div className="min-h-screen bg-white">
       <Toast />
-      {!isAdminRoute && <Header />}
+      {!isAdminRoute && !isHomePage && <Header />}
       <div className="main-container">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -40,7 +41,7 @@ function AppContent() {
           <Route path="/admin/*" element={<AdminRouter />} />
         </Routes>
       </div>
-      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && !isHomePage && <Footer />}
     </div>
   );
 }
