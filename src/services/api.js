@@ -596,6 +596,9 @@ export const analyticsAPI = {
   getInventoryHealth: () => apiCall('/analytics/inventory/health'),
 };
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 export default {
   brandAPI,
@@ -614,5 +617,8 @@ export default {
   employeeAPI,
   roleAPI,
   analyticsAPI,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 };
