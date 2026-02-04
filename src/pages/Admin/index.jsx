@@ -1,30 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeader from './components/AdminHeader';
+import DashboardOverview from './components/DashboardOverview';
 import AnalyticsDashboard from './components/Analytics/AnalyticsDashboard';
 import CouponList from './components/CouponList';
 import CouponForm from './components/CouponForm';
 import PromotionList from './components/PromotionList';
 import PromotionForm from './components/PromotionForm';
-import AdminStats from "./components/AdminStats";
-import ErrorBoundary from "./components/ErrorBoundary";
-import BrandList from "./components/Brand/BrandList";
-import BrandForm from "./components/Brand/BrandForm";
-import CategoryList from "./components/Category/CategoryList";
-import CategoryForm from "./components/Category/CategoryForm";
-import MaterialList from "./components/Material/MaterialList";
-import MaterialForm from "./components/Material/MaterialForm";
-import SizeList from "./components/SizeList";
-import SizeForm from "./components/SizeForm";
-import ColorList from "./components/ColorList";
-import ColorForm from "./components/ColorForm";
-import ProductList from "./components/Product/ProductList";
-import ProductForm from "./components/Product/ProductForm";
+import ErrorBoundary from './components/ErrorBoundary';
+import BrandList from './components/Brand/BrandList';
+import BrandForm from './components/Brand/BrandForm';
+import CategoryList from './components/Category/CategoryList';
+import CategoryForm from './components/Category/CategoryForm';
+import MaterialList from './components/Material/MaterialList';
+import MaterialForm from './components/Material/MaterialForm';
+import SizeList from './components/SizeList';
+import SizeForm from './components/SizeForm';
+import ColorList from './components/ColorList';
+import ColorForm from './components/ColorForm';
+import ProductList from './components/Product/ProductList';
+import ProductForm from './components/Product/ProductForm';
 import './AdminDashboard.css';
 
-
 const AdminDashboard = () => {
-  const [activeSection, setActiveSection] = useState("statistics");
+  const [activeSection, setActiveSection] = useState("dashboard");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const [showBrandForm, setShowBrandForm] = useState(false);
   const [editingBrand, setEditingBrand] = useState(null);
   const [refreshBrandList, setRefreshBrandList] = useState(false);
@@ -45,6 +46,15 @@ const AdminDashboard = () => {
   const [editingColor, setEditingColor] = useState(null);
   const [refreshColorList, setRefreshColorList] = useState(false);
 
+  // Toggle dark mode
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, [darkMode]);
+
   const handleAddBrand = () => {
     setEditingBrand(null);
     setShowBrandForm(true);
@@ -60,15 +70,18 @@ const AdminDashboard = () => {
     setEditingCategory(null);
     setShowCategoryForm(true);
   };
+
   const handleEditCategory = (category) => {
     setEditingCategory(category);
     setShowCategoryForm(true);
   };
+
   const handleSaveCategory = () => {
     setShowCategoryForm(false);
     setEditingCategory(null);
     setRefreshCategoryList((prev) => !prev);
   };
+
   const handleCancelCategoryForm = () => {
     setShowCategoryForm(false);
     setEditingCategory(null);
@@ -79,15 +92,18 @@ const AdminDashboard = () => {
     setEditingMaterial(null);
     setShowMaterialForm(true);
   };
+
   const handleEditMaterial = (material) => {
     setEditingMaterial(material);
     setShowMaterialForm(true);
   };
+
   const handleSaveMaterial = () => {
     setShowMaterialForm(false);
     setEditingMaterial(null);
     setRefreshMaterialList((prev) => !prev);
   };
+
   const handleCancelMaterialForm = () => {
     setShowMaterialForm(false);
     setEditingMaterial(null);
@@ -98,15 +114,18 @@ const AdminDashboard = () => {
     setEditingSize(null);
     setShowSizeForm(true);
   };
+
   const handleEditSize = (size) => {
     setEditingSize(size);
     setShowSizeForm(true);
   };
+
   const handleSaveSize = () => {
     setShowSizeForm(false);
     setEditingSize(null);
     setRefreshSizeList((prev) => !prev);
   };
+
   const handleCancelSizeForm = () => {
     setShowSizeForm(false);
     setEditingSize(null);
@@ -117,15 +136,18 @@ const AdminDashboard = () => {
     setEditingColor(null);
     setShowColorForm(true);
   };
+
   const handleEditColor = (color) => {
     setEditingColor(color);
     setShowColorForm(true);
   };
+
   const handleSaveColor = () => {
     setShowColorForm(false);
     setEditingColor(null);
     setRefreshColorList((prev) => !prev);
   };
+
   const handleCancelColorForm = () => {
     setShowColorForm(false);
     setEditingColor(null);
@@ -135,10 +157,12 @@ const AdminDashboard = () => {
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [refreshProductList, setRefreshProductList] = useState(false);
+
   // Coupon handlers
   const [showCouponForm, setShowCouponForm] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [refreshCouponList, setRefreshCouponList] = useState(false);
+
   // Promotion handlers
   const [showPromotionForm, setShowPromotionForm] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState(null);
@@ -212,7 +236,7 @@ const AdminDashboard = () => {
   const handleSaveBrand = () => {
     setShowBrandForm(false);
     setEditingBrand(null);
-    // Trigger refresh cho BrandList
+    // Trigger refresh for BrandList
     setRefreshBrandList((prev) => !prev);
   };
 
@@ -221,15 +245,57 @@ const AdminDashboard = () => {
     setEditingBrand(null);
   };
 
+  // Get page title based on active section
+  const getPageTitle = () => {
+    const titles = {
+      'dashboard': 'Tổng quan',
+      'analytics': 'Phân tích nâng cao',
+      'product-management/products': 'Quản lý sản phẩm',
+      'product-management/brands': 'Quản lý thương hiệu',
+      'product-management/categories': 'Quản lý danh mục',
+      'product-management/colors': 'Quản lý màu sắc',
+      'product-management/sizes': 'Quản lý kích cỡ',
+      'product-management/materials': 'Quản lý chất liệu',
+      'order-management': 'Quản lý đơn hàng',
+      'user-management': 'Quản lý khách hàng',
+      'returns': 'Quản lý trả hàng',
+      'in-store-sales': 'Bán hàng tại quầy',
+      'promotions/promotions-list': 'Đợt giảm giá',
+      'promotions/coupons': 'Mã giảm giá',
+    };
+    return titles[activeSection] || 'Dashboard';
+  };
+
+  // Get page subtitle based on active section
+  const getPageSubtitle = () => {
+    const subtitles = {
+      'dashboard': 'Chào mừng bạn trở lại! Dưới đây là thống kê doanh nghiệp của bạn.',
+      'analytics': 'Theo dõi và phân tích hiệu suất kinh doanh chi tiết.',
+      'product-management/products': 'Quản lý và cập nhật thông tin sản phẩm.',
+      'product-management/brands': 'Thêm và chỉnh sửa thương hiệu sản phẩm.',
+      'product-management/categories': 'Phân loại và quản lý danh mục sản phẩm.',
+      'product-management/colors': 'Quản lý các màu sắc có sẵn.',
+      'product-management/sizes': 'Quản lý các kích cỡ giày.',
+      'product-management/materials': 'Quản lý chất liệu sản phẩm.',
+      'order-management': 'Theo dõi và xử lý đơn hàng.',
+      'user-management': 'Quản lý thông tin khách hàng.',
+      'returns': 'Xử lý yêu cầu trả hàng.',
+      'in-store-sales': 'Bán hàng trực tiếp tại cửa hàng.',
+      'promotions/promotions-list': 'Tạo và quản lý đợt giảm giá.',
+      'promotions/coupons': 'Tạo và quản lý mã giảm giá.',
+    };
+    return subtitles[activeSection] || 'Quản lý và điều hành';
+  };
+
   const renderContent = () => {
     switch (activeSection) {
-      case "analytics":
+      case 'analytics':
         return <AnalyticsDashboard />;
 
-      case "statistics":
-        return <AdminStats />;
+      case 'dashboard':
+        return <DashboardOverview />;
 
-      case "product-management/products":
+      case 'product-management/products':
         return (
           <ProductList
             onEdit={handleEditProduct}
@@ -238,7 +304,7 @@ const AdminDashboard = () => {
           />
         );
 
-      case "product-management/colors":
+      case 'product-management/colors':
         return (
           <ColorList
             onEdit={handleEditColor}
@@ -247,7 +313,7 @@ const AdminDashboard = () => {
           />
         );
 
-      case "product-management/sizes":
+      case 'product-management/sizes':
         return (
           <SizeList
             onEdit={handleEditSize}
@@ -256,7 +322,7 @@ const AdminDashboard = () => {
           />
         );
 
-      case "product-management/materials":
+      case 'product-management/materials':
         return (
           <MaterialList
             onEdit={handleEditMaterial}
@@ -265,7 +331,7 @@ const AdminDashboard = () => {
           />
         );
 
-      case "product-management/brands":
+      case 'product-management/brands':
         return (
           <BrandList
             onEdit={handleEditBrand}
@@ -274,7 +340,7 @@ const AdminDashboard = () => {
           />
         );
 
-      case "product-management/categories":
+      case 'product-management/categories':
         return (
           <CategoryList
             onEdit={handleEditCategory}
@@ -283,7 +349,7 @@ const AdminDashboard = () => {
           />
         );
 
-      case "in-store-sales":
+      case 'in-store-sales':
         return (
           <div className="admin-content-section">
             <h2 className="section-title">Bán hàng tại quầy</h2>
@@ -295,7 +361,7 @@ const AdminDashboard = () => {
           </div>
         );
 
-      case "order-management":
+      case 'order-management':
         return (
           <div className="admin-content-section">
             <h2 className="section-title">Quản lý đơn hàng</h2>
@@ -307,10 +373,10 @@ const AdminDashboard = () => {
           </div>
         );
 
-      case "user-management":
+      case 'user-management':
         return (
           <div className="admin-content-section">
-            <h2 className="section-title">Quản lý người dùng</h2>
+            <h2 className="section-title">Quản lý khách hàng</h2>
             <div className="placeholder-content">
               <div className="placeholder-icon">👥</div>
               <h3>Quản lý người dùng</h3>
@@ -319,7 +385,7 @@ const AdminDashboard = () => {
           </div>
         );
 
-      case "returns":
+      case 'returns':
         return (
           <div className="admin-content-section">
             <h2 className="section-title">Quản lý trả hàng</h2>
@@ -331,38 +397,21 @@ const AdminDashboard = () => {
           </div>
         );
 
-      case "product-management/brands":
-        return (
-          <BrandList
-            onEdit={handleEditBrand}
-            onAdd={handleAddBrand}
-            refreshTrigger={refreshBrandList}
-          />
-        );
-      case "product-management/categories":
-        return (
-          <CategoryList
-            onEdit={handleEditCategory}
-            onAdd={handleAddCategory}
-            refreshTrigger={refreshCategoryList}
-          />
-        );
-
-      case 'sales-management/coupons':
-        return (
-          <CouponList
-            onEdit={handleEditCoupon}
-            onAdd={handleAddCoupon}
-            refreshTrigger={refreshCouponList}
-          />
-        );
-
-      case 'sales-management/promotions':
+      case 'promotions/promotions-list':
         return (
           <PromotionList
             onEdit={handleEditPromotion}
             onAdd={handleAddPromotion}
             refreshTrigger={refreshPromotionList}
+          />
+        );
+
+      case 'promotions/coupons':
+        return (
+          <CouponList
+            onEdit={handleEditCoupon}
+            onAdd={handleAddCoupon}
+            refreshTrigger={refreshCouponList}
           />
         );
 
@@ -377,14 +426,25 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="admin-dashboard">
+    <div className={`admin-dashboard ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <AdminSidebar
         activeSection={activeSection}
         onSectionChange={setActiveSection}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
       <div className="admin-main">
-        <AdminHeader />
-        <main className="admin-content">{renderContent()}</main>
+        <AdminHeader
+          title={getPageTitle()}
+          subtitle={getPageSubtitle()}
+          darkMode={darkMode}
+          onToggleDarkMode={() => setDarkMode(!darkMode)}
+        />
+        <main className="admin-content">
+          <ErrorBoundary>
+            {renderContent()}
+          </ErrorBoundary>
+        </main>
       </div>
 
       {showBrandForm && (
@@ -395,6 +455,7 @@ const AdminDashboard = () => {
           isEditing={!!editingBrand}
         />
       )}
+
       {showCategoryForm && (
         <CategoryForm
           category={editingCategory}
@@ -403,6 +464,7 @@ const AdminDashboard = () => {
           isEditing={!!editingCategory}
         />
       )}
+
       {showMaterialForm && (
         <MaterialForm
           material={editingMaterial}
@@ -411,6 +473,7 @@ const AdminDashboard = () => {
           isEditing={!!editingMaterial}
         />
       )}
+
       {showSizeForm && (
         <SizeForm
           size={editingSize}
@@ -419,6 +482,7 @@ const AdminDashboard = () => {
           isEditing={!!editingSize}
         />
       )}
+
       {showColorForm && (
         <ColorForm
           color={editingColor}
@@ -427,6 +491,7 @@ const AdminDashboard = () => {
           isEditing={!!editingColor}
         />
       )}
+
       {showProductForm && (
         <ErrorBoundary>
           <ProductForm
@@ -437,6 +502,7 @@ const AdminDashboard = () => {
           />
         </ErrorBoundary>
       )}
+
       {showCouponForm && (
         <CouponForm
           coupon={editingCoupon}
@@ -445,6 +511,7 @@ const AdminDashboard = () => {
           isEditing={!!editingCoupon}
         />
       )}
+
       {showPromotionForm && (
         <PromotionForm
           promotion={editingPromotion}

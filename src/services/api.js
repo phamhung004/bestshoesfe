@@ -421,8 +421,6 @@ export const promotionAPI = {
   }),
 };
 
-<<<<<<< Updated upstream
-=======
 // Customer API functions
 export const customerAPI = {
   getAll: () => apiCall('/customers', { method: 'GET' }),
@@ -597,6 +595,9 @@ export const analyticsAPI = {
 };
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -611,13 +612,14 @@ export default {
   productImageAPI,
   couponAPI,
   promotionAPI,
-<<<<<<< Updated upstream
-=======
   customerAPI,
   employeeAPI,
   roleAPI,
   analyticsAPI,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
