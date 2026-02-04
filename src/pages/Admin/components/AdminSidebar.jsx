@@ -8,9 +8,15 @@ const AdminSidebar = ({ activeSection, onSectionChange }) => {
 
   const menuItems = [
     {
-      id: 'statistics',
-      label: 'Thống kê',
+      id: 'analytics',
+      label: 'Thống kê nâng cao',
       icon: '📊',
+      type: 'single'
+    },
+    {
+      id: 'statistics',
+      label: 'Thống kê cơ bản',
+      icon: '📈',
       type: 'single'
     },
     {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeader from './components/AdminHeader';
+import AnalyticsDashboard from './components/Analytics/AnalyticsDashboard';
 import CouponList from './components/CouponList';
 import CouponForm from './components/CouponForm';
 import PromotionList from './components/PromotionList';
@@ -222,6 +223,9 @@ const AdminDashboard = () => {
 
   const renderContent = () => {
     switch (activeSection) {
+      case "analytics":
+        return <AnalyticsDashboard />;
+
       case "statistics":
         return <AdminStats />;
 

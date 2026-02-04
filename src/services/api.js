@@ -421,6 +421,182 @@ export const promotionAPI = {
   }),
 };
 
+<<<<<<< Updated upstream
+=======
+// Customer API functions
+export const customerAPI = {
+  getAll: () => apiCall('/customers', { method: 'GET' }),
+  getById: (id) => apiCall(`/customers/${id}`, { method: 'GET' }),
+  create: (customer) => apiCall('/customers', { method: 'POST', body: JSON.stringify(customer) }),
+  update: (id, customer) => apiCall(`/customers/${id}`, { method: 'PUT', body: JSON.stringify(customer) }),
+  delete: (id) => apiCall(`/customers/${id}`, { method: 'DELETE' }),
+};
+
+// Employee API functions
+export const employeeAPI = {
+  getAll: () => apiCall('/employees', { method: 'GET' }),
+  getById: (id) => apiCall(`/employees/${id}`, { method: 'GET' }),
+  create: (employee) => apiCall('/employees', { method: 'POST', body: JSON.stringify(employee) }),
+  update: (id, employee) => apiCall(`/employees/${id}`, { method: 'PUT', body: JSON.stringify(employee) }),
+  delete: (id) => apiCall(`/employees/${id}`, { method: 'DELETE' }),
+};
+
+// Roles API functions
+export const roleAPI = {
+  getAll: () => apiCall('/roles', { method: 'GET' }),
+  getById: (id) => apiCall(`/roles/${id}`, { method: 'GET' }),
+};
+
+// Analytics API functions
+export const analyticsAPI = {
+  // Sales analytics
+  getSalesOverview: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    if (params.brandId) queryParams.append('brandId', params.brandId);
+    if (params.categoryId) queryParams.append('categoryId', params.categoryId);
+    return apiCall(`/analytics/sales/overview?${queryParams.toString()}`);
+  },
+
+  getRevenueByPeriod: (period = 'day', params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    return apiCall(`/analytics/sales/revenue/${period}?${queryParams.toString()}`);
+  },
+
+  getRevenueByBrand: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    return apiCall(`/analytics/sales/by-brand?${queryParams.toString()}`);
+  },
+
+  getRevenueByCategory: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    return apiCall(`/analytics/sales/by-category?${queryParams.toString()}`);
+  },
+
+  getRevenueBySize: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    return apiCall(`/analytics/sales/by-size?${queryParams.toString()}`);
+  },
+
+  getRevenueByColor: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    return apiCall(`/analytics/sales/by-color?${queryParams.toString()}`);
+  },
+
+  // Product analytics
+  getProductPerformance: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    if (params.limit) queryParams.append('limit', params.limit);
+    return apiCall(`/analytics/products/performance?${queryParams.toString()}`);
+  },
+
+  getBestSellingProducts: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.limit) queryParams.append('limit', params.limit);
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    return apiCall(`/analytics/products/best-selling?${queryParams.toString()}`);
+  },
+
+  getWorstSellingProducts: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.limit) queryParams.append('limit', params.limit);
+    return apiCall(`/analytics/products/worst-selling?${queryParams.toString()}`);
+  },
+
+  getInventoryTurnover: () => apiCall('/analytics/products/inventory-turnover'),
+
+  getLowStockProducts: (threshold = 10) => apiCall(`/analytics/products/low-stock?threshold=${threshold}`),
+
+  getDeadStockProducts: (days = 60) => apiCall(`/analytics/products/dead-stock?days=${days}`),
+
+  // Customer analytics
+  getCustomerOverview: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    return apiCall(`/analytics/customers/overview?${queryParams.toString()}`);
+  },
+
+  getNewVsReturningCustomers: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    return apiCall(`/analytics/customers/new-vs-returning?${queryParams.toString()}`);
+  },
+
+  getCustomerPurchaseFrequency: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    return apiCall(`/analytics/customers/purchase-frequency?${queryParams.toString()}`);
+  },
+
+  getCustomerLifetimeValue: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.limit) queryParams.append('limit', params.limit);
+    return apiCall(`/analytics/customers/lifetime-value?${queryParams.toString()}`);
+  },
+
+  getGeographicDistribution: () => apiCall('/analytics/customers/geographic'),
+
+  // Conversion funnel
+  getConversionFunnel: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    return apiCall(`/analytics/conversion/funnel?${queryParams.toString()}`);
+  },
+
+  // Traffic analytics
+  getHourlyTraffic: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.date) queryParams.append('date', params.date);
+    return apiCall(`/analytics/traffic/hourly?${queryParams.toString()}`);
+  },
+
+  getWeeklyPattern: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    return apiCall(`/analytics/traffic/weekly?${queryParams.toString()}`);
+  },
+
+  // Forecast
+  getSalesForecast: (days = 30) => apiCall(`/analytics/forecast/sales?days=${days}`),
+
+  // KPI
+  getKPIs: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    return apiCall(`/analytics/kpis?${queryParams.toString()}`);
+  },
+
+  // Comparison
+  getComparison: (period = 'week') => apiCall(`/analytics/comparison/${period}`),
+
+  // AI Insights
+  getAIInsights: () => apiCall('/analytics/insights'),
+
+  // Inventory health
+  getInventoryHealth: () => apiCall('/analytics/inventory/health'),
+};
+
+>>>>>>> Stashed changes
 export default {
   brandAPI,
   categoryAPI,
@@ -432,4 +608,11 @@ export default {
   productImageAPI,
   couponAPI,
   promotionAPI,
+<<<<<<< Updated upstream
+=======
+  customerAPI,
+  employeeAPI,
+  roleAPI,
+  analyticsAPI,
+>>>>>>> Stashed changes
 };
