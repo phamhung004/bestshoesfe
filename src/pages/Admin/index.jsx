@@ -41,10 +41,8 @@ import ProductForm from "./components/Product/ProductForm";
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
-  // const [activeSection, setActiveSection] = useState("dashboard");
-  // const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  // const [darkMode, setDarkMode] = useState(false);
   const [activeSection, setActiveSection] = useState("statistics");
+  const [darkMode, setDarkMode] = useState(false);
   // User management state
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
