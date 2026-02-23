@@ -7,25 +7,49 @@ import CouponList from './components/CouponList';
 import CouponForm from './components/CouponForm';
 import PromotionList from './components/PromotionList';
 import PromotionForm from './components/PromotionForm';
-import ErrorBoundary from './components/ErrorBoundary';
-import BrandList from './components/Brand/BrandList';
-import BrandForm from './components/Brand/BrandForm';
-import CategoryList from './components/Category/CategoryList';
-import CategoryForm from './components/Category/CategoryForm';
-import MaterialList from './components/Material/MaterialList';
-import MaterialForm from './components/Material/MaterialForm';
-import SizeList from './components/SizeList';
-import SizeForm from './components/SizeForm';
-import ColorList from './components/ColorList';
-import ColorForm from './components/ColorForm';
-import ProductList from './components/Product/ProductList';
-import ProductForm from './components/Product/ProductForm';
+// import ErrorBoundary from './components/ErrorBoundary';
+// import BrandList from './components/Brand/BrandList';
+// import BrandForm from './components/Brand/BrandForm';
+// import CategoryList from './components/Category/CategoryList';
+// import CategoryForm from './components/Category/CategoryForm';
+// import MaterialList from './components/Material/MaterialList';
+// import MaterialForm from './components/Material/MaterialForm';
+// import SizeList from './components/SizeList';
+// import SizeForm from './components/SizeForm';
+// import ColorList from './components/ColorList';
+// import ColorForm from './components/ColorForm';
+// import ProductList from './components/Product/ProductList';
+// import ProductForm from './components/Product/ProductForm';
+import AdminStats from "./components/AdminStats";
+import CustomerList from "./components/User/CustomerList";
+import CustomerForm from "./components/User/CustomerForm";
+import EmployeeList from "./components/User/EmployeeList";
+import EmployeeForm from "./components/User/EmployeeForm";
+import ErrorBoundary from "./components/ErrorBoundary";
+import BrandList from "./components/Brand/BrandList";
+import BrandForm from "./components/Brand/BrandForm";
+import CategoryList from "./components/Category/CategoryList";
+import CategoryForm from "./components/Category/CategoryForm";
+import MaterialList from "./components/Material/MaterialList";
+import MaterialForm from "./components/Material/MaterialForm";
+import SizeList from "./components/SizeList";
+import SizeForm from "./components/SizeForm";
+import ColorList from "./components/ColorList";
+import ColorForm from "./components/ColorForm";
+import ProductList from "./components/Product/ProductList";
+import ProductForm from "./components/Product/ProductForm";
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
-  const [activeSection, setActiveSection] = useState("dashboard");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  // const [activeSection, setActiveSection] = useState("dashboard");
+  // const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // const [darkMode, setDarkMode] = useState(false);
+  const [activeSection, setActiveSection] = useState("statistics");
+  // User management state
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [showEmployeeForm, setShowEmployeeForm] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState(null);
   const [showBrandForm, setShowBrandForm] = useState(false);
   const [editingBrand, setEditingBrand] = useState(null);
   const [refreshBrandList, setRefreshBrandList] = useState(false);
@@ -297,113 +321,154 @@ const AdminDashboard = () => {
 
       case 'product-management/products':
         return (
-          <ProductList
-            onEdit={handleEditProduct}
-            onAdd={handleAddProduct}
-            refreshTrigger={refreshProductList}
-          />
+            <ProductList
+                onEdit={handleEditProduct}
+                onAdd={handleAddProduct}
+                refreshTrigger={refreshProductList}
+            />
         );
 
       case 'product-management/colors':
         return (
-          <ColorList
-            onEdit={handleEditColor}
-            onAdd={handleAddColor}
-            refreshTrigger={refreshColorList}
-          />
+            <ColorList
+                onEdit={handleEditColor}
+                onAdd={handleAddColor}
+                refreshTrigger={refreshColorList}
+            />
         );
 
       case 'product-management/sizes':
         return (
-          <SizeList
-            onEdit={handleEditSize}
-            onAdd={handleAddSize}
-            refreshTrigger={refreshSizeList}
-          />
+            <SizeList
+                onEdit={handleEditSize}
+                onAdd={handleAddSize}
+                refreshTrigger={refreshSizeList}
+            />
         );
 
       case 'product-management/materials':
         return (
-          <MaterialList
-            onEdit={handleEditMaterial}
-            onAdd={handleAddMaterial}
-            refreshTrigger={refreshMaterialList}
-          />
+            <MaterialList
+                onEdit={handleEditMaterial}
+                onAdd={handleAddMaterial}
+                refreshTrigger={refreshMaterialList}
+            />
         );
 
       case 'product-management/brands':
         return (
-          <BrandList
-            onEdit={handleEditBrand}
-            onAdd={handleAddBrand}
-            refreshTrigger={refreshBrandList}
-          />
+            <BrandList
+                onEdit={handleEditBrand}
+                onAdd={handleAddBrand}
+                refreshTrigger={refreshBrandList}
+            />
         );
 
       case 'product-management/categories':
         return (
-          <CategoryList
-            onEdit={handleEditCategory}
-            onAdd={handleAddCategory}
-            refreshTrigger={refreshCategoryList}
-          />
+            <CategoryList
+                onEdit={handleEditCategory}
+                onAdd={handleAddCategory}
+                refreshTrigger={refreshCategoryList}
+            />
         );
 
       case 'in-store-sales':
         return (
-          <div className="admin-content-section">
-            <h2 className="section-title">Bán hàng tại quầy</h2>
-            <div className="placeholder-content">
-              <div className="placeholder-icon">🏪</div>
-              <h3>Chức năng bán hàng tại quầy</h3>
-              <p>Đang phát triển...</p>
+            <div className="admin-content-section">
+              <h2 className="section-title">Bán hàng tại quầy</h2>
+              <div className="placeholder-content">
+                <div className="placeholder-icon">🏪</div>
+                <h3>Chức năng bán hàng tại quầy</h3>
+                <p>Đang phát triển...</p>
+              </div>
             </div>
-          </div>
         );
 
       case 'order-management':
         return (
-          <div className="admin-content-section">
-            <h2 className="section-title">Quản lý đơn hàng</h2>
-            <div className="placeholder-content">
-              <div className="placeholder-icon">📋</div>
-              <h3>Quản lý đơn hàng</h3>
-              <p>Đang phát triển...</p>
+            <div className="admin-content-section">
+              <h2 className="section-title">Quản lý đơn hàng</h2>
+              <div className="placeholder-content">
+                <div className="placeholder-icon">📋</div>
+                <h3>Quản lý đơn hàng</h3>
+                <p>Đang phát triển...</p>
+              </div>
             </div>
-          </div>
         );
 
-      case 'user-management':
+      // case 'user-management':
+      //   return (
+      //     <div className="admin-content-section">
+      //       <h2 className="section-title">Quản lý khách hàng</h2>
+      //       <div className="placeholder-content">
+      //         <div className="placeholder-icon">👥</div>
+      //         <h3>Quản lý người dùng</h3>
+      //         <p>Đang phát triển...</p>
+      //       </div>
+      //     </div>
+      case "user-management/customers":
         return (
-          <div className="admin-content-section">
-            <h2 className="section-title">Quản lý khách hàng</h2>
-            <div className="placeholder-content">
-              <div className="placeholder-icon">👥</div>
-              <h3>Quản lý người dùng</h3>
-              <p>Đang phát triển...</p>
-            </div>
-          </div>
+            <CustomerList
+                onEdit={(c) => { setEditingCustomer(c); setShowCustomerForm(true); }}
+                onAdd={() => { setEditingCustomer(null); setShowCustomerForm(true); }}
+            />
+        );
+
+      case "user-management/employees":
+        return (
+            <EmployeeList
+                onEdit={(e) => { setEditingEmployee(e); setShowEmployeeForm(true); }}
+                onAdd={() => { setEditingEmployee(null); setShowEmployeeForm(true); }}
+            />
         );
 
       case 'returns':
         return (
-          <div className="admin-content-section">
-            <h2 className="section-title">Quản lý trả hàng</h2>
-            <div className="placeholder-content">
-              <div className="placeholder-icon">↩️</div>
-              <h3>Quản lý trả hàng</h3>
-              <p>Đang phát triển...</p>
+            <div className="admin-content-section">
+              <h2 className="section-title">Quản lý trả hàng</h2>
+              <div className="placeholder-content">
+                <div className="placeholder-icon">↩️</div>
+                <h3>Quản lý trả hàng</h3>
+                <p>Đang phát triển...</p>
+              </div>
             </div>
-          </div>
         );
 
-      case 'promotions/promotions-list':
+      // case 'promotions/promotions-list':
+      case "product-management/brands":
         return (
-          <PromotionList
-            onEdit={handleEditPromotion}
-            onAdd={handleAddPromotion}
-            refreshTrigger={refreshPromotionList}
-          />
+            <BrandList
+                onEdit={handleEditBrand}
+                onAdd={handleAddBrand}
+                refreshTrigger={refreshBrandList}
+            />
+        );
+      case "product-management/categories":
+        return (
+            <CategoryList
+                onEdit={handleEditCategory}
+                onAdd={handleAddCategory}
+                refreshTrigger={refreshCategoryList}
+            />
+        );
+
+      case 'sales-management/coupons':
+        return (
+            <CouponList
+                onEdit={handleEditCoupon}
+                onAdd={handleAddCoupon}
+                refreshTrigger={refreshCouponList}
+            />
+        );
+
+      case 'sales-management/promotions':
+        return (
+            <PromotionList
+                onEdit={handleEditPromotion}
+                onAdd={handleAddPromotion}
+                refreshTrigger={refreshPromotionList}
+            />
         );
 
       case 'promotions/coupons':
@@ -417,110 +482,205 @@ const AdminDashboard = () => {
 
       default:
         return (
-          <div className="admin-content-section">
-            <h2 className="section-title">Chào mừng đến trang quản trị</h2>
-            <p>Chọn một mục từ sidebar để bắt đầu.</p>
-          </div>
+            <div className="admin-content-section">
+              <h2 className="section-title">Chào mừng đến trang quản trị</h2>
+              <p>Chọn một mục từ sidebar để bắt đầu.</p>
+            </div>
         );
     }
   };
 
   return (
-    <div className={`admin-dashboard ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      <AdminSidebar
-        activeSection={activeSection}
-        onSectionChange={setActiveSection}
-        isCollapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-      />
-      <div className="admin-main">
-        <AdminHeader
-          title={getPageTitle()}
-          subtitle={getPageSubtitle()}
-          darkMode={darkMode}
-          onToggleDarkMode={() => setDarkMode(!darkMode)}
+    // <div className={`admin-dashboard ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+    //   <AdminSidebar
+    //     activeSection={activeSection}
+    //     onSectionChange={setActiveSection}
+    //     isCollapsed={sidebarCollapsed}
+    //     onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+    //   />
+    //   <div className="admin-main">
+    //     <AdminHeader
+    //       title={getPageTitle()}
+    //       subtitle={getPageSubtitle()}
+    //       darkMode={darkMode}
+    //       onToggleDarkMode={() => setDarkMode(!darkMode)}
+    //     />
+    //     <main className="admin-content">
+    //       <ErrorBoundary>
+    //         {renderContent()}
+    //       </ErrorBoundary>
+    //     </main>
+    //   </div>
+
+    //   {showBrandForm && (
+    //     <BrandForm
+    //       brand={editingBrand}
+    //       onSave={handleSaveBrand}
+    //       onCancel={handleCancelBrandForm}
+    //       isEditing={!!editingBrand}
+    //     />
+    //   )}
+
+    //   {showCategoryForm && (
+    //     <CategoryForm
+    //       category={editingCategory}
+    //       onSave={handleSaveCategory}
+    //       onCancel={handleCancelCategoryForm}
+    //       isEditing={!!editingCategory}
+    //     />
+    //   )}
+
+    //   {showMaterialForm && (
+    //     <MaterialForm
+    //       material={editingMaterial}
+    //       onSave={handleSaveMaterial}
+    //       onCancel={handleCancelMaterialForm}
+    //       isEditing={!!editingMaterial}
+    //     />
+    //   )}
+
+    //   {showSizeForm && (
+    //     <SizeForm
+    //       size={editingSize}
+    //       onSave={handleSaveSize}
+    //       onCancel={handleCancelSizeForm}
+    //       isEditing={!!editingSize}
+    //     />
+    //   )}
+
+    //   {showColorForm && (
+    //     <ColorForm
+    //       color={editingColor}
+    //       onSave={handleSaveColor}
+    //       onCancel={handleCancelColorForm}
+    //       isEditing={!!editingColor}
+    //     />
+    //   )}
+
+    //   {showProductForm && (
+    //     <ErrorBoundary>
+    //       <ProductForm
+    //         product={editingProduct}
+    //         onSave={handleSaveProduct}
+    //         onCancel={handleCancelProductForm}
+    //         isEditing={!!editingProduct}
+    //       />
+    //     </ErrorBoundary>
+    //   )}
+
+    //   {showCouponForm && (
+    //     <CouponForm
+    //       coupon={editingCoupon}
+    //       onSave={handleSaveCoupon}
+    //       onCancel={handleCancelCouponForm}
+    //       isEditing={!!editingCoupon}
+    //     />
+    //   )}
+
+    //   {showPromotionForm && (
+    //     <PromotionForm
+    //       promotion={editingPromotion}
+    //       onSave={handleSavePromotion}
+    //       onCancel={handleCancelPromotionForm}
+    //       isEditing={!!editingPromotion}
+    //     />
+    //   )}
+    // </div>
+      <div className="admin-dashboard">
+        <AdminSidebar
+            activeSection={activeSection}
+            onSectionChange={setActiveSection}
         />
-        <main className="admin-content">
-          <ErrorBoundary>
-            {renderContent()}
-          </ErrorBoundary>
-        </main>
+        <div className="admin-main">
+          <AdminHeader />
+          <main className="admin-content">{renderContent()}</main>
+        </div>
+
+        {showBrandForm && (
+            <BrandForm
+                brand={editingBrand}
+                onSave={handleSaveBrand}
+                onCancel={handleCancelBrandForm}
+                isEditing={!!editingBrand}
+            />
+        )}
+        {showCategoryForm && (
+            <CategoryForm
+                category={editingCategory}
+                onSave={handleSaveCategory}
+                onCancel={handleCancelCategoryForm}
+                isEditing={!!editingCategory}
+            />
+        )}
+        {showMaterialForm && (
+            <MaterialForm
+                material={editingMaterial}
+                onSave={handleSaveMaterial}
+                onCancel={handleCancelMaterialForm}
+                isEditing={!!editingMaterial}
+            />
+        )}
+        {showSizeForm && (
+            <SizeForm
+                size={editingSize}
+                onSave={handleSaveSize}
+                onCancel={handleCancelSizeForm}
+                isEditing={!!editingSize}
+            />
+        )}
+        {showColorForm && (
+            <ColorForm
+                color={editingColor}
+                onSave={handleSaveColor}
+                onCancel={handleCancelColorForm}
+                isEditing={!!editingColor}
+            />
+        )}
+        {showProductForm && (
+            <ErrorBoundary>
+              <ProductForm
+                  product={editingProduct}
+                  onSave={handleSaveProduct}
+                  onCancel={handleCancelProductForm}
+                  isEditing={!!editingProduct}
+              />
+            </ErrorBoundary>
+        )}
+        {showCouponForm && (
+            <CouponForm
+                coupon={editingCoupon}
+                onSave={handleSaveCoupon}
+                onCancel={handleCancelCouponForm}
+                isEditing={!!editingCoupon}
+            />
+        )}
+        {showPromotionForm && (
+            <PromotionForm
+                promotion={editingPromotion}
+                onSave={handleSavePromotion}
+                onCancel={handleCancelPromotionForm}
+                isEditing={!!editingPromotion}
+            />
+        )}
+
+        {showCustomerForm && (
+            <CustomerForm
+                customer={editingCustomer}
+                onSave={() => { setShowCustomerForm(false); setEditingCustomer(null); }}
+                onCancel={() => { setShowCustomerForm(false); setEditingCustomer(null); }}
+                isEditing={!!editingCustomer}
+            />
+        )}
+
+        {showEmployeeForm && (
+            <EmployeeForm
+                employee={editingEmployee}
+                onSave={() => { setShowEmployeeForm(false); setEditingEmployee(null); }}
+                onCancel={() => { setShowEmployeeForm(false); setEditingEmployee(null); }}
+                isEditing={!!editingEmployee}
+            />
+        )}
       </div>
-
-      {showBrandForm && (
-        <BrandForm
-          brand={editingBrand}
-          onSave={handleSaveBrand}
-          onCancel={handleCancelBrandForm}
-          isEditing={!!editingBrand}
-        />
-      )}
-
-      {showCategoryForm && (
-        <CategoryForm
-          category={editingCategory}
-          onSave={handleSaveCategory}
-          onCancel={handleCancelCategoryForm}
-          isEditing={!!editingCategory}
-        />
-      )}
-
-      {showMaterialForm && (
-        <MaterialForm
-          material={editingMaterial}
-          onSave={handleSaveMaterial}
-          onCancel={handleCancelMaterialForm}
-          isEditing={!!editingMaterial}
-        />
-      )}
-
-      {showSizeForm && (
-        <SizeForm
-          size={editingSize}
-          onSave={handleSaveSize}
-          onCancel={handleCancelSizeForm}
-          isEditing={!!editingSize}
-        />
-      )}
-
-      {showColorForm && (
-        <ColorForm
-          color={editingColor}
-          onSave={handleSaveColor}
-          onCancel={handleCancelColorForm}
-          isEditing={!!editingColor}
-        />
-      )}
-
-      {showProductForm && (
-        <ErrorBoundary>
-          <ProductForm
-            product={editingProduct}
-            onSave={handleSaveProduct}
-            onCancel={handleCancelProductForm}
-            isEditing={!!editingProduct}
-          />
-        </ErrorBoundary>
-      )}
-
-      {showCouponForm && (
-        <CouponForm
-          coupon={editingCoupon}
-          onSave={handleSaveCoupon}
-          onCancel={handleCancelCouponForm}
-          isEditing={!!editingCoupon}
-        />
-      )}
-
-      {showPromotionForm && (
-        <PromotionForm
-          promotion={editingPromotion}
-          onSave={handleSavePromotion}
-          onCancel={handleCancelPromotionForm}
-          isEditing={!!editingPromotion}
-        />
-      )}
-    </div>
   );
 };
 

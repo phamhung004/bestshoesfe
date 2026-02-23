@@ -22,7 +22,7 @@ const apiCall = async (endpoint, options = {}) => {
       } catch (e) {
         // If response body is not JSON, just use status
       }
-      
+
       const error = new Error(`HTTP error! status: ${response.status}`);
       error.response = {
         status: response.status,
@@ -46,13 +46,13 @@ const apiCall = async (endpoint, options = {}) => {
 // Brand API functions
 export const brandAPI = {
   // Get all brands
-  getAll: (pageNum = 0, pageSize = 10) => apiCall('/brands/list', { 
+  getAll: (pageNum = 0, pageSize = 10) => apiCall('/brands/list', {
     method: 'POST',
     body: JSON.stringify({ pageNum, pageSize })
   }),
 
   // Get active brands only
-  getActive: (pageNum = 0, pageSize = 10) => apiCall('/brands/active', { 
+  getActive: (pageNum = 0, pageSize = 10) => apiCall('/brands/active', {
     method: 'POST',
     body: JSON.stringify({ pageNum, pageSize })
   }),
@@ -91,7 +91,7 @@ export const brandAPI = {
 
 // Category API functions
 export const categoryAPI = {
-  getAll: (pageNum = 0, pageSize = 10) => apiCall('/categories/list', { 
+  getAll: (pageNum = 0, pageSize = 10) => apiCall('/categories/list', {
     method: 'POST',
     body: JSON.stringify({ pageNum, pageSize })
   }),
@@ -111,7 +111,7 @@ export const categoryAPI = {
 
 // Material API functions
 export const materialAPI = {
-  getAll: (pageNum = 0, pageSize = 10) => apiCall('/materials/list', { 
+  getAll: (pageNum = 0, pageSize = 10) => apiCall('/materials/list', {
     method: 'POST',
     body: JSON.stringify({ pageNum, pageSize })
   }),
@@ -130,7 +130,7 @@ export const materialAPI = {
 
 // Size API functions
 export const sizeAPI = {
-  getAll: (pageNum = 0, pageSize = 10) => apiCall('/sizes/list', { 
+  getAll: (pageNum = 0, pageSize = 10) => apiCall('/sizes/list', {
     method: 'POST',
     body: JSON.stringify({ pageNum, pageSize })
   }),
@@ -149,7 +149,7 @@ export const sizeAPI = {
 
 // Color API functions
 export const colorAPI = {
-  getAll: (pageNum = 0, pageSize = 10) => apiCall('/colors/list', { 
+  getAll: (pageNum = 0, pageSize = 10) => apiCall('/colors/list', {
     method: 'POST',
     body: JSON.stringify({ pageNum, pageSize })
   }),
@@ -169,19 +169,19 @@ export const colorAPI = {
 // Product API functions
 export const productAPI = {
   // Get all products
-  getAll: (pageNum = 0, pageSize = 10) => apiCall('/products/list', { 
+  getAll: (pageNum = 0, pageSize = 10) => apiCall('/products/list', {
     method: 'POST',
     body: JSON.stringify({ pageNum, pageSize })
   }),
 
   // Get active products only
-  getActive: (pageNum = 0, pageSize = 10) => apiCall('/products/active', { 
+  getActive: (pageNum = 0, pageSize = 10) => apiCall('/products/active', {
     method: 'POST',
     body: JSON.stringify({ pageNum, pageSize })
   }),
 
   // Get active products with all details loaded
-  getActiveWithDetails: (pageNum = 0, pageSize = 10) => apiCall('/products/active/details', { 
+  getActiveWithDetails: (pageNum = 0, pageSize = 10) => apiCall('/products/active/details', {
     method: 'POST',
     body: JSON.stringify({ pageNum, pageSize })
   }),
@@ -386,7 +386,7 @@ export const promotionAPI = {
 
   // Calculate discount
   calculateDiscount: (id, originalPrice) =>
-    apiCall(`/promotions/${id}/calculate-discount?originalPrice=${encodeURIComponent(originalPrice)}`),
+      apiCall(`/promotions/${id}/calculate-discount?originalPrice=${encodeURIComponent(originalPrice)}`),
 
   // Create new promotion
   create: (promotion) => apiCall('/promotions', {
@@ -444,6 +444,7 @@ export const roleAPI = {
   getAll: () => apiCall('/roles', { method: 'GET' }),
   getById: (id) => apiCall(`/roles/${id}`, { method: 'GET' }),
 };
+
 
 // Analytics API functions
 export const analyticsAPI = {
@@ -594,13 +595,7 @@ export const analyticsAPI = {
   getInventoryHealth: () => apiCall('/analytics/inventory/health'),
 };
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 export default {
   brandAPI,
   categoryAPI,
@@ -616,11 +611,5 @@ export default {
   employeeAPI,
   roleAPI,
   analyticsAPI,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
 };
