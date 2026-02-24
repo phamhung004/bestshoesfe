@@ -40,6 +40,7 @@ import ProductList from "./components/Product/ProductList";
 import ProductForm from "./components/Product/ProductForm";
 import OrderManagement from "./components/Order/OrderManagement";
 import POSPage from "./components/POS/POSPage";
+import ReturnManagement from "./components/Return/ReturnManagement";
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -406,16 +407,7 @@ const AdminDashboard = () => {
         );
 
       case 'returns':
-        return (
-          <div className="admin-content-section">
-            <h2 className="section-title">Quản lý trả hàng</h2>
-            <div className="placeholder-content">
-              <div className="placeholder-icon">↩️</div>
-              <h3>Quản lý trả hàng</h3>
-              <p>Đang phát triển...</p>
-            </div>
-          </div>
-        );
+        return <ReturnManagement />;
 
       // case 'promotions/promotions-list':
       case "product-management/brands":
