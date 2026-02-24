@@ -38,6 +38,7 @@ import ColorList from "./components/ColorList";
 import ColorForm from "./components/ColorForm";
 import ProductList from "./components/Product/ProductList";
 import ProductForm from "./components/Product/ProductForm";
+import OrderManagement from "./components/Order/OrderManagement";
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -319,81 +320,72 @@ const AdminDashboard = () => {
 
       case 'product-management/products':
         return (
-            <ProductList
-                onEdit={handleEditProduct}
-                onAdd={handleAddProduct}
-                refreshTrigger={refreshProductList}
-            />
+          <ProductList
+            onEdit={handleEditProduct}
+            onAdd={handleAddProduct}
+            refreshTrigger={refreshProductList}
+          />
         );
 
       case 'product-management/colors':
         return (
-            <ColorList
-                onEdit={handleEditColor}
-                onAdd={handleAddColor}
-                refreshTrigger={refreshColorList}
-            />
+          <ColorList
+            onEdit={handleEditColor}
+            onAdd={handleAddColor}
+            refreshTrigger={refreshColorList}
+          />
         );
 
       case 'product-management/sizes':
         return (
-            <SizeList
-                onEdit={handleEditSize}
-                onAdd={handleAddSize}
-                refreshTrigger={refreshSizeList}
-            />
+          <SizeList
+            onEdit={handleEditSize}
+            onAdd={handleAddSize}
+            refreshTrigger={refreshSizeList}
+          />
         );
 
       case 'product-management/materials':
         return (
-            <MaterialList
-                onEdit={handleEditMaterial}
-                onAdd={handleAddMaterial}
-                refreshTrigger={refreshMaterialList}
-            />
+          <MaterialList
+            onEdit={handleEditMaterial}
+            onAdd={handleAddMaterial}
+            refreshTrigger={refreshMaterialList}
+          />
         );
 
       case 'product-management/brands':
         return (
-            <BrandList
-                onEdit={handleEditBrand}
-                onAdd={handleAddBrand}
-                refreshTrigger={refreshBrandList}
-            />
+          <BrandList
+            onEdit={handleEditBrand}
+            onAdd={handleAddBrand}
+            refreshTrigger={refreshBrandList}
+          />
         );
 
       case 'product-management/categories':
         return (
-            <CategoryList
-                onEdit={handleEditCategory}
-                onAdd={handleAddCategory}
-                refreshTrigger={refreshCategoryList}
-            />
+          <CategoryList
+            onEdit={handleEditCategory}
+            onAdd={handleAddCategory}
+            refreshTrigger={refreshCategoryList}
+          />
         );
 
       case 'in-store-sales':
         return (
-            <div className="admin-content-section">
-              <h2 className="section-title">Bán hàng tại quầy</h2>
-              <div className="placeholder-content">
-                <div className="placeholder-icon">🏪</div>
-                <h3>Chức năng bán hàng tại quầy</h3>
-                <p>Đang phát triển...</p>
-              </div>
+          <div className="admin-content-section">
+            <h2 className="section-title">Bán hàng tại quầy</h2>
+            <div className="placeholder-content">
+              <div className="placeholder-icon">🏪</div>
+              <h3>Chức năng bán hàng tại quầy</h3>
+              <p>Đang phát triển...</p>
             </div>
+          </div>
         );
 
       case 'order-management':
-        return (
-            <div className="admin-content-section">
-              <h2 className="section-title">Quản lý đơn hàng</h2>
-              <div className="placeholder-content">
-                <div className="placeholder-icon">📋</div>
-                <h3>Quản lý đơn hàng</h3>
-                <p>Đang phát triển...</p>
-              </div>
-            </div>
-        );
+        return <OrderManagement />;
 
       // case 'user-management':
       //   return (
@@ -407,66 +399,66 @@ const AdminDashboard = () => {
       //     </div>
       case "user-management/customers":
         return (
-            <CustomerList
-                onEdit={(c) => { setEditingCustomer(c); setShowCustomerForm(true); }}
-                onAdd={() => { setEditingCustomer(null); setShowCustomerForm(true); }}
-            />
+          <CustomerList
+            onEdit={(c) => { setEditingCustomer(c); setShowCustomerForm(true); }}
+            onAdd={() => { setEditingCustomer(null); setShowCustomerForm(true); }}
+          />
         );
 
       case "user-management/employees":
         return (
-            <EmployeeList
-                onEdit={(e) => { setEditingEmployee(e); setShowEmployeeForm(true); }}
-                onAdd={() => { setEditingEmployee(null); setShowEmployeeForm(true); }}
-            />
+          <EmployeeList
+            onEdit={(e) => { setEditingEmployee(e); setShowEmployeeForm(true); }}
+            onAdd={() => { setEditingEmployee(null); setShowEmployeeForm(true); }}
+          />
         );
 
       case 'returns':
         return (
-            <div className="admin-content-section">
-              <h2 className="section-title">Quản lý trả hàng</h2>
-              <div className="placeholder-content">
-                <div className="placeholder-icon">↩️</div>
-                <h3>Quản lý trả hàng</h3>
-                <p>Đang phát triển...</p>
-              </div>
+          <div className="admin-content-section">
+            <h2 className="section-title">Quản lý trả hàng</h2>
+            <div className="placeholder-content">
+              <div className="placeholder-icon">↩️</div>
+              <h3>Quản lý trả hàng</h3>
+              <p>Đang phát triển...</p>
             </div>
+          </div>
         );
 
       // case 'promotions/promotions-list':
       case "product-management/brands":
         return (
-            <BrandList
-                onEdit={handleEditBrand}
-                onAdd={handleAddBrand}
-                refreshTrigger={refreshBrandList}
-            />
+          <BrandList
+            onEdit={handleEditBrand}
+            onAdd={handleAddBrand}
+            refreshTrigger={refreshBrandList}
+          />
         );
       case "product-management/categories":
         return (
-            <CategoryList
-                onEdit={handleEditCategory}
-                onAdd={handleAddCategory}
-                refreshTrigger={refreshCategoryList}
-            />
+          <CategoryList
+            onEdit={handleEditCategory}
+            onAdd={handleAddCategory}
+            refreshTrigger={refreshCategoryList}
+          />
         );
 
       case 'sales-management/coupons':
         return (
-            <CouponList
-                onEdit={handleEditCoupon}
-                onAdd={handleAddCoupon}
-                refreshTrigger={refreshCouponList}
-            />
+          <CouponList
+            onEdit={handleEditCoupon}
+            onAdd={handleAddCoupon}
+            refreshTrigger={refreshCouponList}
+          />
         );
 
       case 'sales-management/promotions':
         return (
-            <PromotionList
-                onEdit={handleEditPromotion}
-                onAdd={handleAddPromotion}
-                refreshTrigger={refreshPromotionList}
-            />
+          <PromotionList
+            onEdit={handleEditPromotion}
+            onAdd={handleAddPromotion}
+            refreshTrigger={refreshPromotionList}
+          />
         );
 
       case 'promotions/coupons':
@@ -480,10 +472,10 @@ const AdminDashboard = () => {
 
       default:
         return (
-            <div className="admin-content-section">
-              <h2 className="section-title">Chào mừng đến trang quản trị</h2>
-              <p>Chọn một mục từ sidebar để bắt đầu.</p>
-            </div>
+          <div className="admin-content-section">
+            <h2 className="section-title">Chào mừng đến trang quản trị</h2>
+            <p>Chọn một mục từ sidebar để bắt đầu.</p>
+          </div>
         );
     }
   };
@@ -584,101 +576,101 @@ const AdminDashboard = () => {
     //     />
     //   )}
     // </div>
-      <div className="admin-dashboard">
-        <AdminSidebar
-            activeSection={activeSection}
-            onSectionChange={setActiveSection}
-        />
-        <div className="admin-main">
-          <AdminHeader />
-          <main className="admin-content">{renderContent()}</main>
-        </div>
-
-        {showBrandForm && (
-            <BrandForm
-                brand={editingBrand}
-                onSave={handleSaveBrand}
-                onCancel={handleCancelBrandForm}
-                isEditing={!!editingBrand}
-            />
-        )}
-        {showCategoryForm && (
-            <CategoryForm
-                category={editingCategory}
-                onSave={handleSaveCategory}
-                onCancel={handleCancelCategoryForm}
-                isEditing={!!editingCategory}
-            />
-        )}
-        {showMaterialForm && (
-            <MaterialForm
-                material={editingMaterial}
-                onSave={handleSaveMaterial}
-                onCancel={handleCancelMaterialForm}
-                isEditing={!!editingMaterial}
-            />
-        )}
-        {showSizeForm && (
-            <SizeForm
-                size={editingSize}
-                onSave={handleSaveSize}
-                onCancel={handleCancelSizeForm}
-                isEditing={!!editingSize}
-            />
-        )}
-        {showColorForm && (
-            <ColorForm
-                color={editingColor}
-                onSave={handleSaveColor}
-                onCancel={handleCancelColorForm}
-                isEditing={!!editingColor}
-            />
-        )}
-        {showProductForm && (
-            <ErrorBoundary>
-              <ProductForm
-                  product={editingProduct}
-                  onSave={handleSaveProduct}
-                  onCancel={handleCancelProductForm}
-                  isEditing={!!editingProduct}
-              />
-            </ErrorBoundary>
-        )}
-        {showCouponForm && (
-            <CouponForm
-                coupon={editingCoupon}
-                onSave={handleSaveCoupon}
-                onCancel={handleCancelCouponForm}
-                isEditing={!!editingCoupon}
-            />
-        )}
-        {showPromotionForm && (
-            <PromotionForm
-                promotion={editingPromotion}
-                onSave={handleSavePromotion}
-                onCancel={handleCancelPromotionForm}
-                isEditing={!!editingPromotion}
-            />
-        )}
-
-        {showCustomerForm && (
-            <CustomerForm
-                customer={editingCustomer}
-                onSave={() => { setShowCustomerForm(false); setEditingCustomer(null); }}
-                onCancel={() => { setShowCustomerForm(false); setEditingCustomer(null); }}
-                isEditing={!!editingCustomer}
-            />
-        )}
-
-        {showEmployeeForm && (
-            <EmployeeForm
-                employee={editingEmployee}
-                onSave={() => { setShowEmployeeForm(false); setEditingEmployee(null); }}
-                onCancel={() => { setShowEmployeeForm(false); setEditingEmployee(null); }}
-                isEditing={!!editingEmployee}
-            />
-        )}
+    <div className="admin-dashboard">
+      <AdminSidebar
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+      />
+      <div className="admin-main">
+        <AdminHeader />
+        <main className="admin-content">{renderContent()}</main>
       </div>
+
+      {showBrandForm && (
+        <BrandForm
+          brand={editingBrand}
+          onSave={handleSaveBrand}
+          onCancel={handleCancelBrandForm}
+          isEditing={!!editingBrand}
+        />
+      )}
+      {showCategoryForm && (
+        <CategoryForm
+          category={editingCategory}
+          onSave={handleSaveCategory}
+          onCancel={handleCancelCategoryForm}
+          isEditing={!!editingCategory}
+        />
+      )}
+      {showMaterialForm && (
+        <MaterialForm
+          material={editingMaterial}
+          onSave={handleSaveMaterial}
+          onCancel={handleCancelMaterialForm}
+          isEditing={!!editingMaterial}
+        />
+      )}
+      {showSizeForm && (
+        <SizeForm
+          size={editingSize}
+          onSave={handleSaveSize}
+          onCancel={handleCancelSizeForm}
+          isEditing={!!editingSize}
+        />
+      )}
+      {showColorForm && (
+        <ColorForm
+          color={editingColor}
+          onSave={handleSaveColor}
+          onCancel={handleCancelColorForm}
+          isEditing={!!editingColor}
+        />
+      )}
+      {showProductForm && (
+        <ErrorBoundary>
+          <ProductForm
+            product={editingProduct}
+            onSave={handleSaveProduct}
+            onCancel={handleCancelProductForm}
+            isEditing={!!editingProduct}
+          />
+        </ErrorBoundary>
+      )}
+      {showCouponForm && (
+        <CouponForm
+          coupon={editingCoupon}
+          onSave={handleSaveCoupon}
+          onCancel={handleCancelCouponForm}
+          isEditing={!!editingCoupon}
+        />
+      )}
+      {showPromotionForm && (
+        <PromotionForm
+          promotion={editingPromotion}
+          onSave={handleSavePromotion}
+          onCancel={handleCancelPromotionForm}
+          isEditing={!!editingPromotion}
+        />
+      )}
+
+      {showCustomerForm && (
+        <CustomerForm
+          customer={editingCustomer}
+          onSave={() => { setShowCustomerForm(false); setEditingCustomer(null); }}
+          onCancel={() => { setShowCustomerForm(false); setEditingCustomer(null); }}
+          isEditing={!!editingCustomer}
+        />
+      )}
+
+      {showEmployeeForm && (
+        <EmployeeForm
+          employee={editingEmployee}
+          onSave={() => { setShowEmployeeForm(false); setEditingEmployee(null); }}
+          onCancel={() => { setShowEmployeeForm(false); setEditingEmployee(null); }}
+          isEditing={!!editingEmployee}
+        />
+      )}
+    </div>
   );
 };
 
