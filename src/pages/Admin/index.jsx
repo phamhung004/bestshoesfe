@@ -39,6 +39,7 @@ import ColorForm from "./components/ColorForm";
 import ProductList from "./components/Product/ProductList";
 import ProductForm from "./components/Product/ProductForm";
 import OrderManagement from "./components/Order/OrderManagement";
+import POSPage from "./components/POS/POSPage";
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -373,16 +374,7 @@ const AdminDashboard = () => {
         );
 
       case 'in-store-sales':
-        return (
-          <div className="admin-content-section">
-            <h2 className="section-title">Bán hàng tại quầy</h2>
-            <div className="placeholder-content">
-              <div className="placeholder-icon">🏪</div>
-              <h3>Chức năng bán hàng tại quầy</h3>
-              <p>Đang phát triển...</p>
-            </div>
-          </div>
-        );
+        return <POSPage />;
 
       case 'order-management':
         return <OrderManagement />;
