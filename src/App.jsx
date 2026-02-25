@@ -18,6 +18,7 @@ import Cart from "./pages/Cart/CartPage";
 import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
 import AdminRouter from "./pages/Admin/AdminRouter";
+import MyAccountPage from "./pages/MyAccount";
 
 function AppContent() {
   const location = useLocation();
@@ -37,6 +38,7 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/account" element={<MyAccountPage />} />
           <Route path="/admin/*" element={<AdminRouter />} />
         </Routes>
       </div>
