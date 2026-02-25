@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import './Footer.css'
 
 function Footer() {
@@ -8,165 +9,226 @@ function Footer() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!email) return
-    
+
     setIsSubmitting(true)
-    // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false)
       setEmail('')
-      alert('Thank you for subscribing!')
+      alert('Cảm ơn bạn đã đăng ký!')
     }, 1000)
   }
 
-  const footerLinks = [
-    { label: 'About Us', href: '#about' },
-    { label: 'Catalog', href: '#catalog' },
-    { label: 'Sale', href: '#sale' },
-    { label: 'Preview', href: '#preview' },
-    { label: 'Career', href: '#career' },
-    { label: 'Blog', href: '#blog' }
+  const quickLinks = [
+    { label: 'Trang chủ', href: '/' },
+    { label: 'Giới thiệu', href: '/#about' },
+    { label: 'Sản phẩm', href: '/catalog' },
+    { label: 'Khuyến mãi & Sale', href: '/#sale' },
+    { label: 'Blog & Tin tức', href: '/#blog' },
+    { label: 'Tuyển dụng', href: '/#career' }
+  ]
+
+  const supportLinks = [
+    { label: 'Chính sách đổi trả', href: '#' },
+    { label: 'Hướng dẫn chọn size', href: '#' },
+    { label: 'Theo dõi đơn hàng', href: '#' },
+    { label: 'Câu hỏi thường gặp', href: '#' },
+    { label: 'Liên hệ hỗ trợ', href: '/#contact' },
+    { label: 'Chính sách bảo mật', href: '#' }
   ]
 
   const legalLinks = [
-    { label: 'Terms', href: '#terms' },
-    { label: 'Privacy', href: '#privacy' },
-    { label: 'Cookies', href: '#cookies' }
+    { label: 'Điều khoản', href: '#' },
+    { label: 'Chính sách', href: '#' },
+    { label: 'Cookie', href: '#' }
   ]
 
   return (
-    <footer className="footer">
-      <div className="container mx-auto px-6 py-12">
-        <div className="footer-grid">
-          {/* Left Column - Company Info */}
-          <div className="footer-company">
-            <div className="footer-brand">
-              <h3 className="footer-logo">
-                BEST SHOES
-              </h3>
-              <p className="footer-description">
-                BEST Shoes offers top-quality footwear with a focus on comfort and style. From casual sneakers to formal shoes, our diverse collection meets high standards of design and durability. Discover the perfect pair with Well Shoes.
+    <>
+      {/* Wave Divider */}
+      <div className="bs-footer-wave">
+        <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          <path d="M0 60L0 30C240 5 480 0 720 10C960 20 1200 45 1440 30L1440 60H0Z" fill="#0F172A" />
+        </svg>
+      </div>
+
+      <footer className="bs-footer">
+        <div className="bs-footer__inner">
+          <div className="bs-footer__grid">
+            {/* Column 1 — Brand */}
+            <div className="bs-footer__brand-col">
+              <Link to="/" className="bs-footer__logo">
+                <span className="bs-footer__logo-best">BEST</span>
+                <span className="bs-footer__logo-shoes">SHOES</span>
+              </Link>
+
+              <p className="bs-footer__tagline">
+                Bước đi tự tin — Phong cách bền vững
               </p>
+
+              <p className="bs-footer__desc">
+                Chúng tôi mang đến những đôi giày chất lượng cao với phong cách hiện đại.
+                Sản phẩm chính hãng 100%, bảo hành 12 tháng.
+              </p>
+
+              {/* Social Icons */}
+              <div className="bs-footer__socials">
+                {/* Facebook */}
+                <a href="#" className="bs-footer__social-btn" aria-label="Facebook">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                  </svg>
+                </a>
+                {/* Instagram */}
+                <a href="#" className="bs-footer__social-btn" aria-label="Instagram">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                  </svg>
+                </a>
+                {/* TikTok */}
+                <a href="#" className="bs-footer__social-btn" aria-label="TikTok">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1 0-5.78 2.84 2.84 0 0 1 .51.05V9.01a6.27 6.27 0 0 0-1 0 6.34 6.34 0 0 0 0 12.68 6.29 6.29 0 0 0 6.34-6.34V9.06a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-.52-.49z" />
+                  </svg>
+                </a>
+                {/* YouTube */}
+                <a href="#" className="bs-footer__social-btn" aria-label="YouTube">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.43z" />
+                    <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+                  </svg>
+                </a>
+              </div>
+
+              {/* Contact Info */}
+              <div className="bs-footer__contact">
+                <div className="bs-footer__contact-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                  <span>081 236 216 362</span>
+                </div>
+                <div className="bs-footer__contact-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" />
+                  </svg>
+                  <span>contact@bestshoes.com</span>
+                </div>
+                <div className="bs-footer__contact-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818CF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                  </svg>
+                  <span>1234 Shoe Street, Fashion City, CA 56789, USA</span>
+                </div>
+              </div>
             </div>
 
-            {/* Contact Info */}
-            <div className="footer-contact">
-              <a 
-                href="tel:081236216362" 
-                className="contact-item group"
-              >
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3.5 2C3.5 1.17 4.17 0.5 5 0.5H6.5C7.33 0.5 8 1.17 8 2V2.5C8 4.43 6.43 6 4.5 6H4C3.17 6 2.5 6.67 2.5 7.5V9C2.5 9.83 3.17 10.5 4 10.5H5.5C6.33 10.5 7 11.17 7 12V13.5C7 14.33 7.67 15 8.5 15H10C10.83 15 11.5 14.33 11.5 13.5V12.5C11.5 8.91 8.59 6 5 6V5.5C8.59 5 11.5 2.09 11.5 -1.5V-3C11.5 -3.83 10.83 -4.5 10 -4.5H8.5C7.67 -4.5 7 -3.83 7 -3V-1.5C7 0.71 5.21 2.5 3 2.5H2.5C1.67 2.5 1 3.17 1 4V5.5C1 6.33 1.67 7 2.5 7H4C4.83 7 5.5 7.67 5.5 8.5V10C5.5 10.83 6.17 11.5 7 11.5H8.5C9.33 11.5 10 10.83 10 10V9C10 5.41 7.09 2.5 3.5 2.5V2C7.09 2 10 -0.91 10 -4.5V-6C10 -6.83 9.33 -7.5 8.5 -7.5H7C6.17 -7.5 5.5 -6.83 5.5 -6V-4.5C5.5 -2.29 3.71 -0.5 1.5 -0.5H1C0.17 -0.5 -0.5 0.17 -0.5 1V2.5C-0.5 3.33 0.17 4 1 4H2.5C3.33 4 4 4.67 4 5.5V7C4 7.83 4.67 8.5 5.5 8.5H7C7.83 8.5 8.5 7.83 8.5 7V6C8.5 2.41 5.59 -0.5 2 -0.5V-1C5.59 -1 8.5 -3.91 8.5 -7.5V-9C8.5 -9.83 7.83 -10.5 7 -10.5H5.5C4.67 -10.5 4 -9.83 4 -9V-7.5C4 -5.29 2.21 -3.5 0 -3.5H-0.5C-1.33 -3.5 -2 -2.83 -2 -2V-0.5C-2 0.33 -1.33 1 -0.5 1H1C1.83 1 2.5 1.67 2.5 2.5V4C2.5 4.83 3.17 5.5 4 5.5H5.5C6.33 5.5 7 4.83 7 4V3C7 -0.59 4.09 -3.5 0.5 -3.5V-4C4.09 -4 7 -6.91 7 -10.5V-12C7 -12.83 6.33 -13.5 5.5 -13.5H4C3.17 -13.5 2.5 -12.83 2.5 -12V-10.5C2.5 -8.29 0.71 -6.5 -1.5 -6.5H-2C-2.83 -6.5 -3.5 -5.83 -3.5 -5V-3.5C-3.5 -2.67 -2.83 -2 -2 -2H-0.5C0.33 -2 1 -1.33 1 -0.5V1C1 1.83 1.67 2.5 2.5 2.5H4Z" fill="currentColor"/>
-                </svg>
-                <span>081236216362</span>
-                <div className="contact-underline"></div>
-              </a>
-              
-              <a 
-                href="mailto:contact@wellshoes.gom" 
-                className="contact-item group"
-              >
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1.58 1.5H16.5V14.95H1.58V1.5Z" fill="currentColor"/>
-                  <path d="M1.5 3L9 9L16.5 3" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M1.5 5.25H16.5" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-                <span>contact@bestshoes.gom</span>
-                <div className="contact-underline"></div>
-              </a>
-              
-              <div className="contact-item contact-address">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 2H20V22H4V2Z" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M2 8H22" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M9 7H15" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-                <span>
-                  BEST Shoes Headquarters<br/>
-                  1234 Shoe Street, Fashion City, CA 56789, USA
-                </span>
-              </div>
-              
-              <div className="footer-legal">
-                {legalLinks.map((link, index) => (
-                  <a 
-                    key={index}
-                    href={link.href} 
-                    className="legal-link"
-                  >
-                    {link.label}
-                  </a>
+            {/* Column 2 — Quick Links */}
+            <div className="bs-footer__links-col">
+              <h4 className="bs-footer__heading">
+                KHÁM PHÁ
+                <span className="bs-footer__heading-accent" />
+              </h4>
+              <ul className="bs-footer__link-list">
+                {quickLinks.map((link) => (
+                  <li key={link.label}>
+                    <Link to={link.href} className="bs-footer__link">
+                      {link.label}
+                    </Link>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
-          </div>
 
-          {/* Middle Column - Links */}
-          <div className="footer-links">
-            {footerLinks.map((link, index) => (
-              <a 
-                key={index}
-                href={link.href} 
-                className="footer-link"
-              >
-                <span className="footer-link-text">{link.label}</span>
-                <div className="footer-link-underline"></div>
-              </a>
-            ))}
-          </div>
+            {/* Column 3 — Support */}
+            <div className="bs-footer__links-col">
+              <h4 className="bs-footer__heading">
+                HỖ TRỢ
+                <span className="bs-footer__heading-accent" />
+              </h4>
+              <ul className="bs-footer__link-list">
+                {supportLinks.map((link) => (
+                  <li key={link.label}>
+                    <a href={link.href} className="bs-footer__link">
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          {/* Right Column - Newsletter */}
-          <div className="footer-newsletter">
-            <div className="newsletter-box">
-              <p className="newsletter-title">
-                Get information and updates on wellshoes by entering your email.
+            {/* Column 4 — Newsletter */}
+            <div className="bs-footer__newsletter-col">
+              <h4 className="bs-footer__heading">
+                NHẬN ƯU ĐÃI ĐỘC QUYỀN
+                <span className="bs-footer__heading-accent" />
+              </h4>
+
+              <p className="bs-footer__newsletter-text">
+                Đăng ký nhận thông tin về sản phẩm mới và ưu đãi dành riêng cho thành viên.
               </p>
-              <form onSubmit={handleSubmit} className="newsletter-form">
+
+              <form onSubmit={handleSubmit} className="bs-footer__form">
                 <input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="Nhập email của bạn"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="newsletter-input"
+                  className="bs-footer__input"
                   required
                 />
-                <button 
+                <button
                   type="submit"
-                  className={`newsletter-button ${isSubmitting ? 'newsletter-button-loading' : ''}`}
+                  className={`bs-footer__submit ${isSubmitting ? 'bs-footer__submit--loading' : ''}`}
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
-                    <div className="newsletter-spinner"></div>
+                    <span className="bs-footer__spinner" />
                   ) : (
-                    <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path 
-                        d="M3.5 10.5L17.5 10.5M10.5 3.5L17.5 10.5L10.5 17.5" 
-                        stroke="currentColor" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    'Đăng ký ngay →'
                   )}
                 </button>
               </form>
+
+              {/* Trust Badges */}
+              <div className="bs-footer__trust">
+                <div className="bs-footer__trust-item">
+                  <span>🔒</span>
+                  <span>Bảo mật SSL</span>
+                </div>
+                <span className="bs-footer__trust-divider">|</span>
+                <div className="bs-footer__trust-item">
+                  <span>✅</span>
+                  <span>Hàng chính hãng</span>
+                </div>
+                <span className="bs-footer__trust-divider">|</span>
+                <div className="bs-footer__trust-item">
+                  <span>🚚</span>
+                  <span>Freeship 500k+</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Copyright */}
-      <div className="footer-copyright">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-center gap-2">
-            <p className="copyright-text">
-              © Shoes E-Commerce. All rights reserved
+        {/* Bottom Bar */}
+        <div className="bs-footer__bottom">
+          <div className="bs-footer__bottom-inner">
+            <p className="bs-footer__copyright">
+              © 2026 BestShoes. Tất cả quyền được bảo lưu.
             </p>
+            <div className="bs-footer__legal">
+              {legalLinks.map((link, i) => (
+                <span key={link.label}>
+                  <a href={link.href} className="bs-footer__legal-link">{link.label}</a>
+                  {i < legalLinks.length - 1 && <span className="bs-footer__legal-dot"> · </span>}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-    </footer>
+      </footer>
+    </>
   )
 }
 
 export default Footer
-

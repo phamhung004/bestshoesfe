@@ -1,161 +1,429 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import './Header.css'
 
 function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isMiniCartOpen, setIsMiniCartOpen] = useState(false)
+  const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false)
+  const [catalogAccordionOpen, setCatalogAccordionOpen] = useState(false)
   const location = useLocation()
+  const searchInputRef = useRef(null)
+  const miniCartRef = useRef(null)
+  const megaMenuTimeoutRef = useRef(null)
+
+  // Mock data
+  const wishlistCount = 1
+  const cartItems = [
+    {
+      id: 1,
+      name: 'Nike Air Max 270',
+      size: '42',
+      color: 'Đen/Trắng',
+      qty: 1,
+      price: 3290000,
+      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=80&h=80&fit=crop'
+    },
+    {
+      id: 2,
+      name: 'Adidas Ultraboost 22',
+      size: '43',
+      color: 'Xám',
+      qty: 1,
+      price: 4190000,
+      image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=80&h=80&fit=crop'
+    }
+  ]
+  const cartCount = cartItems.reduce((sum, item) => sum + item.qty, 0)
+  const cartSubtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0)
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
+      setIsScrolled(window.scrollY > 10)
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Close mini cart on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (miniCartRef.current && !miniCartRef.current.contains(e.target)) {
+        setIsMiniCartOpen(false)
+      }
+    }
+    if (isMiniCartOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isMiniCartOpen])
+
+  // Close search on Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsSearchOpen(false)
+        setIsMiniCartOpen(false)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Auto-focus search input
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [isSearchOpen])
+
+  // Lock body scroll when drawer open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [isMenuOpen])
+
   const navItems = [
-    { id: 'Home', label: 'Home', href: '/' },
-    { id: 'About', label: 'About', href: '/#about' },
-    { id: 'Catalog', label: 'Catalog', href: '/catalog' },
-    { id: 'Contact', label: 'Contact', href: '/#contact' }
+    { id: 'Home', label: 'Trang chủ', href: '/' },
+    { id: 'About', label: 'Giới thiệu', href: '/#about' },
+    { id: 'Catalog', label: 'Sản phẩm', href: '/catalog' },
+    { id: 'Sale', label: 'Khuyến mãi', href: '/#sale' },
+    { id: 'Contact', label: 'Liên hệ', href: '/#contact' }
+  ]
+
+  const megaMenuCategories = [
+    { icon: '🏃', label: 'Giày chạy bộ', href: '/catalog?cat=running' },
+    { icon: '⭐', label: 'Sneaker', href: '/catalog?cat=sneaker' },
+    { icon: '💼', label: 'Giày da công sở', href: '/catalog?cat=formal' },
+    { icon: '🩴', label: 'Dép & Sandal', href: '/catalog?cat=sandal' }
+  ]
+
+  const megaMenuBrands = [
+    { name: 'Nike', href: '/catalog?brand=nike' },
+    { name: 'Adidas', href: '/catalog?brand=adidas' },
+    { name: 'New Balance', href: '/catalog?brand=nb' },
+    { name: "Biti's Hunter", href: '/catalog?brand=bitis' }
   ]
 
   const getActiveNav = () => {
     if (location.pathname === '/catalog') return 'Catalog'
     if (location.pathname === '/') return 'Home'
-    return 'Home'
+    return ''
   }
 
   const activeNav = getActiveNav()
 
+  const handleMegaMenuEnter = () => {
+    clearTimeout(megaMenuTimeoutRef.current)
+    setIsMegaMenuOpen(true)
+  }
+
+  const handleMegaMenuLeave = () => {
+    megaMenuTimeoutRef.current = setTimeout(() => {
+      setIsMegaMenuOpen(false)
+    }, 150)
+  }
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(price)
+  }
+
   return (
-    <header className={`header ${isScrolled ? 'header-scrolled' : ''}`}>
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between gap-6">
-          {/* Menu Button */}
-          <button 
-            className="menu-button group"
+    <>
+      <header className={`bs-header ${isScrolled ? 'bs-header--scrolled' : ''}`}>
+        <div className="bs-header__inner">
+          {/* Mobile hamburger */}
+          <button
+            className="bs-header__hamburger"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
-            <div className="menu-icon">
-              <span className={`menu-line ${isMenuOpen ? 'menu-line-1-open' : ''}`}></span>
-              <span className={`menu-line ${isMenuOpen ? 'menu-line-2-open' : ''}`}></span>
-              <span className={`menu-line ${isMenuOpen ? 'menu-line-3-open' : ''}`}></span>
-            </div>
+            <span className={`bs-hamburger__line ${isMenuOpen ? 'bs-hamburger__line--top' : ''}`} />
+            <span className={`bs-hamburger__line ${isMenuOpen ? 'bs-hamburger__line--mid' : ''}`} />
+            <span className={`bs-hamburger__line ${isMenuOpen ? 'bs-hamburger__line--bot' : ''}`} />
           </button>
 
-          {/* Vertical Line */}
-          <div className="header-divider"></div>
+          {/* Logo */}
+          <Link to="/" className="bs-header__logo">
+            <span className="bs-logo__best">BEST</span>
+            <span className="bs-logo__shoes">SHOES</span>
+          </Link>
 
-          {/* Navigation Items */}
-          <nav className="flex items-center gap-6 flex-1 justify-center">
-            {navItems.map((item, index) => {
-              if (item.id === 'About') {
-                return (
-                  <div key={item.id} className="flex items-center gap-6">
-                    <Link
-                      to={item.href}
-                      className={`nav-link ${activeNav === item.id ? 'nav-link-active' : ''}`}
-                    >
-                      {item.label}
-                    </Link>
-                    <div className="nav-divider"></div>
-                    <h1 className="logo-text">
-                      BESTSHOES
-                    </h1>
-                    <div className="nav-divider"></div>
-                  </div>
-                )
-              }
-              return (
+          {/* Desktop navigation */}
+          <nav className="bs-header__nav">
+            {navItems.map((item) => (
+              <div
+                key={item.id}
+                className="bs-nav__item-wrapper"
+                onMouseEnter={item.id === 'Catalog' ? handleMegaMenuEnter : undefined}
+                onMouseLeave={item.id === 'Catalog' ? handleMegaMenuLeave : undefined}
+              >
                 <Link
-                  key={item.id}
                   to={item.href}
-                  className={`nav-link ${activeNav === item.id ? 'nav-link-active' : ''}`}
+                  className={`bs-nav__link ${activeNav === item.id ? 'bs-nav__link--active' : ''}`}
                 >
                   {item.label}
+                  {item.id === 'Catalog' && (
+                    <svg className="bs-nav__chevron" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
                 </Link>
-              )
-            })}
+
+                {/* Mega Menu */}
+                {item.id === 'Catalog' && (
+                  <div className={`bs-megamenu ${isMegaMenuOpen ? 'bs-megamenu--open' : ''}`}>
+                    <div className="bs-megamenu__content">
+                      <div className="bs-megamenu__col">
+                        <h4 className="bs-megamenu__heading">Danh mục</h4>
+                        <ul className="bs-megamenu__list">
+                          {megaMenuCategories.map((cat) => (
+                            <li key={cat.label}>
+                              <Link to={cat.href} className="bs-megamenu__link">
+                                <span className="bs-megamenu__icon">{cat.icon}</span>
+                                {cat.label}
+                              </Link>
+                            </li>
+                          ))}
+                          <li>
+                            <Link to="/catalog" className="bs-megamenu__link bs-megamenu__link--all">
+                              Xem tất cả →
+                            </Link>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="bs-megamenu__col">
+                        <h4 className="bs-megamenu__heading">Thương hiệu nổi bật</h4>
+                        <ul className="bs-megamenu__list">
+                          {megaMenuBrands.map((brand) => (
+                            <li key={brand.name}>
+                              <Link to={brand.href} className="bs-megamenu__link">
+                                <span className="bs-megamenu__brand-dot" />
+                                {brand.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                    <div className="bs-megamenu__banner">
+                      <span>🔥 Sale cuối tuần — Giảm đến 40%</span>
+                      <Link to="/catalog?sale=true" className="bs-megamenu__banner-link">Xem ngay →</Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </nav>
 
-          {/* Vertical Line */}
-          <div className="header-divider"></div>
-
-          {/* Search Button */}
-          <button 
-            className="search-button group"
-            aria-label="Search"
-          >
-            <svg 
-              width="24" 
-              height="24" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-              className="search-icon"
-            >
-              <circle 
-                cx="11" 
-                cy="11" 
-                r="8" 
-                stroke="currentColor" 
-                strokeWidth="2"
-                className="search-circle"
+          {/* Right actions */}
+          <div className="bs-header__actions">
+            {/* Search */}
+            <div className={`bs-search ${isSearchOpen ? 'bs-search--open' : ''}`}>
+              <input
+                ref={searchInputRef}
+                type="text"
+                className="bs-search__input"
+                placeholder="Tìm kiếm sản phẩm..."
               />
-              <path 
-                d="m21 21-4.35-4.35" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round"
-                className="search-path"
-              />
-            </svg>
-            <span className="search-ripple"></span>
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu Overlay */}
-      {isMenuOpen && (
-        <div 
-          className="mobile-menu-overlay"
-          onClick={() => setIsMenuOpen(false)}
-        >
-          <div 
-            className="mobile-menu-content"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mobile-menu-header">
-              <h2 className="mobile-menu-title">BEST SHOES</h2>
-              <button 
-                className="mobile-menu-close"
-                onClick={() => setIsMenuOpen(false)}
+              <button
+                className="bs-search__clear"
+                onClick={() => setIsSearchOpen(false)}
+                aria-label="Close search"
               >
-                ×
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
-            <nav className="mobile-menu-nav">
-              {navItems.map((item) => (
-                <Link
-                  key={item.id}
-                  to={item.href}
-                  className={`mobile-nav-link ${activeNav === item.id ? 'mobile-nav-link-active' : ''}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <button
+              className="bs-header__icon-btn bs-header__search-btn"
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              aria-label="Search"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+              </svg>
+            </button>
+
+            {/* Wishlist */}
+            <button className="bs-header__icon-btn bs-header__wishlist-btn" aria-label="Wishlist">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+              {wishlistCount > 0 && (
+                <span className="bs-header__badge bs-header__badge--red">{wishlistCount}</span>
+              )}
+            </button>
+
+            {/* Cart */}
+            <div className="bs-header__cart-wrapper" ref={miniCartRef}>
+              <button
+                className="bs-header__icon-btn bs-header__cart-btn"
+                onClick={() => setIsMiniCartOpen(!isMiniCartOpen)}
+                aria-label="Cart"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+                {cartCount > 0 && (
+                  <span className="bs-header__badge bs-header__badge--indigo">{cartCount}</span>
+                )}
+              </button>
+
+              {/* Mini Cart Dropdown */}
+              <div className={`bs-minicart ${isMiniCartOpen ? 'bs-minicart--open' : ''}`}>
+                <div className="bs-minicart__header">
+                  <h4>Giỏ hàng ({cartCount})</h4>
+                </div>
+                {cartItems.length === 0 ? (
+                  <div className="bs-minicart__empty">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                      <line x1="3" y1="6" x2="21" y2="6" />
+                      <path d="M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                    <p>Giỏ hàng trống</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="bs-minicart__items">
+                      {cartItems.map((item) => (
+                        <div key={item.id} className="bs-minicart__item">
+                          <img src={item.image} alt={item.name} className="bs-minicart__item-img" />
+                          <div className="bs-minicart__item-info">
+                            <p className="bs-minicart__item-name">{item.name}</p>
+                            <p className="bs-minicart__item-meta">Size: {item.size} · {item.color}</p>
+                            <div className="bs-minicart__item-row">
+                              <span className="bs-minicart__item-qty">SL: {item.qty}</span>
+                              <span className="bs-minicart__item-price">{formatPrice(item.price)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bs-minicart__footer">
+                      <div className="bs-minicart__subtotal">
+                        <span>Tạm tính</span>
+                        <span className="bs-minicart__subtotal-price">{formatPrice(cartSubtotal)}</span>
+                      </div>
+                      <Link to="/cart" className="bs-minicart__btn bs-minicart__btn--outline" onClick={() => setIsMiniCartOpen(false)}>
+                        Xem giỏ hàng
+                      </Link>
+                      <Link to="/checkout" className="bs-minicart__btn bs-minicart__btn--primary" onClick={() => setIsMiniCartOpen(false)}>
+                        Thanh toán
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      )}
-    </header>
+      </header>
+
+      {/* Mobile Drawer */}
+      <div className={`bs-drawer-overlay ${isMenuOpen ? 'bs-drawer-overlay--open' : ''}`} onClick={() => setIsMenuOpen(false)} />
+      <aside className={`bs-drawer ${isMenuOpen ? 'bs-drawer--open' : ''}`}>
+        <div className="bs-drawer__header">
+          <Link to="/" className="bs-drawer__logo" onClick={() => setIsMenuOpen(false)}>
+            <span className="bs-logo__best">BEST</span>
+            <span className="bs-logo__shoes">SHOES</span>
+          </Link>
+          <button className="bs-drawer__close" onClick={() => setIsMenuOpen(false)} aria-label="Close menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <nav className="bs-drawer__nav">
+          {navItems.map((item) => (
+            <div key={item.id}>
+              {item.id === 'Catalog' ? (
+                <>
+                  <button
+                    className={`bs-drawer__link ${activeNav === item.id ? 'bs-drawer__link--active' : ''}`}
+                    onClick={() => setCatalogAccordionOpen(!catalogAccordionOpen)}
+                  >
+                    <span>{item.label}</span>
+                    <svg className={`bs-drawer__chevron ${catalogAccordionOpen ? 'bs-drawer__chevron--open' : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  <div className={`bs-drawer__accordion ${catalogAccordionOpen ? 'bs-drawer__accordion--open' : ''}`}>
+                    {megaMenuCategories.map((cat) => (
+                      <Link
+                        key={cat.label}
+                        to={cat.href}
+                        className="bs-drawer__sublink"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <span className="bs-drawer__subicon">{cat.icon}</span>
+                        {cat.label}
+                      </Link>
+                    ))}
+                    <Link to="/catalog" className="bs-drawer__sublink bs-drawer__sublink--all" onClick={() => setIsMenuOpen(false)}>
+                      Xem tất cả →
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <Link
+                  to={item.href}
+                  className={`bs-drawer__link ${activeNav === item.id ? 'bs-drawer__link--active' : ''}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span>{item.label}</span>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </Link>
+              )}
+            </div>
+          ))}
+        </nav>
+
+        <div className="bs-drawer__divider" />
+
+        <div className="bs-drawer__bottom">
+          <div className="bs-drawer__search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+            </svg>
+            <input type="text" placeholder="Tìm kiếm..." className="bs-drawer__search-input" />
+          </div>
+          <div className="bs-drawer__icons">
+            <button className="bs-drawer__icon-btn" aria-label="Wishlist">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+              {wishlistCount > 0 && <span className="bs-drawer__badge">{wishlistCount}</span>}
+            </button>
+            <button className="bs-drawer__icon-btn" aria-label="Cart">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
+              {cartCount > 0 && <span className="bs-drawer__badge bs-drawer__badge--indigo">{cartCount}</span>}
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
   )
 }
 
 export default Header
-
