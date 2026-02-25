@@ -14,7 +14,7 @@ import Purchase from "./pages/Purchase";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import "./App.css";
-import Cart from "./pages/Cart";
+import Cart from "./pages/Cart/CartPage";
 import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
 import AdminRouter from "./pages/Admin/AdminRouter";
