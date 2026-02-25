@@ -8,7 +8,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Toast from "./components/Toast";
 import { ToastProvider } from "./context/ToastContext";
-import Home from "./pages/Home";
+import HomePage from "./pages/HomePage/HomePage";
 import Catalog from "./pages/Catalog2/CatalogPage";
 import Purchase from "./pages/Purchase";
 import Login from "./pages/Auth/Login";
@@ -22,15 +22,14 @@ import AdminRouter from "./pages/Admin/AdminRouter";
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
-  const isHomePage = location.pathname === "/";
 
   return (
     <div className="min-h-screen bg-white">
       <Toast />
-      {!isAdminRoute && !isHomePage && <Header />}
+      {!isAdminRoute && <Header />}
       <div className="main-container">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/purchase/:productId" element={<Purchase />} />
           <Route path="/checkout" element={<Checkout />} />
@@ -41,7 +40,7 @@ function AppContent() {
           <Route path="/admin/*" element={<AdminRouter />} />
         </Routes>
       </div>
-      {!isAdminRoute && !isHomePage && <Footer />}
+      {!isAdminRoute && <Footer />}
     </div>
   );
 }
