@@ -65,7 +65,7 @@ const FilterSidebar = ({ onApply = noop }) => {
         <div className="filter-section">
           <h3 className="filter-section-title">Color</h3>
           <div className="color-options">
-            {colors.map((color) => (
+            {Array.isArray(colors) && colors.map((color) => (
               <div
                 key={color.colorId || color.name}
                 className={`color-circle ${selectedColorIds.includes(color.colorId) ? 'selected' : ''}`}
@@ -81,7 +81,7 @@ const FilterSidebar = ({ onApply = noop }) => {
         <div className="filter-section">
           <h3 className="filter-section-title">Category</h3>
           <div className="checkbox-options">
-            {categories.map((category) => (
+            {Array.isArray(categories) && categories.map((category) => (
               <label key={category.categoryId} className="checkbox-option">
                 <input
                   type="checkbox"
@@ -117,7 +117,7 @@ const FilterSidebar = ({ onApply = noop }) => {
         <div className="filter-section">
           <h3 className="filter-section-title">Size</h3>
           <div className="checkbox-options">
-            {sizes.map((size) => (
+            {Array.isArray(sizes) && sizes.map((size) => (
               <label key={size.sizeId} className="checkbox-option">
                 <input
                   type="checkbox"

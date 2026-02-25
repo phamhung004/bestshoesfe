@@ -9,7 +9,7 @@ import Footer from "./components/Footer";
 import Toast from "./components/Toast";
 import { ToastProvider } from "./context/ToastContext";
 import Home from "./pages/Home";
-import Catalog from "./pages/Catalog";
+import Catalog from "./pages/Catalog2/CatalogPage";
 import Purchase from "./pages/Purchase";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";

@@ -79,7 +79,7 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
                     <div className="pos-modal-section">
                         <div className="pos-modal-label">Màu sắc</div>
                         <div className="pos-modal-colors">
-                            {productColors.map(c => {
+                            {Array.isArray(productColors) && productColors.map(c => {
                                 const hasStock = colorHasStock(c.color_id);
                                 return (
                                     <button

@@ -120,7 +120,7 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
 
                 {/* Color dot filters */}
                 <div className="pos-color-dots">
-                    {colors.map(c => (
+                    {Array.isArray(colors) && colors.map(c => (
                         <button
                             key={c.color_id}
                             className={`pos-color-dot-filter${activeColor === c.color_id ? ' active' : ''}`}
