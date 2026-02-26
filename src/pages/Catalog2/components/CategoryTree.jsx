@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { CATEGORIES, countByCategory } from '../mockCatalogData';
 
-const CategoryTree = ({ selectedCategory, onSelect }) => {
+/**
+ * CategoryTree — accepts `categories` prop from real API (CategoryDTO[]).
+ * Each category: { categoryId, name, parentId, productCount }
+ */
+const CategoryTree = ({ selectedCategory, onSelect, categories = [] }) => {
     const [expandedIds, setExpandedIds] = useState([]);
-
-    // Find root categories (parent_id === null)
-    const rootCategories = CATEGORIES.filter(c => c.parent_id === null && c.status === 1);
 
     const toggleExpand = (catId) => {
         setExpandedIds(prev =>
@@ -13,24 +13,24 @@ const CategoryTree = ({ selectedCategory, onSelect }) => {
         );
     };
 
-    const getChildren = (parentId) => {
-        return CATEGORIES.filter(c => c.parent_id === parentId && c.status === 1);
-    };
+    const getChildren = (parentId) =>
+        categories.filter(c => String(c.parentId) === String(parentId));
+
+    const rootCategories = categories.filter(c => c.parentId == null);
 
     const renderCategory = (cat, level = 0) => {
-        const children = getChildren(cat.category_id);
+        const children = getChildren(cat.categoryId);
         const hasChildren = children.length > 0;
-        const isExpanded = expandedIds.includes(cat.category_id);
-        const isActive = selectedCategory === cat.category_id;
-        const count = countByCategory(cat.category_id);
+        const isExpanded = expandedIds.includes(cat.categoryId);
+        const isActive = selectedCategory === cat.categoryId;
 
         return (
-            <li key={cat.category_id} className="catalog-cat-item">
+            <li key={cat.categoryId} className="catalog-cat-item">
                 <button
                     className={`catalog-cat-btn ${isActive ? 'active' : ''}`}
                     onClick={() => {
-                        onSelect(cat.category_id);
-                        if (hasChildren) toggleExpand(cat.category_id);
+                        onSelect(cat.categoryId);
+                        if (hasChildren) toggleExpand(cat.categoryId);
                     }}
                     style={{ paddingLeft: `${8 + level * 16}px` }}
                 >
@@ -38,7 +38,9 @@ const CategoryTree = ({ selectedCategory, onSelect }) => {
                         <span className={`catalog-cat-arrow ${isExpanded ? 'expanded' : ''}`}>▸</span>
                     )}
                     <span>{cat.name}</span>
-                    <span className="catalog-cat-count">{count}</span>
+                    {cat.productCount != null && (
+                        <span className="catalog-cat-count">{cat.productCount}</span>
+                    )}
                 </button>
                 {hasChildren && isExpanded && (
                     <ul className="catalog-cat-children">
@@ -48,6 +50,8 @@ const CategoryTree = ({ selectedCategory, onSelect }) => {
             </li>
         );
     };
+
+    if (categories.length === 0) return null;
 
     return (
         <ul className="catalog-cat-tree">

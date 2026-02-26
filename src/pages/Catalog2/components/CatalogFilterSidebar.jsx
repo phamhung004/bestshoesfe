@@ -4,184 +4,133 @@ import BrandFilter from './BrandFilter';
 import PriceRangeSlider from './PriceRangeSlider';
 import SizeFilter from './SizeFilter';
 import ColorFilter from './ColorFilter';
-import MaterialFilter from './MaterialFilter';
-import RatingFilter from './RatingFilter';
-import AvailabilityToggles from './AvailabilityToggles';
 
-const CatalogFilterSidebar = ({ filters, onFilterChange, onReset }) => {
-    // Collapsible sections
+/**
+ * CatalogFilterSidebar — uses real API filter options.
+ *
+ * Props:
+ *   filters        — from useProducts() hook
+ *   filterOptions  — from useFilterOptions() hook: { categories, brands, sizes, colors, maxPrice }
+ *   onFilterChange — (key, value) => void
+ *   onReset        — () => void
+ */
+const CatalogFilterSidebar = ({ filters, filterOptions, onFilterChange, onReset }) => {
+    // Accept both {categories, brands, ...} or {options: {categories, ...}}
+    const opts = (filterOptions && filterOptions.options) ? filterOptions.options : (filterOptions || {});
+    const { categories = [], brands = [], sizes = [], colors = [], maxPrice } = opts;
     const [collapsed, setCollapsed] = useState({});
 
-    const toggleSection = (key) => {
+    const toggleSection = (key) =>
         setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
+
+    // Single-select toggle: if same value is clicked, deselect (set to undefined)
+    const toggleSingle = (key, value) => {
+        onFilterChange(key, filters[key] === value ? undefined : value);
     };
 
-    const toggleArray = (key, value) => {
-        const arr = filters[key] || [];
-        const newArr = arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value];
-        onFilterChange(key, newArr);
-    };
+    const sectionHeader = (label, key) => (
+        <h3
+            className={`catalog-filter-title ${collapsed[key] ? 'collapsed' : ''}`}
+            onClick={() => toggleSection(key)}
+        >
+            {label}
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" fill="none" />
+            </svg>
+        </h3>
+    );
 
     return (
         <div className="catalog-filter-sidebar">
-            {/* Category Tree */}
+            {/* Category */}
             <div className="catalog-filter-section">
-                <h3
-                    className={`catalog-filter-title ${collapsed.category ? 'collapsed' : ''}`}
-                    onClick={() => toggleSection('category')}
-                >
-                    Danh mục
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    </svg>
-                </h3>
+                {sectionHeader('Danh mục', 'category')}
                 {!collapsed.category && (
                     <CategoryTree
-                        selectedCategory={filters.category}
-                        onSelect={(catId) => onFilterChange('category', filters.category === catId ? null : catId)}
+                        categories={categories}
+                        selectedCategory={filters.categoryId}
+                        onSelect={(catId) => toggleSingle('categoryId', catId)}
                     />
                 )}
             </div>
 
-            {/* Brand Filter */}
+            {/* Brand */}
             <div className="catalog-filter-section">
-                <h3
-                    className={`catalog-filter-title ${collapsed.brands ? 'collapsed' : ''}`}
-                    onClick={() => toggleSection('brands')}
-                >
-                    Thương hiệu
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    </svg>
-                </h3>
+                {sectionHeader('Thương hiệu', 'brands')}
                 {!collapsed.brands && (
                     <BrandFilter
-                        selectedBrands={filters.brands}
-                        onToggle={(id) => toggleArray('brands', id)}
+                        brands={brands}
+                        selectedBrands={filters.brandId != null ? [filters.brandId] : []}
+                        onToggle={(id) => toggleSingle('brandId', id)}
                     />
                 )}
             </div>
 
             {/* Price Range */}
             <div className="catalog-filter-section">
-                <h3
-                    className={`catalog-filter-title ${collapsed.price ? 'collapsed' : ''}`}
-                    onClick={() => toggleSection('price')}
-                >
-                    Khoảng giá
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    </svg>
-                </h3>
+                {sectionHeader('Khoảng giá', 'price')}
                 {!collapsed.price && (
                     <PriceRangeSlider
-                        priceRange={filters.priceRange}
-                        onApply={(range) => onFilterChange('priceRange', range)}
-                    />
-                )}
-            </div>
-
-            {/* Size Filter */}
-            <div className="catalog-filter-section">
-                <h3
-                    className={`catalog-filter-title ${collapsed.sizes ? 'collapsed' : ''}`}
-                    onClick={() => toggleSection('sizes')}
-                >
-                    Size
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    </svg>
-                </h3>
-                {!collapsed.sizes && (
-                    <SizeFilter
-                        selectedSizes={filters.sizes}
-                        onToggle={(id) => toggleArray('sizes', id)}
-                    />
-                )}
-            </div>
-
-            {/* Color Filter */}
-            <div className="catalog-filter-section">
-                <h3
-                    className={`catalog-filter-title ${collapsed.colors ? 'collapsed' : ''}`}
-                    onClick={() => toggleSection('colors')}
-                >
-                    Màu sắc
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    </svg>
-                </h3>
-                {!collapsed.colors && (
-                    <ColorFilter
-                        selectedColors={filters.colors}
-                        onToggle={(id) => toggleArray('colors', id)}
-                    />
-                )}
-            </div>
-
-            {/* Material Filter */}
-            <div className="catalog-filter-section">
-                <h3
-                    className={`catalog-filter-title ${collapsed.materials ? 'collapsed' : ''}`}
-                    onClick={() => toggleSection('materials')}
-                >
-                    Chất liệu
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    </svg>
-                </h3>
-                {!collapsed.materials && (
-                    <MaterialFilter
-                        selectedMaterials={filters.materials}
-                        onToggle={(id) => toggleArray('materials', id)}
-                    />
-                )}
-            </div>
-
-            {/* Rating Filter */}
-            <div className="catalog-filter-section">
-                <h3
-                    className={`catalog-filter-title ${collapsed.rating ? 'collapsed' : ''}`}
-                    onClick={() => toggleSection('rating')}
-                >
-                    Đánh giá
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    </svg>
-                </h3>
-                {!collapsed.rating && (
-                    <RatingFilter
-                        selectedRating={filters.rating}
-                        onSelect={(val) => onFilterChange('rating', val)}
-                    />
-                )}
-            </div>
-
-            {/* Availability Toggles */}
-            <div className="catalog-filter-section">
-                <h3
-                    className={`catalog-filter-title ${collapsed.availability ? 'collapsed' : ''}`}
-                    onClick={() => toggleSection('availability')}
-                >
-                    Trạng thái
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    </svg>
-                </h3>
-                {!collapsed.availability && (
-                    <AvailabilityToggles
-                        availability={filters.availability}
-                        onToggle={(key) => {
-                            onFilterChange('availability', {
-                                ...filters.availability,
-                                [key]: !filters.availability[key],
-                            });
+                        priceRange={[filters.minPrice ?? 0, filters.maxPrice ?? (maxPrice ?? 5000000)]}
+                        maxPrice={maxPrice ?? 5000000}
+                        onApply={([min, max]) => {
+                            onFilterChange('minPrice', min > 0 ? min : undefined);
+                            onFilterChange('maxPrice', max < (maxPrice ?? 5000000) ? max : undefined);
                         }}
                     />
                 )}
             </div>
 
-            {/* Reset button */}
+            {/* Size */}
+            <div className="catalog-filter-section">
+                {sectionHeader('Size', 'sizes')}
+                {!collapsed.sizes && (
+                    <SizeFilter
+                        sizes={sizes}
+                        selectedSizes={filters.sizeName != null ? [filters.sizeName] : []}
+                        onToggle={(size) => toggleSingle('sizeName', size)}
+                    />
+                )}
+            </div>
+
+            {/* Color */}
+            <div className="catalog-filter-section">
+                {sectionHeader('Màu sắc', 'colors')}
+                {!collapsed.colors && (
+                    <ColorFilter
+                        colors={colors}
+                        selectedColors={filters.colorId}
+                        onToggle={(id) => toggleSingle('colorId', id)}
+                    />
+                )}
+            </div>
+
+            {/* Availability toggles */}
+            <div className="catalog-filter-section">
+                {sectionHeader('Trạng thái', 'availability')}
+                {!collapsed.availability && (
+                    <div className="catalog-availability-toggles">
+                        <label className="catalog-toggle-row">
+                            <input
+                                type="checkbox"
+                                checked={!!filters.isNew}
+                                onChange={() => onFilterChange('isNew', filters.isNew ? undefined : true)}
+                            />
+                            <span>Hàng mới về</span>
+                        </label>
+                        <label className="catalog-toggle-row">
+                            <input
+                                type="checkbox"
+                                checked={!!filters.onSale}
+                                onChange={() => onFilterChange('onSale', filters.onSale ? undefined : true)}
+                            />
+                            <span>Đang khuyến mãi</span>
+                        </label>
+                    </div>
+                )}
+            </div>
+
+            {/* Reset */}
             <button className="catalog-reset-btn" onClick={onReset}>
                 Xóa tất cả bộ lọc
             </button>

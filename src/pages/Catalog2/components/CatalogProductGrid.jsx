@@ -41,7 +41,7 @@ const CatalogProductGrid = ({
         <div className={gridClass}>
             {products.map(product => (
                 <CatalogProductCard
-                    key={product.product_id}
+                    key={product.productId ?? product.product_id}
                     product={product}
                     viewMode={viewMode}
                     onQuickView={onQuickView}

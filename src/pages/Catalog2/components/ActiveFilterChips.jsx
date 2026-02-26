@@ -1,76 +1,73 @@
 import React from 'react';
-import { BRANDS, SIZES, COLORS, MATERIALS, CATEGORIES } from '../mockCatalogData';
+import { formatVND } from '../../../utils/formatPrice';
 
-const ActiveFilterChips = ({ filters, onRemoveFilter, onClearAll }) => {
+/**
+ * ActiveFilterChips — uses real API filter keys.
+ *
+ * Props:
+ *   filters        — current filter state from useProducts()
+ *   filterOptions  — { categories, brands, sizes, colors } from useFilterOptions()
+ *   onRemoveFilter — (key, value?) => void
+ *   onClearAll     — () => void
+ */
+const ActiveFilterChips = ({ filters, filterOptions, onRemoveFilter, onClearAll }) => {
+    // Accept both {categories, brands, ...} or {options: {categories, ...}}
+    const opts = (filterOptions && filterOptions.options) ? filterOptions.options : (filterOptions || {});
+    const { categories = [], brands = [], colors = [] } = opts;
     const chips = [];
 
-    // Category chip
-    if (filters.category) {
-        const cat = CATEGORIES.find(c => c.category_id === filters.category);
-        if (cat) {
-            chips.push({ key: 'category', label: cat.name, value: filters.category });
-        }
+    // Category
+    if (filters.categoryId) {
+        const cat = categories.find(c => c.categoryId === filters.categoryId);
+        chips.push({ key: 'categoryId', label: cat ? cat.name : `Danh mục #${filters.categoryId}` });
     }
 
-    // Brand chips
-    filters.brands.forEach(bid => {
-        const brand = BRANDS.find(b => b.brand_id === bid);
-        if (brand) {
-            chips.push({ key: 'brands', label: brand.name, value: bid });
-        }
-    });
-
-    // Size chips
-    filters.sizes.forEach(sid => {
-        const size = SIZES.find(s => s.size_id === sid);
-        if (size) {
-            chips.push({ key: 'sizes', label: `Size ${size.size_name}`, value: sid });
-        }
-    });
-
-    // Color chips
-    filters.colors.forEach(cid => {
-        const color = COLORS.find(c => c.color_id === cid);
-        if (color) {
-            chips.push({ key: 'colors', label: `Màu ${color.color_name}`, value: cid });
-        }
-    });
-
-    // Material chips
-    filters.materials.forEach(mid => {
-        const mat = MATERIALS.find(m => m.material_id === mid);
-        if (mat) {
-            chips.push({ key: 'materials', label: mat.material_name, value: mid });
-        }
-    });
-
-    // Price range chip
-    if (filters.priceRange[0] > 0 || filters.priceRange[1] < 5000000) {
-        const fmt = (n) => new Intl.NumberFormat('vi-VN').format(n);
-        chips.push({
-            key: 'priceRange',
-            label: `${fmt(filters.priceRange[0])} — ${fmt(filters.priceRange[1])} ₫`,
-            value: 'price',
-        });
+    // Brand
+    if (filters.brandId != null) {
+        const brand = brands.find(b => b.brandId === filters.brandId);
+        chips.push({ key: 'brandId', label: brand ? brand.name : `Thương hiệu #${filters.brandId}` });
     }
 
-    // Rating chip
-    if (filters.rating) {
-        chips.push({ key: 'rating', label: `${filters.rating}★ trở lên`, value: filters.rating });
+    // Size
+    if (filters.sizeName) {
+        chips.push({ key: 'sizeName', label: `Size ${filters.sizeName}` });
     }
 
-    // Availability chips
-    if (filters.availability.inStock) {
-        chips.push({ key: 'availability-inStock', label: 'Còn hàng', value: 'inStock' });
+    // Color
+    if (filters.colorId != null) {
+        const color = colors.find(c => c.colorId === filters.colorId);
+        chips.push({ key: 'colorId', label: `Màu ${color ? color.colorName : filters.colorId}` });
     }
-    if (filters.availability.onPromotion) {
-        chips.push({ key: 'availability-onPromotion', label: 'Đang khuyến mãi', value: 'onPromotion' });
+
+    // Price range
+    if (filters.minPrice != null || filters.maxPrice != null) {
+        const min = filters.minPrice ?? 0;
+        const max = filters.maxPrice;
+        const label = max != null
+            ? `${formatVND(min)} — ${formatVND(max)}`
+            : `Từ ${formatVND(min)}`;
+        chips.push({ key: 'priceRange', label });
     }
-    if (filters.availability.newArrivals) {
-        chips.push({ key: 'availability-newArrivals', label: 'Hàng mới về', value: 'newArrivals' });
-    }
+
+    // isNew
+    if (filters.isNew) chips.push({ key: 'isNew', label: 'Hàng mới về' });
+
+    // onSale
+    if (filters.onSale) chips.push({ key: 'onSale', label: 'Đang khuyến mãi' });
+
+    // keyword
+    if (filters.keyword) chips.push({ key: 'keyword', label: `"${filters.keyword}"` });
 
     if (chips.length === 0) return null;
+
+    const handleRemove = (chip) => {
+        if (chip.key === 'priceRange') {
+            onRemoveFilter('minPrice');
+            onRemoveFilter('maxPrice');
+        } else {
+            onRemoveFilter(chip.key);
+        }
+    };
 
     return (
         <div className="catalog-active-chips">
@@ -79,7 +76,7 @@ const ActiveFilterChips = ({ filters, onRemoveFilter, onClearAll }) => {
                     {chip.label}
                     <button
                         className="catalog-chip-remove"
-                        onClick={() => onRemoveFilter(chip.key, chip.value)}
+                        onClick={() => handleRemove(chip)}
                         aria-label={`Xóa bộ lọc ${chip.label}`}
                     >
                         ×

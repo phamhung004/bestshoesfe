@@ -1,34 +1,45 @@
 import React from 'react';
-import { COLORS } from '../mockCatalogData';
 
-const ColorFilter = ({ selectedColors, onToggle }) => {
-    // Determine if a color is "light" to show a darker border
+/**
+ * ColorFilter — accepts `colors` prop from real API (ColorDTO[]).
+ * Each color: { colorId, colorName, colorCode }
+ * selectedColors: number | null (single-select)
+ */
+const ColorFilter = ({ selectedColors, onToggle, colors = [] }) => {
+    const selectedId = Array.isArray(selectedColors)
+        ? selectedColors[0]
+        : selectedColors;
+
+    // Determine if a color is "light" to show darker border
     const isLight = (hex) => {
+        if (!hex || !hex.startsWith('#')) return false;
         const r = parseInt(hex.slice(1, 3), 16);
         const g = parseInt(hex.slice(3, 5), 16);
         const b = parseInt(hex.slice(5, 7), 16);
         return (r * 299 + g * 587 + b * 114) / 1000 > 200;
     };
 
+    if (colors.length === 0) return <p style={{ color: '#999', fontSize: 13 }}>Đang tải...</p>;
+
     return (
         <div className="catalog-color-dots">
-            {COLORS.map(color => {
-                const isSelected = selectedColors.includes(color.color_id);
-                const lightColor = isLight(color.color_code);
+            {colors.map(color => {
+                const isSelected = selectedId === color.colorId;
+                const lightColor = isLight(color.colorCode);
 
                 return (
-                    <div key={color.color_id} className="catalog-color-dot-wrapper">
+                    <div key={color.colorId} className="catalog-color-dot-wrapper">
                         <button
                             className={`catalog-color-dot ${isSelected ? 'selected' : ''} ${lightColor ? 'light-color' : ''}`}
-                            style={{ backgroundColor: color.color_code }}
-                            onClick={() => onToggle(color.color_id)}
-                            aria-label={color.color_name}
+                            style={{ backgroundColor: color.colorCode || '#999' }}
+                            onClick={() => onToggle(color.colorId)}
+                            aria-label={color.colorName}
                         >
                             {isSelected && (
                                 <span className="checkmark" style={{ color: lightColor ? '#333' : '#fff' }}>✓</span>
                             )}
                         </button>
-                        <span className="catalog-color-tooltip">{color.color_name}</span>
+                        <span className="catalog-color-tooltip">{color.colorName}</span>
                     </div>
                 );
             })}

@@ -1,205 +1,54 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CatalogFilterSidebar from './components/CatalogFilterSidebar';
 import FilterDrawer from './components/FilterDrawer';
 import ActiveFilterChips from './components/ActiveFilterChips';
 import CatalogToolbar from './components/CatalogToolbar';
 import CatalogProductGrid from './components/CatalogProductGrid';
 import CatalogPagination from './components/CatalogPagination';
-import QuickViewModal from './components/QuickViewModal';
-import {
-    PRODUCTS,
-    CATEGORIES,
-    PRODUCTS_PER_PAGE,
-    getMinPrice,
-    getActivePromotion,
-    getDiscountedPrice,
-    isNewProduct,
-    getTotalStock,
-} from './mockCatalogData';
+import ErrorState from '../../components/common/ErrorState';
+import { useProducts } from '../../hooks/useProducts';
+import { useFilterOptions } from '../../hooks/useFilterOptions';
 import './CatalogPage.css';
 
-// ─── Default filter state ──────────────────────────────
-const DEFAULT_FILTERS = {
-    category: null,
-    brands: [],
-    priceRange: [0, 5000000],
-    sizes: [],
-    colors: [],
-    materials: [],
-    rating: null,
-    availability: {
-        inStock: false,
-        onPromotion: false,
-        newArrivals: false,
-    },
-};
-
 const CatalogPage = () => {
-    // ── Filter state ─────────────────────────────────────
-    const [filters, setFilters] = useState({ ...DEFAULT_FILTERS });
-    const [sortBy, setSortBy] = useState('featured');
+    const navigate = useNavigate();
+
+    // ── Real API hooks ────────────────────────────────────
+    const {
+        filters,
+        products,
+        loading,
+        error,
+        totalPages,
+        totalElements,
+        currentPage,
+        updateFilter,
+        resetFilters,
+        activeFilterCount,
+    } = useProducts();
+
+    const { options: filterOptions, loading: filtersLoading } = useFilterOptions();
+
+    // ── Local UI state ────────────────────────────────────
     const [viewMode, setViewMode] = useState('grid-4');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [loading, setLoading] = useState(true);
-    const [quickViewProduct, setQuickViewProduct] = useState(null);
     const [wishlist, setWishlist] = useState([]);
     const [toast, setToast] = useState(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const [loadedPages, setLoadedPages] = useState(1);
 
-    // Simulate initial loading
-    useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 800);
-        return () => clearTimeout(timer);
-    }, []);
-
-    // ── Filter logic ─────────────────────────────────────
-    const filteredProducts = useMemo(() => {
-        let result = PRODUCTS.filter(p => p.status === 1);
-
-        // Category filter (including children)
-        if (filters.category) {
-            const childCats = CATEGORIES
-                .filter(c => c.parent_id === filters.category)
-                .map(c => c.category_id);
-            const catIds = [filters.category, ...childCats];
-            result = result.filter(p => catIds.includes(p.category_id));
-        }
-
-        // Brand filter
-        if (filters.brands.length > 0) {
-            result = result.filter(p => filters.brands.includes(p.brand_id));
-        }
-
-        // Price range filter
-        if (filters.priceRange[0] > 0 || filters.priceRange[1] < 5000000) {
-            result = result.filter(p => {
-                const minPrice = getMinPrice(p);
-                return minPrice >= filters.priceRange[0] && minPrice <= filters.priceRange[1];
-            });
-        }
-
-        // Size filter
-        if (filters.sizes.length > 0) {
-            result = result.filter(p =>
-                p.variants.some(v => filters.sizes.includes(v.size_id) && v.status === 1)
-            );
-        }
-
-        // Color filter
-        if (filters.colors.length > 0) {
-            result = result.filter(p =>
-                p.variants.some(v => filters.colors.includes(v.color_id) && v.status === 1)
-            );
-        }
-
-        // Material filter
-        if (filters.materials.length > 0) {
-            result = result.filter(p => filters.materials.includes(p.material_id));
-        }
-
-        // Rating filter
-        if (filters.rating) {
-            result = result.filter(p => p.rating >= filters.rating);
-        }
-
-        // Availability: in-stock
-        if (filters.availability.inStock) {
-            result = result.filter(p => getTotalStock(p) > 0);
-        }
-
-        // Availability: on promotion
-        if (filters.availability.onPromotion) {
-            result = result.filter(p => getActivePromotion(p) !== null);
-        }
-
-        // Availability: new arrivals
-        if (filters.availability.newArrivals) {
-            result = result.filter(p => isNewProduct(p));
-        }
-
-        return result;
-    }, [filters]);
-
-    // ── Sort logic ───────────────────────────────────────
-    const sortedProducts = useMemo(() => {
-        const copy = [...filteredProducts];
-        switch (sortBy) {
-            case 'newest':
-                return copy.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            case 'price_asc':
-                return copy.sort((a, b) => getMinPrice(a) - getMinPrice(b));
-            case 'price_desc':
-                return copy.sort((a, b) => getMinPrice(b) - getMinPrice(a));
-            case 'rating':
-                return copy.sort((a, b) => b.rating - a.rating);
-            case 'bestseller':
-                return copy.sort((a, b) => (b.isBestseller ? 1 : 0) - (a.isBestseller ? 1 : 0));
-            case 'featured':
-            default:
-                return copy.sort((a, b) => {
-                    if (a.isBestseller && !b.isBestseller) return -1;
-                    if (!a.isBestseller && b.isBestseller) return 1;
-                    return b.rating - a.rating;
-                });
-        }
-    }, [filteredProducts, sortBy]);
-
-    // ── Pagination ───────────────────────────────────────
-    const totalPages = Math.ceil(sortedProducts.length / PRODUCTS_PER_PAGE);
-    const paginatedProducts = sortedProducts.slice(
-        0,
-        currentPage * PRODUCTS_PER_PAGE
-    );
-    // For standard pagination mode
-    const pageProducts = sortedProducts.slice(
-        (currentPage - 1) * PRODUCTS_PER_PAGE,
-        currentPage * PRODUCTS_PER_PAGE
-    );
-
-    const displayProducts = pageProducts;
-    const startItem = sortedProducts.length > 0 ? (currentPage - 1) * PRODUCTS_PER_PAGE + 1 : 0;
-    const endItem = Math.min(currentPage * PRODUCTS_PER_PAGE, sortedProducts.length);
-
-    // Reset page when filters change
-    useEffect(() => {
-        setCurrentPage(1);
-        setLoadedPages(1);
-    }, [filters, sortBy]);
-
-    // ── Filter change handler ────────────────────────────
+    // ── Handlers ─────────────────────────────────────────
     const handleFilterChange = useCallback((key, value) => {
-        setFilters(prev => ({ ...prev, [key]: value }));
-    }, []);
+        updateFilter(key, value);
+    }, [updateFilter]);
 
     const handleResetFilters = useCallback(() => {
-        setFilters({ ...DEFAULT_FILTERS });
-    }, []);
+        resetFilters();
+    }, [resetFilters]);
 
-    // Remove a single filter chip
-    const handleRemoveFilter = useCallback((key, value) => {
-        if (key === 'category') {
-            setFilters(prev => ({ ...prev, category: null }));
-        } else if (key === 'priceRange') {
-            setFilters(prev => ({ ...prev, priceRange: [0, 5000000] }));
-        } else if (key === 'rating') {
-            setFilters(prev => ({ ...prev, rating: null }));
-        } else if (key.startsWith('availability-')) {
-            const subKey = key.replace('availability-', '');
-            setFilters(prev => ({
-                ...prev,
-                availability: { ...prev.availability, [subKey]: false },
-            }));
-        } else {
-            // Array-based filters
-            setFilters(prev => ({
-                ...prev,
-                [key]: (prev[key] || []).filter(v => v !== value),
-            }));
-        }
-    }, []);
+    const handleRemoveFilter = useCallback((key) => {
+        updateFilter(key, undefined);
+    }, [updateFilter]);
 
-    // ── Wishlist toggle ──────────────────────────────────
     const handleToggleWishlist = useCallback((productId) => {
         setWishlist(prev =>
             prev.includes(productId)
@@ -208,33 +57,25 @@ const CatalogPage = () => {
         );
     }, []);
 
-    // ── Add to cart ──────────────────────────────────────
-    const handleAddToCart = useCallback((product, variant, qty = 1) => {
-        // Show toast notification
+    const handleAddToCart = useCallback((product) => {
         setToast(`Đã thêm "${product.name}" vào giỏ hàng!`);
         setTimeout(() => setToast(null), 3000);
     }, []);
 
-    // ── Breadcrumb data ──────────────────────────────────
-    const activeCat = filters.category
-        ? CATEGORIES.find(c => c.category_id === filters.category)
+    const handleQuickView = useCallback((product) => {
+        navigate(`/products/${product.productId}`);
+    }, [navigate]);
+
+    // ── Breadcrumb title from active category ─────────────
+    const activeCatName = filters.categoryId && filterOptions?.categories
+        ? filterOptions.categories.find(c => c.categoryId === filters.categoryId)?.name
         : null;
+    const pageTitle = activeCatName ?? 'Tất cả sản phẩm';
 
-    const pageTitle = activeCat ? activeCat.name : 'Tất cả sản phẩm';
-
-    // Count active filters for mobile badge
-    const activeFilterCount = [
-        filters.category ? 1 : 0,
-        filters.brands.length,
-        filters.sizes.length,
-        filters.colors.length,
-        filters.materials.length,
-        filters.rating ? 1 : 0,
-        (filters.priceRange[0] > 0 || filters.priceRange[1] < 5000000) ? 1 : 0,
-        filters.availability.inStock ? 1 : 0,
-        filters.availability.onPromotion ? 1 : 0,
-        filters.availability.newArrivals ? 1 : 0,
-    ].reduce((sum, v) => sum + v, 0);
+    // Range display for toolbar
+    const pageSize = filters.size ?? 12;
+    const startItem = totalElements > 0 ? currentPage * pageSize + 1 : 0;
+    const endItem = Math.min((currentPage + 1) * pageSize, totalElements);
 
     return (
         <div className="catalog-page">
@@ -245,21 +86,22 @@ const CatalogPage = () => {
                         <a href="/">Trang chủ</a>
                         <span className="catalog-breadcrumb-sep">/</span>
                         <a href="/catalog">Sản phẩm</a>
-                        {activeCat && (
+                        {activeCatName && (
                             <>
                                 <span className="catalog-breadcrumb-sep">/</span>
-                                <span className="catalog-breadcrumb-current">{activeCat.name}</span>
+                                <span className="catalog-breadcrumb-current">{activeCatName}</span>
                             </>
                         )}
                     </nav>
                     <h1 className="catalog-page-title">{pageTitle}</h1>
                     <p className="catalog-product-count">
-                        Tìm thấy {sortedProducts.length} sản phẩm
+                        {loading ? 'Đang tải...' : `Tìm thấy ${totalElements} sản phẩm`}
                     </p>
 
                     {/* Active filter chips */}
                     <ActiveFilterChips
                         filters={filters}
+                        filterOptions={filterOptions}
                         onRemoveFilter={handleRemoveFilter}
                         onClearAll={handleResetFilters}
                     />
@@ -271,6 +113,8 @@ const CatalogPage = () => {
                 {/* Left filter sidebar (desktop) */}
                 <CatalogFilterSidebar
                     filters={filters}
+                    filterOptions={filterOptions}
+                    filterOptionsLoading={filtersLoading}
                     onFilterChange={handleFilterChange}
                     onReset={handleResetFilters}
                 />
@@ -279,36 +123,63 @@ const CatalogPage = () => {
                 <div className="catalog-main-content">
                     {/* Toolbar */}
                     <CatalogToolbar
-                        totalProducts={sortedProducts.length}
+                        totalProducts={totalElements}
                         currentRange={[startItem, endItem]}
-                        sortBy={sortBy}
-                        onSortChange={setSortBy}
+                        sortBy={filters.sortBy ?? 'newest'}
+                        onSortChange={(val) => updateFilter('sortBy', val)}
                         viewMode={viewMode}
                         onViewChange={setViewMode}
                     />
 
+                    {/* Error state */}
+                    {error && !loading && (
+                        <ErrorState
+                            message={error}
+                            onRetry={() => updateFilter('page', currentPage)}
+                        />
+                    )}
+
                     {/* Product grid */}
-                    <CatalogProductGrid
-                        products={displayProducts}
-                        loading={loading}
-                        viewMode={viewMode}
-                        onQuickView={(product) => setQuickViewProduct(product)}
-                        onAddToCart={handleAddToCart}
-                        wishlist={wishlist}
-                        onToggleWishlist={handleToggleWishlist}
-                        onClearFilters={handleResetFilters}
-                        onShowAll={handleResetFilters}
-                    />
+                    {!error && (
+                        <div style={{ position: 'relative' }}>
+                            {/* Overlay spinner during filter changes (when data already exists) */}
+                            {loading && products.length > 0 && (
+                                <div style={{
+                                    position: 'absolute', inset: 0, zIndex: 10,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    background: 'rgba(255,255,255,0.6)',
+                                }}>
+                                    <div style={{
+                                        width: 40, height: 40, border: '3px solid #e0e7ff',
+                                        borderTop: '3px solid #4f46e5', borderRadius: '50%',
+                                        animation: 'spin 0.8s linear infinite',
+                                    }} />
+                                </div>
+                            )}
+                            <div style={{ opacity: loading && products.length > 0 ? 0.5 : 1, transition: 'opacity 0.2s' }}>
+                                <CatalogProductGrid
+                                    products={products}
+                                    loading={loading && products.length === 0}
+                                    viewMode={viewMode}
+                                    onQuickView={handleQuickView}
+                                    onAddToCart={handleAddToCart}
+                                    wishlist={wishlist}
+                                    onToggleWishlist={handleToggleWishlist}
+                                    onClearFilters={handleResetFilters}
+                                    onShowAll={handleResetFilters}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     {/* Pagination */}
-                    {!loading && sortedProducts.length > 0 && (
+                    {!loading && totalElements > 0 && (
                         <CatalogPagination
-                            currentPage={currentPage}
+                            currentPage={currentPage + 1}
                             totalPages={totalPages}
-                            totalProducts={sortedProducts.length}
-                            pageSize={PRODUCTS_PER_PAGE}
-                            onPageChange={setCurrentPage}
-                            onLoadMore={() => setCurrentPage(prev => prev + 1)}
+                            totalProducts={totalElements}
+                            pageSize={pageSize}
+                            onPageChange={(p) => updateFilter('page', p - 1)}
                         />
                     )}
                 </div>
@@ -332,15 +203,13 @@ const CatalogPage = () => {
                 <div className="catalog-mobile-sort">
                     <select
                         className="catalog-sort-select"
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
+                        value={filters.sortBy ?? 'newest'}
+                        onChange={(e) => updateFilter('sortBy', e.target.value)}
                     >
-                        <option value="featured">Nổi bật nhất</option>
                         <option value="newest">Mới nhất</option>
+                        <option value="popular">Phổ biến nhất</option>
                         <option value="price_asc">Giá tăng dần</option>
                         <option value="price_desc">Giá giảm dần</option>
-                        <option value="rating">Đánh giá cao nhất</option>
-                        <option value="bestseller">Bán chạy nhất</option>
                     </select>
                 </div>
             </div>
@@ -350,30 +219,27 @@ const CatalogPage = () => {
                 isOpen={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
                 filters={filters}
+                filterOptions={filterOptions}
                 onFilterChange={handleFilterChange}
                 onReset={handleResetFilters}
-                filteredCount={sortedProducts.length}
-                onApply={() => { }}
+                filteredCount={totalElements}
+                onApply={() => setDrawerOpen(false)}
             />
-
-            {/* ── Quick View Modal ────────────────────────── */}
-            {quickViewProduct && (
-                <QuickViewModal
-                    product={quickViewProduct}
-                    onClose={() => setQuickViewProduct(null)}
-                    onAddToCart={handleAddToCart}
-                    wishlist={wishlist}
-                    onToggleWishlist={handleToggleWishlist}
-                />
-            )}
 
             {/* ── Toast notification ──────────────────────── */}
             {toast && (
-                <div className="catalog-toast" key={Date.now()}>
+                <div className="catalog-toast">
                     <span>✓</span>
                     {toast}
                 </div>
             )}
+
+            <style>{`
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 };
