@@ -1,94 +1,20 @@
-.auth-page {
-  min-height: calc(100vh - 160px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ffffff;
-  padding: 40px 20px;
+/* Register shares all base styles from Login.css
+   Only register-specific overrides needed here */
+
+.register-page .auth-brand::before {
+  background: #F97316;
+  opacity: 0.20;
 }
 
-.auth-card {
-  display: flex;
-  width: 1100px;
-  border: 1px solid #2C3333;
-  background: white;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.03);
+.register-page .auth-brand::after {
+  background: #6366F1;
+  opacity: 0.14;
 }
 
-.auth-illustration {
-  flex: 1;
-  padding: 40px;
-  border-right: 1px solid #2C3333;
-}
-.illustration-placeholder {
-  width: 100%;
-  height: 420px;
-  background: #D9D9D9;
-  border: 1px solid #bdbdbd;
+.register-page .brand-bar {
+  background: linear-gradient(90deg, #F97316 0%, #6366F1 60%, transparent 100%);
 }
 
-.auth-form {
-  width: 420px;
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+.register-page .auth-form-panel::before {
+  background: linear-gradient(90deg, #F97316, #6366F1);
 }
-
-.auth-title {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 48px;
-  margin: 0;
-  color: #2C3333;
-}
-.auth-subtitle {
-  font-family: 'Roboto Slab', serif;
-  color: #2C3333;
-  margin: 0 0 8px 0;
-}
-
-.social-row {
-  display: flex;
-  gap: 10px;
-}
-.social-btn {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #AEAEAE;
-  background: white;
-  cursor: pointer;
-  font-family: 'Roboto Slab', serif;
-}
-.social-btn.google { color: #DB4437; }
-.social-btn.facebook { color: #1877F2; }
-
-.divider {
-  text-align: center;
-  color: #AEAEAE;
-  margin: 8px 0;
-}
-.divider span {
-  background: white;
-  padding: 0 10px;
-}
-
-.form { display: flex; flex-direction: column; gap: 12px; }
-.field .label { display: block; font-size: 12px; color: #2C3333; margin-bottom: 6px; }
-.field input { width: 100%; padding: 12px; border: 1px solid #AEAEAE; font-family: 'Roboto Slab', serif; }
-
-.terms { display:flex; gap:8px; align-items:center; color:#2C3333; }
-.terms a { color:#2C3333; font-weight:700; text-decoration:none; }
-
-.primary-btn { background:#2C3333; color:white; padding:12px; border:none; cursor:pointer; font-family:'Bebas Neue', sans-serif; font-size:20px; }
-.form-error { color:#BE2A2A; border:1px solid #BE2A2A; padding:8px; }
-
-.auth-foot { display:flex; gap:8px; align-items:center; margin-top:8px; }
-.auth-foot .link { color:#2C3333; text-decoration:none; font-weight:700; }
-
-@media (max-width: 1100px) {
-  .auth-card { width: 100%; flex-direction: column; }
-  .auth-illustration { border-right:none; border-bottom:1px solid #2C3333; }
-  .auth-form { width:100%; }
-}
-
-
