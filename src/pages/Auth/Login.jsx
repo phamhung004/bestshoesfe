@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/authService';
 import './Login.css';
 
 const EyeIcon = ({ open }) =>
@@ -18,20 +20,37 @@ const EyeIcon = ({ open }) =>
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (!email || !password) {
-      setError('Please enter both email and password.');
+      setError('Vui lòng nhập email và mật khẩu.');
       return;
     }
-    navigate('/purchase');
+    setLoading(true);
+    try {
+      const response = await authService.login({ email, password });
+      login(response.data);
+      const from = location.state?.from?.pathname;
+      if (response.data.role !== 'CUSTOMER') {
+        navigate('/admin');
+      } else {
+        navigate(from || '/');
+      }
+    } catch (err) {
+      setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,26 +84,6 @@ const Login = () => {
             <h1 className="auth-title">Sign In</h1>
             <p className="auth-subtitle">Continue to your BestShoes account</p>
           </div>
-
-          <div className="social-row">
-            <button className="social-btn google" type="button">
-              <svg viewBox="0 0 24 24" width="16" height="16">
-                <path fill="#DB4437" d="M12 5c1.6 0 3 .6 4.1 1.5L19.3 3.3C17.4 1.3 14.8 0 12 0 7.4 0 3.5 2.7 1.5 6.6l3.8 2.9C6.3 6.9 8.9 5 12 5z"/>
-                <path fill="#F4B400" d="M23.5 12.2c0-.8-.1-1.6-.2-2.3H12v4.4h6.5c-.3 1.5-1.1 2.7-2.3 3.5l3.6 2.8c2.1-2 3.7-5 3.7-8.4z"/>
-                <path fill="#0F9D58" d="M5.3 14.5C5.1 13.7 5 12.9 5 12s.1-1.7.3-2.5L1.5 6.6C.5 8.5 0 10.2 0 12c0 1.8.5 3.5 1.5 5l3.8-2.5z"/>
-                <path fill="#DB4437" d="M12 24c2.7 0 5-.9 6.8-2.4l-3.6-2.8c-1 .7-2.2 1.1-3.2 1.1-3.1 0-5.7-2-6.7-4.8L1.5 17.6C3.5 21.3 7.4 24 12 24z"/>
-              </svg>
-              Google
-            </button>
-            <button className="social-btn facebook" type="button">
-              <svg viewBox="0 0 24 24" width="16" height="16">
-                <path fill="#1877F2" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.41 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97H15.8c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/>
-              </svg>
-              Facebook
-            </button>
-          </div>
-
-          <div className="divider">or</div>
 
           {error && <div className="form-error">⚠ {error}</div>}
 
@@ -133,7 +132,9 @@ const Login = () => {
               <Link to="/#forgot" className="forgot">Forgot password?</Link>
             </div>
 
-            <button className="primary-btn" type="submit">Sign In</button>
+            <button className="primary-btn" type="submit" disabled={loading}>
+              {loading ? 'Đang đăng nhập...' : 'Sign In'}
+            </button>
           </form>
 
           <div className="auth-foot">

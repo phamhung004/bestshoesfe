@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import './Header.css'
 
 function Header() {
@@ -10,6 +11,8 @@ function Header() {
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false)
   const [catalogAccordionOpen, setCatalogAccordionOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+  const { isAuthenticated, user, logout } = useAuth()
   const searchInputRef = useRef(null)
   const miniCartRef = useRef(null)
   const megaMenuTimeoutRef = useRef(null)
@@ -264,6 +267,34 @@ function Header() {
                 <span className="bs-header__badge bs-header__badge--red">{wishlistCount}</span>
               )}
             </button>
+
+            {/* Auth */}
+            {isAuthenticated ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Link to="/account" className="bs-header__icon-btn" title={user?.fullName} style={{ fontSize: '13px', fontWeight: 600 }}>
+                  {user?.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                </Link>
+                <button
+                  className="bs-header__icon-btn"
+                  onClick={() => { logout(); navigate('/'); }}
+                  style={{ fontSize: '12px' }}
+                  title="Đăng xuất"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <Link to="/login" className="bs-header__icon-btn" title="Đăng nhập">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </Link>
+            )}
 
             {/* Cart */}
             <div className="bs-header__cart-wrapper" ref={miniCartRef}>

@@ -8,6 +8,8 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Toast from "./components/Toast";
 import { ToastProvider } from "./context/ToastContext";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage/HomePage";
 import Catalog from "./pages/Catalog2/CatalogPage";
 import Purchase from "./pages/Purchase";
@@ -36,14 +38,14 @@ function AppContent() {
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/purchase/:productId" element={<Purchase />} />
           <Route path="/products/:productId" element={<ProductDetailPage />} />
-          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/account" element={<MyAccountPage />} />
-          <Route path="/admin/*" element={<AdminRouter />} />
-          <Route path="/admin/san-pham" element={<ProductManagementPage />} />
+          <Route path="/account" element={<ProtectedRoute><MyAccountPage /></ProtectedRoute>} />
+          <Route path="/admin/*" element={<ProtectedRoute requireAdmin><AdminRouter /></ProtectedRoute>} />
+          <Route path="/admin/san-pham" element={<ProtectedRoute requireAdmin><ProductManagementPage /></ProtectedRoute>} />
         </Routes>
       </div>
       {!isAdminRoute && <Footer />}
@@ -54,9 +56,11 @@ function AppContent() {
 function App() {
   return (
     <ToastProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <AuthProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </AuthProvider>
     </ToastProvider>
   );
 }
