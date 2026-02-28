@@ -23,6 +23,7 @@ import AdminRouter from "./pages/Admin/AdminRouter";
 import MyAccountPage from "./pages/MyAccount";
 import ProductDetailPage from "./pages/ProductDetail/ProductDetailPage";
 import ProductManagementPage from "./pages/Admin/ProductManagement/ProductManagementPage";
+import AccountManagementPage from "./pages/Admin/AccountManagement/AccountManagementPage";
 
 function AppContent() {
   const location = useLocation();
@@ -46,6 +47,7 @@ function AppContent() {
           <Route path="/account" element={<ProtectedRoute><MyAccountPage /></ProtectedRoute>} />
           <Route path="/admin/*" element={<ProtectedRoute requireAdmin><AdminRouter /></ProtectedRoute>} />
           <Route path="/admin/san-pham" element={<ProtectedRoute requireAdmin><ProductManagementPage /></ProtectedRoute>} />
+          <Route path="/admin/tai-khoan" element={<ProtectedRoute requireAdmin><AccountManagementPage /></ProtectedRoute>} />
         </Routes>
       </div>
       {!isAdminRoute && <Footer />}

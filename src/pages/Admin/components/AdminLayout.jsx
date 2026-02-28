@@ -24,6 +24,9 @@ const AdminLayout = ({ activeSection, title, subtitle, children }) => {
       case 'product-management/products':
         navigate('/admin/products');
         break;
+      case 'user-management':
+        navigate('/admin/tai-khoan');
+        break;
       case 'dashboard':
         navigate('/admin');
         break;

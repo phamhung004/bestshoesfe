@@ -140,7 +140,7 @@ const menuStructure = [
   },
   {
     id: 'user-management',
-    label: 'Khách hàng',
+    label: 'Tài khoản',
     icon: Icons.Users,
     type: 'single',
   },

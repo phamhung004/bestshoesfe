@@ -7,6 +7,7 @@ import CategoryDetail from "./components/Category/CategoryDetail";
 import MaterialDetail from "./components/Material/MaterialDetail";
 import ProductDetail from "./components/Product/ProductDetail";
 import ProductManagementPage from "./ProductManagement/ProductManagementPage";
+import AccountManagementPage from "./AccountManagement/AccountManagementPage";
 
 const AdminRouter = () => {
   return (
@@ -18,6 +19,7 @@ const AdminRouter = () => {
       <Route path="/material/:id" element={<MaterialDetail />} />
       <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/products" element={<ProductManagementPage />} />
+      <Route path="/tai-khoan" element={<AccountManagementPage />} />
     </Routes>
   );
 };
