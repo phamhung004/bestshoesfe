@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Check, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import TabBasicInfo from './TabBasicInfo';
 import TabVariants from './TabVariants';
 import TabImages from './TabImages';
-import { MOCK_CATEGORIES, MOCK_BRANDS, MOCK_MATERIALS, slugify } from '../../mockProducts';
+import { slugify } from '../../mockProducts';
 
 const TABS = [
   { index: 0, label: 'Thông tin cơ bản', short: '① Cơ bản' },
@@ -31,15 +31,21 @@ const emptyBasicInfo = {
  * ProductModal
  *
  * Props:
- *   mode      'add' | 'edit'
- *   product   Product | null  (null for add)
- *   onSave    (productData) => void
- *   onCancel  () => void
+ *   mode       'add' | 'edit'
+ *   product    Product | null  (null for add)
+ *   categories Category[]
+ *   brands     Brand[]
+ *   materials  Material[]
+ *   sizes      Size[]
+ *   colors     Color[]
+ *   onSave     async ({ basicInfo, variants, variantImages, existingProduct }) => void
+ *   onCancel   () => void
  */
-const ProductModal = ({ mode, product, onSave, onCancel }) => {
+const ProductModal = ({ mode, product, categories = [], brands = [], materials = [], sizes = [], colors = [], onSave, onCancel }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [completedTabs, setCompletedTabs] = useState(new Set());
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   // Tab 1 — Basic info form state
   const [basicInfo, setBasicInfo] = useState(() => {
@@ -66,8 +72,24 @@ const ProductModal = ({ mode, product, onSave, onCancel }) => {
   // Tab 2 — Variants
   const [variants, setVariants] = useState(() => product?.variants || []);
 
-  // Tab 3 — Images per variant
-  const [variantImages, setVariantImages] = useState({});
+  // Tab 3 — Images per variant (pre-populated with existing images in edit mode)
+  const [variantImages, setVariantImages] = useState(() => {
+    if (!product?.variants) return {};
+    const init = {};
+    for (const v of product.variants) {
+      if (Array.isArray(v.images) && v.images.length > 0) {
+        init[v.id] = v.images.map((img) => ({
+          id: img.id,          // number → existing on server
+          imageUrl: img.imageUrl,
+          altText: img.altText,
+          isPrimary: img.isPrimary,
+          sortOrder: img.sortOrder,
+          objectUrl: img.imageUrl, // use Cloudinary URL for preview
+        }));
+      }
+    }
+    return init;
+  });
 
   // Validation errors
   const [errors, setErrors] = useState({});
@@ -134,51 +156,19 @@ const ProductModal = ({ mode, product, onSave, onCancel }) => {
     }
 
     setSaving(true);
-
-    // Resolve lookup objects from IDs
-    const category = MOCK_CATEGORIES.find((c) => String(c.id) === basicInfo.categoryId);
-    const brand    = MOCK_BRANDS.find((b) => String(b.id) === basicInfo.brandId);
-    const material = MOCK_MATERIALS.find((m) => String(m.id) === basicInfo.materialId);
-
-    const totalStock = variants.reduce((s, v) => s + (parseInt(v.stock) || 0), 0);
-    const prices = variants.map((v) => parseFloat(v.price)).filter((p) => !isNaN(p) && p > 0);
-
-    const productData = {
-      ...(product || {}),
-      name:         basicInfo.name.trim(),
-      description:  basicInfo.description.trim(),
-      category:     category || null,
-      brand:        brand    || null,
-      material:     material || null,
-      status:       basicInfo.status,
-      tags:         basicInfo.tags,
-      slug:         basicInfo.slug || slugify(basicInfo.name),
-      seoTitle:     basicInfo.seoTitle,
-      seoDescription: basicInfo.seoDescription,
-      weight:       basicInfo.weight,
-      variants,
-      totalVariants: variants.length,
-      totalStock,
-      basePrice:    prices.length ? Math.min(...prices) : 0,
-      sku:          product?.sku || `BS-${Date.now().toString(36).toUpperCase()}`,
-      imageUrl:     (() => {
-        // Use shared image or first variant image as cover
-        const sharedImgs = variantImages['shared'] || [];
-        if (sharedImgs.length > 0) return sharedImgs[0].objectUrl || sharedImgs[0].url;
-        for (const v of variants) {
-          const imgs = variantImages[v.id] || [];
-          if (imgs.length > 0) return imgs[0].objectUrl || imgs[0].url;
-        }
-        return product?.imageUrl || null;
-      })(),
-      createdAt:    product?.createdAt || new Date().toISOString(),
-      updatedAt:    new Date().toISOString(),
-    };
-
-    // Small delay to simulate API call feel
-    await new Promise((r) => setTimeout(r, 400));
-    setSaving(false);
-    onSave(productData);
+    setSaveError(null);
+    try {
+      await onSave({
+        basicInfo,
+        variants,
+        variantImages,
+        existingProduct: product || null,
+      });
+      // Modal is closed by parent after successful save
+    } catch (err) {
+      setSaveError(err?.message ?? 'Lỗi lưu sản phẩm. Vui lòng thử lại.');
+      setSaving(false);
+    }
   };
 
   /* ── Escape key ───────────────────────────────────────────── */
@@ -237,10 +227,23 @@ const ProductModal = ({ mode, product, onSave, onCancel }) => {
         {/* ── Body ────────────────────────────────────────── */}
         <div className="pm-modal-body">
           {activeTab === 0 && (
-            <TabBasicInfo data={basicInfo} onChange={handleBasicInfoChange} errors={errors} />
+            <TabBasicInfo
+              data={basicInfo}
+              onChange={handleBasicInfoChange}
+              errors={errors}
+              categories={categories}
+              brands={brands}
+              materials={materials}
+            />
           )}
           {activeTab === 1 && (
-            <TabVariants variants={variants} onChange={setVariants} errors={errors} />
+            <TabVariants
+              variants={variants}
+              onChange={setVariants}
+              errors={errors}
+              sizes={sizes}
+              colors={colors}
+            />
           )}
           {activeTab === 2 && (
             <TabImages
@@ -263,6 +266,12 @@ const ProductModal = ({ mode, product, onSave, onCancel }) => {
                 <ChevronLeft size={14} />
                 Quay lại
               </button>
+            )}
+            {saveError && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ef4444', fontSize: 13 }}>
+                <AlertTriangle size={14} />
+                {saveError}
+              </span>
             )}
           </div>
 

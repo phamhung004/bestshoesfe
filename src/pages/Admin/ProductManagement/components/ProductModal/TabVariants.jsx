@@ -3,6 +3,13 @@ import { Zap, Trash2, Plus } from 'lucide-react';
 import { MOCK_SIZES, MOCK_COLORS } from '../../mockProducts';
 import { formatPrice } from '../../../../../utils/formatPrice';
 
+/** Normalise a size object from either mock or API format */
+const normSize = (s) =>
+  typeof s === 'string' ? { id: null, name: s } : { id: s.id ?? null, name: s.name };
+
+/** Normalise a color object from either mock or API format */
+const normColor = (c) => ({ id: c.id, name: c.name, code: c.code ?? '#cccccc' });
+
 /** Generate variant combinations (additive — preserves existing) */
 const generateVariants = (sizes, colors, existing) => {
   const map = new Map(
@@ -10,10 +17,12 @@ const generateVariants = (sizes, colors, existing) => {
   );
   return sizes.flatMap((size) =>
     colors.map((color) =>
-      map.get(`${size}-${color.name}`) || {
-        id: `new-${Date.now()}-${Math.random().toString(36).slice(2)}-${size}-${color.name}`,
-        size,
+      map.get(`${size.name}-${color.name}`) || {
+        id: `new-${Date.now()}-${Math.random().toString(36).slice(2)}-${size.name}-${color.name}`,
+        size:    size.name,
+        sizeId:  size.id,
         color,
+        colorId: color.id,
         price: '',
         costPrice: '',
         stock: '',
@@ -44,18 +53,27 @@ const MarginBadge = ({ price, costPrice }) => {
  * TabVariants
  *
  * Props:
- *   variants     Variant[]
- *   onChange     (variants) => void
- *   errors       { variants? }
+ *   variants  Variant[]
+ *   onChange  (variants) => void
+ *   errors    { variants? }
+ *   sizes     Size[]   from API (optional, falls back to MOCK_SIZES)
+ *   colors    Color[]  from API (optional, falls back to MOCK_COLORS)
  */
-const TabVariants = ({ variants = [], onChange, errors = {} }) => {
+const TabVariants = ({ variants = [], onChange, errors = {}, sizes: sizeProp, colors: colorProp }) => {
+  // Normalise sizes and colors — prefer real API data, fall back to mock
+  const allSizes  = (sizeProp  && sizeProp.length  ? sizeProp  : MOCK_SIZES ).map(normSize);
+  const allColors = (colorProp && colorProp.length ? colorProp : MOCK_COLORS).map(normColor);
+
   const [selectedSizes, setSelectedSizes] = useState(
-    () => [...new Set(variants.map((v) => v.size))]
+    () => {
+      const names = new Set(variants.map((v) => v.size));
+      return allSizes.filter((s) => names.has(s.name));
+    }
   );
   const [selectedColors, setSelectedColors] = useState(
     () => {
-      const colorNames = new Set(variants.map((v) => v.color.name));
-      return MOCK_COLORS.filter((c) => colorNames.has(c.name));
+      const colorNames = new Set(variants.map((v) => v.color?.name));
+      return allColors.filter((c) => colorNames.has(c.name));
     }
   );
 
@@ -92,13 +110,16 @@ const TabVariants = ({ variants = [], onChange, errors = {} }) => {
   };
 
   const handleAddManual = () => {
-    const firstColor = MOCK_COLORS[0];
+    const firstColor = allColors[0] ?? { id: null, name: 'Mặc định', code: '#cccccc' };
+    const firstSize  = allSizes[0]  ?? { id: null, name: '40' };
     onChange([
       ...variants,
       {
         id: `new-manual-${Date.now()}`,
-        size: '40',
-        color: firstColor,
+        size:    firstSize.name,
+        sizeId:  firstSize.id,
+        color:   firstColor,
+        colorId: firstColor.id,
         price: '',
         costPrice: '',
         stock: '',
@@ -142,7 +163,7 @@ const TabVariants = ({ variants = [], onChange, errors = {} }) => {
             <button
               type="button"
               style={{ background: 'none', border: 'none', color: '#6366f1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-              onClick={() => setSelectedSizes([...MOCK_SIZES])}
+              onClick={() => setSelectedSizes([...allSizes])}
             >
               Chọn tất cả
             </button>
@@ -156,14 +177,14 @@ const TabVariants = ({ variants = [], onChange, errors = {} }) => {
           </div>
         </div>
         <div className="pm-size-grid">
-          {MOCK_SIZES.map((size) => (
+          {allSizes.map((size) => (
             <button
-              key={size}
+              key={size.name}
               type="button"
-              className={`pm-size-chip ${selectedSizes.includes(size) ? 'selected' : ''}`}
+              className={`pm-size-chip ${selectedSizes.some((s) => s.name === size.name) ? 'selected' : ''}`}
               onClick={() => toggleSize(size)}
             >
-              {size}
+              {size.name}
             </button>
           ))}
         </div>
@@ -175,7 +196,7 @@ const TabVariants = ({ variants = [], onChange, errors = {} }) => {
           2. Chọn màu sắc có sẵn
         </span>
         <div className="pm-color-grid">
-          {MOCK_COLORS.map((color) => {
+          {allColors.map((color) => {
             const selected = selectedColors.some((c) => c.id === color.id);
             return (
               <button

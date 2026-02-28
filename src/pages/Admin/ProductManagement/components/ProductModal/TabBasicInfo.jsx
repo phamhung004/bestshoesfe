@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { MOCK_CATEGORIES, MOCK_BRANDS, MOCK_MATERIALS, slugify } from '../../mockProducts';
+import { slugify } from '../../mockProducts';
 
 const TAGS = [
   { key: 'hot',        label: '🔥 HOT' },
@@ -13,11 +13,14 @@ const TAGS = [
  * TabBasicInfo
  *
  * Props:
- *   data     { name, description, categoryId, brandId, materialId, status, tags, seoTitle, seoDesc, slug }
- *   onChange (field, value) => void
- *   errors   { name?, categoryId?, brandId? }
+ *   data       { name, description, categoryId, brandId, materialId, status, tags, seoTitle, seoDesc, slug }
+ *   onChange   (field, value) => void
+ *   errors     { name?, categoryId?, brandId? }
+ *   categories Category[]  from API
+ *   brands     Brand[]     from API
+ *   materials  Material[]  from API
  */
-const TabBasicInfo = ({ data, onChange, errors = {} }) => {
+const TabBasicInfo = ({ data, onChange, errors = {}, categories = [], brands = [], materials = [] }) => {
   const [seoOpen, setSeoOpen] = useState(false);
 
   // Auto-generate slug from name (only if slug hasn't been manually edited)
@@ -96,11 +99,14 @@ const TabBasicInfo = ({ data, onChange, errors = {} }) => {
               onChange={(e) => onChange('categoryId', e.target.value)}
             >
               <option value="">-- Chọn danh mục --</option>
-              {MOCK_CATEGORIES.map((c) => (
-                <option key={c.id} value={String(c.id)}>
-                  {c.name}
-                </option>
-              ))}
+              {categories.map((c) => {
+                const id = c.categoryId ?? c.id;
+                return (
+                  <option key={id} value={String(id)}>
+                    {c.name}
+                  </option>
+                );
+              })}
             </select>
             {errors.categoryId && (
               <span className="pm-field-error">{errors.categoryId}</span>
@@ -118,11 +124,14 @@ const TabBasicInfo = ({ data, onChange, errors = {} }) => {
               onChange={(e) => onChange('brandId', e.target.value)}
             >
               <option value="">-- Chọn thương hiệu --</option>
-              {MOCK_BRANDS.map((b) => (
-                <option key={b.id} value={String(b.id)}>
-                  {b.name}
-                </option>
-              ))}
+              {brands.map((b) => {
+                const id = b.brandId ?? b.id;
+                return (
+                  <option key={id} value={String(id)}>
+                    {b.name}
+                  </option>
+                );
+              })}
             </select>
             {errors.brandId && (
               <span className="pm-field-error">{errors.brandId}</span>
@@ -138,11 +147,14 @@ const TabBasicInfo = ({ data, onChange, errors = {} }) => {
               onChange={(e) => onChange('materialId', e.target.value)}
             >
               <option value="">-- Chọn chất liệu --</option>
-              {MOCK_MATERIALS.map((m) => (
-                <option key={m.id} value={String(m.id)}>
-                  {m.name}
-                </option>
-              ))}
+              {materials.map((m) => {
+                const id = m.materialId ?? m.id;
+                return (
+                  <option key={id} value={String(id)}>
+                    {m.name}
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>

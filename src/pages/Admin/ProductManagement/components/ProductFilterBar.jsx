@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Grid2X2, List, X } from 'lucide-react';
-import { MOCK_CATEGORIES, MOCK_BRANDS } from '../mockProducts';
 
 /**
  * ProductFilterBar
@@ -30,6 +29,8 @@ const ProductFilterBar = ({
   onSortChange,
   resultCount,
   totalCount,
+  categories = [],
+  brands = [],
 }) => {
   // Local search value for debouncing
   const [localSearch, setLocalSearch] = useState(filters.search);
@@ -89,11 +90,14 @@ const ProductFilterBar = ({
           onChange={(e) => onFilterChange('categoryId', e.target.value)}
         >
           <option value="">Tất cả danh mục</option>
-          {MOCK_CATEGORIES.map((c) => (
-            <option key={c.id} value={String(c.id)}>
-              {c.name}
-            </option>
-          ))}
+          {categories.map((c) => {
+            const id = c.categoryId ?? c.id;
+            return (
+              <option key={id} value={String(id)}>
+                {c.name}
+              </option>
+            );
+          })}
         </select>
 
         {/* Brand */}
@@ -103,11 +107,14 @@ const ProductFilterBar = ({
           onChange={(e) => onFilterChange('brandId', e.target.value)}
         >
           <option value="">Tất cả thương hiệu</option>
-          {MOCK_BRANDS.map((b) => (
-            <option key={b.id} value={String(b.id)}>
-              {b.name}
-            </option>
-          ))}
+          {brands.map((b) => {
+            const id = b.brandId ?? b.id;
+            return (
+              <option key={id} value={String(id)}>
+                {b.name}
+              </option>
+            );
+          })}
         </select>
 
         {/* Status */}

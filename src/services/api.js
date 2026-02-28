@@ -4,12 +4,14 @@ const API_BASE_URL = 'http://localhost:8080/api';
 // Generic API call function
 const apiCall = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
+  // Allow caller to skip Content-Type (e.g. for multipart/form-data)
+  const headers = options._skipContentType
+    ? { ...options.headers }
+    : { 'Content-Type': 'application/json', ...options.headers };
+  const { _skipContentType, ...restOptions } = options;
   const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
+    headers,
+    ...restOptions,
   };
 
   try {
@@ -51,8 +53,8 @@ export const brandAPI = {
     body: JSON.stringify({ pageNum, pageSize })
   }),
 
-  // Get active brands only
-  getActive: (pageNum = 0, pageSize = 10) => apiCall('/brands/active', {
+  // Get active brands only (falls back to list with large page)
+  getActive: (pageNum = 0, pageSize = 200) => apiCall('/brands/list', {
     method: 'POST',
     body: JSON.stringify({ pageNum, pageSize })
   }),
@@ -168,11 +170,15 @@ export const colorAPI = {
 
 // Product API functions
 export const productAPI = {
-  // Get all products
-  getAll: (pageNum = 0, pageSize = 10) => apiCall('/products/list', {
-    method: 'POST',
-    body: JSON.stringify({ pageNum, pageSize })
-  }),
+  // Get all / search products (server-side filtering & pagination)
+  // filters: { name, brandId, categoryId, materialId, status, pageNum, pageSize }
+  getAll: (filters = {}) => {
+    const { pageNum = 0, pageSize = 10, ...rest } = filters;
+    return apiCall('/products/list', {
+      method: 'POST',
+      body: JSON.stringify({ pageNum, pageSize, ...rest }),
+    });
+  },
 
   // Get active products only
   getActive: (pageNum = 0, pageSize = 10) => apiCall('/products/active', {
@@ -300,6 +306,32 @@ export const productImageAPI = {
     const idsParam = variantIds.join(',');
     return apiCall(`/product-images/variants?variantIds=${encodeURIComponent(idsParam)}`);
   },
+
+  // Get images for a single variant
+  getByVariant: (variantId) => apiCall(`/product-images/variant/${variantId}`),
+
+  // Upload image file for a variant (multipart/form-data)
+  upload: (variantId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiCall(`/product-images/variant/${variantId}/upload`, {
+      method: 'POST',
+      body: formData,
+      _skipContentType: true, // let browser set boundary
+    });
+  },
+
+  // Delete an image by ID
+  delete: (imageId) => apiCall(`/product-images/${imageId}`, { method: 'DELETE' }),
+
+  // Set an image as primary
+  setPrimary: (imageId) => apiCall(`/product-images/${imageId}/primary`, { method: 'PATCH' }),
+
+  // Reorder images for a variant
+  reorder: (variantId, imageIds) => apiCall(`/product-images/variant/${variantId}/reorder`, {
+    method: 'PUT',
+    body: JSON.stringify({ imageIds }),
+  }),
 };
 
 // Coupon API functions

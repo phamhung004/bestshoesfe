@@ -1,4 +1,4 @@
-import React, { useReducer, useMemo, useCallback, useEffect } from 'react';
+import React, { useReducer, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Check, AlertTriangle, Trash2, X } from 'lucide-react';
 import './ProductManagementPage.css';
 
@@ -13,12 +13,17 @@ import ProductSlideOver from './components/ProductSlideOver';
 import ProductModal from './components/ProductModal/ProductModal';
 
 import {
-  mockProducts,
-  STATUS_CONFIG,
-  MOCK_CATEGORIES,
-  MOCK_BRANDS,
-  getMinPrice,
-} from './mockProducts';
+  productAPI,
+  categoryAPI,
+  brandAPI,
+  materialAPI,
+  sizeAPI,
+  colorAPI,
+  productVariantAPI,
+  productImageAPI,
+} from '../../../services/api';
+
+import { STATUS_CONFIG, getMinPrice, slugify } from './mockProducts';
 
 /* ═══════════════════════════════════════════════════════════
    REDUCER
@@ -32,8 +37,19 @@ const INITIAL_FILTERS = {
 };
 
 const initialState = {
-  products: mockProducts,
-  viewMode: 'list',
+  // Server data
+  products: [],
+  totalElements: 0,
+  serverTotalPages: 1,
+  loading: false,
+  error: null,
+  // Lookup data from API
+  categories: [],
+  brands: [],
+  materials: [],
+  sizes: [],
+  colors: [],
+  // UI state
   filters: { ...INITIAL_FILTERS },
   sortConfig: { key: 'updatedAt', dir: 'desc' },
   currentPage: 1,
@@ -140,6 +156,57 @@ function productReducer(state, action) {
       };
     }
 
+    // ── Server-side data management ─────────────────────────
+    case 'FETCH_START':
+      return { ...state, loading: true, error: null };
+    case 'FETCH_SUCCESS':
+      return {
+        ...state,
+        loading: false,
+        products: action.products,
+        totalElements: action.totalElements,
+        serverTotalPages: action.totalPages,
+      };
+    case 'FETCH_ERROR':
+      return { ...state, loading: false, error: action.error };
+
+    case 'SET_LOOKUP_DATA':
+      return { ...state, [action.key]: action.data };
+
+    case 'UPDATE_PRODUCT':
+      return {
+        ...state,
+        products: state.products.map((p) =>
+          p.id === action.payload.id ? action.payload : p
+        ),
+        slideOverProduct:
+          state.slideOverProduct?.id === action.payload.id
+            ? action.payload
+            : state.slideOverProduct,
+      };
+
+    case 'REMOVE_PRODUCT':
+      return {
+        ...state,
+        products: state.products.filter((p) => p.id !== action.id),
+        confirmDialog: null,
+        selectedIds: (() => {
+          const s = new Set(state.selectedIds);
+          s.delete(action.id);
+          return s;
+        })(),
+      };
+
+    case 'REMOVE_PRODUCTS': {
+      const toRm = action.ids;
+      return {
+        ...state,
+        products: state.products.filter((p) => !toRm.has(p.id)),
+        selectedIds: new Set(),
+        confirmDialog: null,
+      };
+    }
+
     case 'SHOW_TOAST':
       return { ...state, toast: { message: action.message, type: action.toastType || 'success' } };
     case 'HIDE_TOAST':
@@ -200,15 +267,15 @@ const sortProducts = (arr, { key, dir }) => {
   return sorted;
 };
 
-const buildChips = (filters) => {
+const buildChips = (filters, categories = [], brands = []) => {
   const chips = [];
   if (filters.search)    chips.push({ key: 'search',    label: `"${filters.search}"` });
   if (filters.categoryId) {
-    const cat = MOCK_CATEGORIES.find((c) => String(c.id) === filters.categoryId);
+    const cat = categories.find((c) => String(c.categoryId ?? c.id) === filters.categoryId);
     chips.push({ key: 'categoryId', label: cat?.name || filters.categoryId });
   }
   if (filters.brandId) {
-    const brand = MOCK_BRANDS.find((b) => String(b.id) === filters.brandId);
+    const brand = brands.find((b) => String(b.brandId ?? b.id) === filters.brandId);
     chips.push({ key: 'brandId', label: brand?.name || filters.brandId });
   }
   if (filters.status) {
@@ -232,29 +299,97 @@ const buildChips = (filters) => {
 const ProductManagementPage = () => {
   const [state, dispatch] = useReducer(productReducer, initialState);
 
-  /* ── Derived state ──────────────────────────────────────── */
-  const filteredProducts = useMemo(
-    () => state.products.filter((p) => matchesFilters(p, state.filters)),
-    [state.products, state.filters]
-  );
+  // Ref to debounce search so we don't fire a request per keystroke
+  const searchDebounceRef = useRef(null);
+
+  /* ── Fetch products from server ─────────────────────────── */
+  const fetchProducts = useCallback(async (filters, page, rowsPerPage) => {
+    dispatch({ type: 'FETCH_START' });
+    try {
+      const searchRequest = {
+        pageNum: page - 1, // BE is 0-based
+        pageSize: rowsPerPage,
+        name: filters.search || undefined,
+        categoryId: filters.categoryId ? Number(filters.categoryId) : undefined,
+        brandId: filters.brandId ? Number(filters.brandId) : undefined,
+        status: filters.status || undefined,
+      };
+      const res = await productAPI.getAll(searchRequest);
+      const pageData = res?.data ?? res;
+      dispatch({
+        type: 'FETCH_SUCCESS',
+        products: pageData?.content ?? [],
+        totalElements: pageData?.totalElements ?? 0,
+        totalPages: pageData?.totalPages ?? 1,
+      });
+    } catch (err) {
+      dispatch({ type: 'FETCH_ERROR', error: err.message ?? 'Lỗi tải dữ liệu' });
+    }
+  }, []);
+
+  /* ── Load lookup data (categories, brands, materials) ────── */
+  useEffect(() => {
+    const loadLookups = async () => {
+      try {
+        const [catRes, brandRes, matRes, sizeRes, colorRes] = await Promise.all([
+          categoryAPI.getAll(0, 200),
+          brandAPI.getAll(0, 200),
+          materialAPI.getAll(0, 200),
+          sizeAPI.getAll(0, 200),
+          colorAPI.getAll(0, 200),
+        ]);
+        const extractList = (res) => {
+          const d = res?.data ?? res;
+          return d?.content ?? (Array.isArray(d) ? d : []);
+        };
+        dispatch({ type: 'SET_LOOKUP_DATA', key: 'categories', data: extractList(catRes) });
+        dispatch({ type: 'SET_LOOKUP_DATA', key: 'brands',     data: extractList(brandRes) });
+        dispatch({ type: 'SET_LOOKUP_DATA', key: 'materials',  data: extractList(matRes) });
+        dispatch({ type: 'SET_LOOKUP_DATA', key: 'sizes',      data: extractList(sizeRes) });
+        dispatch({ type: 'SET_LOOKUP_DATA', key: 'colors',     data: extractList(colorRes) });
+      } catch (e) {
+        console.error('Failed to load lookup data:', e);
+      }
+    };
+    loadLookups();
+  }, []);
+
+  /* ── Trigger fetch when filters / page / rowsPerPage change ─ */
+  useEffect(() => {
+    // Debounce name search; fire immediately for everything else
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      fetchProducts(state.filters, state.currentPage, state.rowsPerPage);
+    }, state.filters.search ? 400 : 0);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [state.filters, state.currentPage, state.rowsPerPage, fetchProducts]);
+
+  /* ── Derived state (client-side sort + priceRange on current page) ─ */
+  const priceFilteredProducts = useMemo(() => {
+    if (!state.filters.priceRange) return state.products;
+    const [lo, hi] = state.filters.priceRange.split('-').map(Number);
+    return state.products.filter((p) => {
+      const minP = getMinPrice(p);
+      return minP >= lo && minP <= hi;
+    });
+  }, [state.products, state.filters.priceRange]);
 
   const sortedProducts = useMemo(
-    () => sortProducts(filteredProducts, state.sortConfig),
-    [filteredProducts, state.sortConfig]
+    () => sortProducts(priceFilteredProducts, state.sortConfig),
+    [priceFilteredProducts, state.sortConfig]
   );
 
-  const totalPages = Math.max(1, Math.ceil(sortedProducts.length / state.rowsPerPage));
-
-  const paginatedProducts = useMemo(() => {
-    const start = (state.currentPage - 1) * state.rowsPerPage;
-    return sortedProducts.slice(start, start + state.rowsPerPage);
-  }, [sortedProducts, state.currentPage, state.rowsPerPage]);
+  // Pagination is handled server-side; use products directly
+  const paginatedProducts = sortedProducts;
+  const totalPages = state.serverTotalPages;
 
   const kpiStats = useMemo(() => {
     const all = state.products;
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
     return {
-      total:         all.length,
+      total:         state.totalElements,
       active:        all.filter((p) => p.status === 'ACTIVE').length,
       outOfStock:    all.filter((p) => p.status === 'OUT_OF_STOCK').length,
       inactive:      all.filter((p) => p.status === 'INACTIVE').length,
@@ -262,9 +397,12 @@ const ProductManagementPage = () => {
       totalVariants: all.reduce((s, p) => s + (p.totalVariants || 0), 0),
       newThisMonth:  all.filter((p) => new Date(p.createdAt).getTime() > thirtyDaysAgo).length,
     };
-  }, [state.products]);
+  }, [state.products, state.totalElements]);
 
-  const activeFilterChips = useMemo(() => buildChips(state.filters), [state.filters]);
+  const activeFilterChips = useMemo(
+    () => buildChips(state.filters, state.categories, state.brands),
+    [state.filters, state.categories, state.brands]
+  );
 
   /* ── Toast auto-dismiss ────────────────────────────────── */
   useEffect(() => {
@@ -273,9 +411,9 @@ const ProductManagementPage = () => {
     return () => clearTimeout(timer);
   }, [state.toast]);
 
-  /* ── Clamp page if filters shrink results ───────────────── */
+  /* ── Clamp page if server returns fewer pages ───────────── */
   useEffect(() => {
-    if (state.currentPage > totalPages) {
+    if (totalPages > 0 && state.currentPage > totalPages) {
       dispatch({ type: 'SET_PAGE', payload: 1 });
     }
   }, [totalPages, state.currentPage]);
@@ -322,6 +460,21 @@ const ProductManagementPage = () => {
     dispatch({ type: 'OPEN_MODAL', mode: 'edit', product });
   }, []);
 
+  const handleToggleStatus = useCallback(async (product) => {
+    try {
+      const res = await productAPI.toggleStatus(product.id);
+      const updated = res?.data ?? res;
+      dispatch({ type: 'UPDATE_PRODUCT', payload: updated });
+      dispatch({
+        type: 'SHOW_TOAST',
+        message: `Đã ${updated.status === 'ACTIVE' ? 'kích hoạt' : 'tắt'} "${updated.name}"`,
+        toastType: 'success',
+      });
+    } catch (e) {
+      dispatch({ type: 'SHOW_TOAST', message: `Lỗi đổi trạng thái: ${e.message}`, toastType: 'error' });
+    }
+  }, []);
+
   const handleDelete = useCallback((product) => {
     dispatch({
       type: 'SHOW_CONFIRM',
@@ -329,39 +482,167 @@ const ProductManagementPage = () => {
         title:    `Xóa sản phẩm?`,
         body:     `Bạn có chắc muốn xóa "${product.name}"? Thao tác này không thể hoàn tác.`,
         danger:   true,
-        onConfirm: () => {
-          dispatch({ type: 'DELETE_PRODUCT', id: product.id });
-          dispatch({ type: 'SHOW_TOAST', message: `Đã xóa "${product.name}"`, toastType: 'info' });
+        onConfirm: async () => {
+          try {
+            await productAPI.delete(product.id);
+            dispatch({ type: 'REMOVE_PRODUCT', id: product.id });
+            dispatch({ type: 'SHOW_TOAST', message: `Đã xóa "${product.name}"`, toastType: 'info' });
+            // Refresh to keep pagination correct
+            fetchProducts(state.filters, state.currentPage, state.rowsPerPage);
+          } catch (e) {
+            dispatch({ type: 'SHOW_TOAST', message: `Lỗi xóa: ${e.message}`, toastType: 'error' });
+          }
         },
       },
     });
-  }, []);
+  }, [state.filters, state.currentPage, state.rowsPerPage, fetchProducts]);
 
   const handleBulkDelete = useCallback(() => {
     const count = state.selectedIds.size;
+    const ids = new Set(state.selectedIds);
     dispatch({
       type: 'SHOW_CONFIRM',
       payload: {
         title:    `Xóa ${count} sản phẩm?`,
         body:     `Bạn có chắc muốn xóa ${count} sản phẩm đã chọn? Thao tác này không thể hoàn tác.`,
         danger:   true,
-        onConfirm: () => {
-          dispatch({ type: 'BULK_DELETE' });
-          dispatch({ type: 'SHOW_TOAST', message: `Đã xóa ${count} sản phẩm`, toastType: 'info' });
+        onConfirm: async () => {
+          const results = await Promise.allSettled(
+            [...ids].map((id) => productAPI.delete(id))
+          );
+          const failed = results.filter((r) => r.status === 'rejected').length;
+          dispatch({ type: 'REMOVE_PRODUCTS', ids });
+          if (failed > 0) {
+            dispatch({ type: 'SHOW_TOAST', message: `Xóa ${count - failed}/${count} thành công, ${failed} lỗi`, toastType: 'error' });
+          } else {
+            dispatch({ type: 'SHOW_TOAST', message: `Đã xóa ${count} sản phẩm`, toastType: 'info' });
+          }
+          fetchProducts(state.filters, state.currentPage, state.rowsPerPage);
         },
       },
     });
-  }, [state.selectedIds.size]);
+  }, [state.selectedIds, state.filters, state.currentPage, state.rowsPerPage, fetchProducts]);
 
-  const handleSaveProduct = useCallback((productData) => {
-    dispatch({ type: 'SAVE_PRODUCT', payload: productData });
-    const isNew = state.modalMode === 'add';
+  /**
+   * handleSaveProduct is the async orchestration handler passed to ProductModal.
+   * It receives raw form data: { basicInfo, variants, variantImages, existingProduct }
+   * Steps: 1) create/update product → 2) create/update/delete variants → 3) upload/delete images
+   */
+  const handleSaveProduct = useCallback(async ({ basicInfo, variants, variantImages, existingProduct }) => {
+    const isNew = !existingProduct;
+
+    // ── Step 1: Create or update product basic info ──────────
+    const productPayload = {
+      name:          basicInfo.name.trim(),
+      description:   basicInfo.description?.trim() || '',
+      categoryId:    basicInfo.categoryId ? Number(basicInfo.categoryId) : null,
+      brandId:       basicInfo.brandId    ? Number(basicInfo.brandId)    : null,
+      materialId:    basicInfo.materialId ? Number(basicInfo.materialId) : null,
+      status:        basicInfo.status || 'ACTIVE',
+      tags:          basicInfo.tags || [],
+      slug:          basicInfo.slug || slugify(basicInfo.name),
+      seoTitle:      basicInfo.seoTitle || '',
+      seoDescription: basicInfo.seoDescription || '',
+      weight:        basicInfo.weight ? Number(basicInfo.weight) : null,
+      launchDate:    basicInfo.launchDate || null,
+    };
+
+    let savedProduct;
+    if (isNew) {
+      const res = await productAPI.create(productPayload);
+      savedProduct = res?.data ?? res;
+    } else {
+      const res = await productAPI.update(existingProduct.id, productPayload);
+      savedProduct = res?.data ?? res;
+    }
+    const productId = savedProduct.id;
+
+    // ── Step 2: Manage variants ──────────────────────────────
+    const existingVariantIds = new Set((existingProduct?.variants || []).map((v) => v.id));
+    const savedVariantIds = new Set();
+    const variantIdMap = {}; // tempId (from form) → real saved variantId
+
+    for (const variant of variants) {
+      const variantPayload = {
+        productId,
+        sizeId:    variant.sizeId   != null ? Number(variant.sizeId)                   : null,
+        colorId:   variant.colorId  != null ? Number(variant.colorId)
+                 : variant.color?.id != null ? Number(variant.color.id)                : null,
+        price:     variant.price     ? Number(variant.price)     : 0,
+        costPrice: variant.costPrice ? Number(variant.costPrice) : null,
+        stock:     variant.stock     ? Number(variant.stock)     : 0,
+        weight:    variant.weight    ? Number(variant.weight)    : null,
+        status:    variant.status    || 'ACTIVE',
+      };
+
+      let savedVariant;
+      if (variant.id && existingVariantIds.has(variant.id)) {
+        // Existing variant → update
+        const res = await productVariantAPI.update(variant.id, variantPayload);
+        savedVariant = res?.data ?? res;
+        savedVariantIds.add(variant.id);
+      } else {
+        // New variant → create
+        const res = await productVariantAPI.create(variantPayload);
+        savedVariant = res?.data ?? res;
+      }
+      variantIdMap[variant.id] = savedVariant.id;
+    }
+
+    // Delete variants that were removed from the form
+    for (const oldId of existingVariantIds) {
+      if (!savedVariantIds.has(oldId)) {
+        await productVariantAPI.delete(oldId).catch(() => {});
+      }
+    }
+
+    // ── Step 3: Manage images for each variant ───────────────
+    for (const [tempVariantId, images] of Object.entries(variantImages)) {
+      const realVariantId = variantIdMap[tempVariantId] ?? tempVariantId;
+      // Find existing images (id is a number) vs new files (id is a string like "ts-idx")
+      const existingImages = images.filter((img) => typeof img.id === 'number');
+      const newImages      = images.filter((img) => typeof img.id !== 'number' && img.file instanceof File);
+
+      // Upload new files
+      const uploadedImages = [];
+      for (const img of newImages) {
+        try {
+          const res = await productImageAPI.upload(realVariantId, img.file);
+          uploadedImages.push(res?.data ?? res);
+        } catch (e) {
+          console.error('Image upload failed:', e);
+        }
+      }
+
+      // Set primary image
+      const primaryImg = images.find((img) => img.isPrimary);
+      if (primaryImg) {
+        const primaryRealId = typeof primaryImg.id === 'number'
+          ? primaryImg.id
+          : uploadedImages.find((u, i) => newImages[i] === primaryImg)?.id;
+        if (primaryRealId) {
+          await productImageAPI.setPrimary(primaryRealId).catch(() => {});
+        }
+      }
+
+      // Reorder if there are existing images
+      if (existingImages.length > 0) {
+        const orderedIds = [...existingImages.map((i) => i.id), ...uploadedImages.map((i) => i.id)];
+        await productImageAPI.reorder(realVariantId, orderedIds).catch(() => {});
+      }
+    }
+
+    // ── Done: refresh product list ───────────────────────────
+    dispatch({
+      type: 'CLOSE_MODAL',
+    });
     dispatch({
       type: 'SHOW_TOAST',
-      message: isNew ? 'Sản phẩm đã được thêm thành công' : 'Đã cập nhật sản phẩm',
+      message: isNew ? 'Sản phẩm đã được thêm thành công!' : 'Đã cập nhật sản phẩm',
       toastType: 'success',
     });
-  }, [state.modalMode]);
+    fetchProducts(state.filters, state.currentPage, state.rowsPerPage);
+  }, [state.filters, state.currentPage, state.rowsPerPage, fetchProducts]);
 
   const handleExportExcel = useCallback(() => {
     dispatch({ type: 'SHOW_TOAST', message: 'Đang xuất Excel...', toastType: 'info' });
@@ -377,6 +658,21 @@ const ProductManagementPage = () => {
       {/* Page header */}
       <ProductPageHeader onAdd={handleOpenAdd} onExportExcel={handleExportExcel} />
 
+      {/* Error banner */}
+      {state.error && (
+        <div className="pm-error-banner">
+          <AlertTriangle size={16} />
+          {state.error}
+          <button
+            type="button"
+            className="pm-error-dismiss"
+            onClick={() => fetchProducts(state.filters, state.currentPage, state.rowsPerPage)}
+          >
+            Thử lại
+          </button>
+        </div>
+      )}
+
       {/* KPI cards */}
       <ProductKpiCards stats={kpiStats} />
 
@@ -391,8 +687,10 @@ const ProductManagementPage = () => {
         onViewModeChange={handleViewMode}
         sortConfig={state.sortConfig}
         onSortChange={handleSort}
-        resultCount={filteredProducts.length}
-        totalCount={state.products.length}
+        resultCount={paginatedProducts.length}
+        totalCount={state.totalElements}
+        categories={state.categories}
+        brands={state.brands}
       />
 
       {/* Bulk action bar */}
@@ -432,10 +730,11 @@ const ProductManagementPage = () => {
           onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onToggleStatus={handleToggleStatus}
           onAdd={handleOpenAdd}
           sortConfig={state.sortConfig}
           onSort={handleSort}
-          loading={false}
+          loading={state.loading}
         />
       ) : (
         <ProductGrid
@@ -445,6 +744,7 @@ const ProductManagementPage = () => {
           onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onToggleStatus={handleToggleStatus}
           onAdd={handleOpenAdd}
         />
       )}
@@ -454,7 +754,7 @@ const ProductManagementPage = () => {
         currentPage={state.currentPage}
         totalPages={totalPages}
         rowsPerPage={state.rowsPerPage}
-        totalItems={filteredProducts.length}
+        totalItems={state.totalElements}
         onPageChange={(page) => dispatch({ type: 'SET_PAGE', payload: page })}
         onRowsPerPageChange={(rows) => dispatch({ type: 'SET_ROWS_PER_PAGE', payload: rows })}
       />
@@ -471,6 +771,11 @@ const ProductManagementPage = () => {
         <ProductModal
           mode={state.modalMode}
           product={state.modalProduct}
+          categories={state.categories}
+          brands={state.brands}
+          materials={state.materials}
+          sizes={state.sizes}
+          colors={state.colors}
           onSave={handleSaveProduct}
           onCancel={() => dispatch({ type: 'CLOSE_MODAL' })}
         />
