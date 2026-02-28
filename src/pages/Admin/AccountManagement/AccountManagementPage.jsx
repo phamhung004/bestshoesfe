@@ -1,4 +1,4 @@
-import React, { useReducer, useMemo, useCallback, useEffect } from 'react';
+import React, { useReducer, useCallback, useEffect, useRef } from 'react';
 import { Check, X, AlertTriangle } from 'lucide-react';
 import './AccountManagementPage.css';
 
@@ -14,15 +14,41 @@ import CustomerDetailSlideOver from './components/CustomerDetailSlideOver';
 import AccountFormSlideOver from './components/AccountFormSlideOver';
 import LockUnlockModal from './components/LockUnlockModal';
 
-import {
-  mockCustomers,
-  mockEmployees,
-  computeCustomerKpis,
-  computeEmployeeKpis,
-  getCustomerStatus,
-  getMemberTier,
-  CURRENT_EMPLOYEE_ID,
-} from './mockAccountData';
+import { adminCustomerAPI, adminEmployeeAPI, adminRoleAPI } from './accountApi';
+import { CURRENT_EMPLOYEE_ID } from './mockAccountData';
+
+/* ═══════════════════════════════════════════════════════════
+   HELPERS – Normalize API response data
+   Backend returns status as Boolean (true/false).
+   Frontend components expect status as Number (1/0).
+   ═══════════════════════════════════════════════════════════ */
+function normalizeCustomer(c) {
+  return {
+    ...c,
+    status: c.status === true ? 1 : c.status === false ? 0 : c.status,
+    gender: c.gender === 'MALE' ? 'Nam' : c.gender === 'FEMALE' ? 'Nữ' : c.gender === 'OTHER' ? 'Khác' : c.gender,
+    totalOrders: c.totalOrders ?? 0,
+    totalSpending: c.totalSpending ?? 0,
+    memberTier: c.memberTier ?? null,
+    avatar: null,
+  };
+}
+
+function mapGenderToApi(gender) {
+  if (!gender) return null;
+  if (gender === 'Nam') return 'MALE';
+  if (gender === 'Nữ') return 'FEMALE';
+  if (gender === 'Khác') return 'OTHER';
+  return gender;
+}
+
+function normalizeEmployee(e) {
+  return {
+    ...e,
+    status: e.status === true ? 1 : e.status === false ? 0 : e.status,
+    avatar: null,
+  };
+}
 
 /* ═══════════════════════════════════════════════════════════
    REDUCER
@@ -38,11 +64,26 @@ const INITIAL_FILTERS = {
 
 const initialState = {
   // Tab
-  activeTab: 'customers', // 'customers' | 'employees'
+  activeTab: 'customers',
 
-  // Data
-  customers: [...mockCustomers],
-  employees: [...mockEmployees],
+  // Server data
+  customers: [],
+  employees: [],
+  totalCustomers: 0,
+  totalEmployees: 0,
+  totalCustomerPages: 1,
+  totalEmployeePages: 1,
+
+  // KPI (fetched from server)
+  customerKpis: { total: 0, active: 0, locked: 0, unverified: 0, newThisMonth: 0, activePercent: '0' },
+  employeeKpis: { total: 0, admins: 0, managers: 0, staff: 0 },
+
+  // Roles (for dropdown)
+  roles: [],
+
+  // Loading
+  loading: false,
+  error: null,
 
   // Filters
   filters: { ...INITIAL_FILTERS },
@@ -55,13 +96,13 @@ const initialState = {
   selectedIds: new Set(),
 
   // Slide-overs
-  detailCustomer: null,      // customer object for detail slide-over
-  detailInitialTab: 'info',  // 'info' | 'orders' | 'addresses'
-  formMode: null,             // 'add' | 'edit' | null
-  formAccount: null,          // account object for edit
+  detailCustomer: null,
+  detailInitialTab: 'info',
+  formMode: null,
+  formAccount: null,
 
   // Modal
-  modalType: null,            // 'lock' | 'unlock' | 'delete' | null
+  modalType: null,
   modalAccount: null,
 
   // Toast
@@ -134,63 +175,39 @@ function accountReducer(state, action) {
     case 'REMOVE_TOAST':
       return { ...state, toasts: state.toasts.filter((t) => t.id !== action.id) };
 
-    case 'UPDATE_CUSTOMER_STATUS':
+    // ── Server data actions ──────────────────────────────
+    case 'FETCH_START':
+      return { ...state, loading: true, error: null };
+
+    case 'FETCH_CUSTOMERS_SUCCESS':
       return {
         ...state,
-        customers: state.customers.map((c) =>
-          c.customerId === action.customerId ? { ...c, status: action.status } : c
-        ),
+        loading: false,
+        customers: action.customers,
+        totalCustomers: action.totalElements,
+        totalCustomerPages: action.totalPages,
       };
 
-    case 'UPDATE_EMPLOYEE_STATUS':
+    case 'FETCH_EMPLOYEES_SUCCESS':
       return {
         ...state,
-        employees: state.employees.map((e) =>
-          e.employeeId === action.employeeId ? { ...e, status: action.status } : e
-        ),
+        loading: false,
+        employees: action.employees,
+        totalEmployees: action.totalElements,
+        totalEmployeePages: action.totalPages,
       };
 
-    case 'UPDATE_EMPLOYEE_ROLE':
-      return {
-        ...state,
-        employees: state.employees.map((e) =>
-          e.employeeId === action.employeeId ? { ...e, roleName: action.roleName } : e
-        ),
-      };
+    case 'FETCH_ERROR':
+      return { ...state, loading: false, error: action.error };
 
-    case 'DELETE_EMPLOYEE':
-      return {
-        ...state,
-        employees: state.employees.filter((e) => e.employeeId !== action.employeeId),
-      };
+    case 'SET_CUSTOMER_KPIS':
+      return { ...state, customerKpis: action.payload };
 
-    case 'ADD_CUSTOMER':
-      return {
-        ...state,
-        customers: [action.customer, ...state.customers],
-      };
+    case 'SET_EMPLOYEE_KPIS':
+      return { ...state, employeeKpis: action.payload };
 
-    case 'EDIT_CUSTOMER':
-      return {
-        ...state,
-        customers: state.customers.map((c) =>
-          c.customerId === action.customer.customerId ? { ...c, ...action.customer } : c
-        ),
-      };
-
-    case 'ADD_EMPLOYEE':
-      return {
-        ...state,
-        employees: [action.employee, ...state.employees],
-      };
-
-    case 'EDIT_EMPLOYEE':
-      return {
-        ...state,
-        employees: state.employees.map((e) =>
-          e.employeeId === action.employee.employeeId ? { ...e, ...action.employee } : e
-        ),
-      };
+    case 'SET_ROLES':
+      return { ...state, roles: action.payload };
 
     default:
       return state;
@@ -198,101 +215,146 @@ function accountReducer(state, action) {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   FILTERING LOGIC
-   ═══════════════════════════════════════════════════════════ */
-function filterCustomers(customers, filters) {
-  let list = [...customers];
-
-  // search
-  if (filters.search) {
-    const q = filters.search.toLowerCase();
-    list = list.filter(
-      (c) =>
-        c.fullName.toLowerCase().includes(q) ||
-        c.email.toLowerCase().includes(q) ||
-        (c.phone && c.phone.includes(q))
-    );
-  }
-
-  // status
-  if (filters.status) {
-    list = list.filter((c) => {
-      const s = getCustomerStatus(c);
-      if (filters.status === 'Hoạt động') return s === 'active';
-      if (filters.status === 'Bị khóa') return s === 'locked';
-      if (filters.status === 'Chưa xác thực') return s === 'unverified';
-      return true;
-    });
-  }
-
-  // tier
-  if (filters.tier) {
-    list = list.filter((c) => getMemberTier(c.totalSpending) === filters.tier);
-  }
-
-  // time
-  if (filters.time) {
-    const now = new Date();
-    const msMap = {
-      'Hôm nay': 86400000,
-      '7 ngày qua': 7 * 86400000,
-      '30 ngày qua': 30 * 86400000,
-      '3 tháng qua': 90 * 86400000,
-      'Năm nay': null,
-    };
-    const ms = msMap[filters.time];
-    if (ms != null) {
-      list = list.filter((c) => now - new Date(c.createdAt) <= ms);
-    } else if (filters.time === 'Năm nay') {
-      list = list.filter((c) => new Date(c.createdAt).getFullYear() === now.getFullYear());
-    }
-  }
-
-  // sort
-  if (filters.sort) {
-    const sorters = {
-      newest: (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-      oldest: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-      'name-asc': (a, b) => a.fullName.localeCompare(b.fullName, 'vi'),
-      'spending-desc': (a, b) => b.totalSpending - a.totalSpending,
-      'orders-desc': (a, b) => b.totalOrders - a.totalOrders,
-    };
-    if (sorters[filters.sort]) list.sort(sorters[filters.sort]);
-  }
-
-  return list;
-}
-
-function filterEmployees(employees, filters) {
-  let list = [...employees];
-
-  if (filters.search) {
-    const q = filters.search.toLowerCase();
-    list = list.filter(
-      (e) => e.fullName.toLowerCase().includes(q) || e.email.toLowerCase().includes(q)
-    );
-  }
-
-  if (filters.role) {
-    list = list.filter((e) => e.roleName === filters.role);
-  }
-
-  if (filters.status) {
-    list = list.filter((e) => {
-      if (filters.status === 'Hoạt động') return e.status === 1;
-      if (filters.status === 'Bị khóa') return e.status === 0;
-      return true;
-    });
-  }
-
-  return list;
-}
-
-/* ═══════════════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════════ */
 const AccountManagementPage = () => {
   const [state, dispatch] = useReducer(accountReducer, initialState);
+  const searchDebounceRef = useRef(null);
+
+  // ── Helpers ────────────────────────────────────────────
+  const showToast = useCallback((message, type = 'success') => {
+    dispatch({ type: 'SET_TOAST', message, toastType: type });
+  }, []);
+
+  const isCustomerTab = state.activeTab === 'customers';
+
+  /* ── Fetch list data from server ────────────────────────── */
+  const fetchCustomers = useCallback(async (filters, page, rowsPerPage) => {
+    dispatch({ type: 'FETCH_START' });
+    try {
+      const searchRequest = {
+        pageNum: page - 1,
+        pageSize: rowsPerPage,
+        search: filters.search || undefined,
+        status: filters.status || undefined,
+        tier: filters.tier || undefined,
+        time: filters.time || undefined,
+        sort: filters.sort || undefined,
+      };
+      const res = await adminCustomerAPI.list(searchRequest);
+      const pageData = res?.data ?? res;
+      const items = (pageData?.content ?? []).map(normalizeCustomer);
+      dispatch({
+        type: 'FETCH_CUSTOMERS_SUCCESS',
+        customers: items,
+        totalElements: pageData?.totalElements ?? items.length,
+        totalPages: pageData?.totalPages ?? 1,
+      });
+    } catch (err) {
+      dispatch({ type: 'FETCH_ERROR', error: err.message ?? 'Lỗi tải dữ liệu' });
+    }
+  }, []);
+
+  const fetchEmployees = useCallback(async (filters, page, rowsPerPage) => {
+    dispatch({ type: 'FETCH_START' });
+    try {
+      const searchRequest = {
+        pageNum: page - 1,
+        pageSize: rowsPerPage,
+        search: filters.search || undefined,
+        role: filters.role || undefined,
+        status: filters.status || undefined,
+      };
+      const res = await adminEmployeeAPI.list(searchRequest);
+      const pageData = res?.data ?? res;
+      const items = (pageData?.content ?? []).map(normalizeEmployee);
+      dispatch({
+        type: 'FETCH_EMPLOYEES_SUCCESS',
+        employees: items,
+        totalElements: pageData?.totalElements ?? items.length,
+        totalPages: pageData?.totalPages ?? 1,
+      });
+    } catch (err) {
+      dispatch({ type: 'FETCH_ERROR', error: err.message ?? 'Lỗi tải dữ liệu' });
+    }
+  }, []);
+
+  const fetchKpis = useCallback(async () => {
+    try {
+      const [custKpiRes, empKpiRes] = await Promise.all([
+        adminCustomerAPI.getKpis(),
+        adminEmployeeAPI.getKpis(),
+      ]);
+      const ck = custKpiRes?.data ?? custKpiRes;
+      const ek = empKpiRes?.data ?? empKpiRes;
+      dispatch({
+        type: 'SET_CUSTOMER_KPIS',
+        payload: {
+          total: ck.totalCustomers ?? 0,
+          active: ck.activeCustomers ?? 0,
+          locked: ck.lockedCustomers ?? 0,
+          unverified: ck.unverifiedCustomers ?? 0,
+          newThisMonth: ck.newCustomersThisMonth ?? 0,
+          activePercent: ck.totalCustomers > 0
+            ? ((ck.activeCustomers / ck.totalCustomers) * 100).toFixed(1)
+            : '0',
+        },
+      });
+      dispatch({
+        type: 'SET_EMPLOYEE_KPIS',
+        payload: {
+          total: ek.totalEmployees ?? 0,
+          admins: ek.adminCount ?? 0,
+          managers: ek.managerCount ?? 0,
+          staff: ek.staffCount ?? 0,
+        },
+      });
+    } catch (_) { /* KPI load failure is non-blocking */ }
+  }, []);
+
+  /* ── Reload current list (called after mutating operations) ── */
+  const reloadCurrentList = useCallback(() => {
+    if (state.activeTab === 'customers') {
+      fetchCustomers(state.filters, state.currentPage, state.rowsPerPage);
+    } else {
+      fetchEmployees(state.filters, state.currentPage, state.rowsPerPage);
+    }
+    fetchKpis();
+  }, [state.activeTab, state.filters, state.currentPage, state.rowsPerPage, fetchCustomers, fetchEmployees, fetchKpis]);
+
+  /* ── Initial load + refetch on tab/filter/page change ────── */
+  useEffect(() => {
+    // Load roles once
+    adminRoleAPI.list().then((res) => {
+      const roles = res?.data ?? (Array.isArray(res) ? res : []);
+      dispatch({ type: 'SET_ROLES', payload: roles });
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchKpis();
+  }, [fetchKpis]);
+
+  // Debounce search, immediate for other filters
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+
+    const doFetch = () => {
+      if (state.activeTab === 'customers') {
+        fetchCustomers(state.filters, state.currentPage, state.rowsPerPage);
+      } else {
+        fetchEmployees(state.filters, state.currentPage, state.rowsPerPage);
+      }
+    };
+
+    if (state.filters.search) {
+      searchDebounceRef.current = setTimeout(doFetch, 400);
+    } else {
+      doFetch();
+    }
+
+    return () => { if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current); };
+  }, [state.activeTab, state.filters, state.currentPage, state.rowsPerPage, fetchCustomers, fetchEmployees]);
 
   // Read tab from URL search params
   useEffect(() => {
@@ -301,14 +363,6 @@ const AccountManagementPage = () => {
     if (tab === 'employees' || tab === 'customers') {
       dispatch({ type: 'SET_TAB', payload: tab });
     }
-  }, []);
-
-  // Update URL when tab changes
-  const handleTabChange = useCallback((tab) => {
-    dispatch({ type: 'SET_TAB', payload: tab });
-    const url = new URL(window.location);
-    url.searchParams.set('tab', tab);
-    window.history.pushState({}, '', url);
   }, []);
 
   // Toast auto-remove
@@ -322,24 +376,17 @@ const AccountManagementPage = () => {
     }
   }, [state.toasts]);
 
-  const showToast = useCallback((message, type = 'success') => {
-    dispatch({ type: 'SET_TOAST', message, toastType: type });
+  // ── Computed ───────────────────────────────────────────
+  const pageItems = isCustomerTab ? state.customers : state.employees;
+  const totalFiltered = isCustomerTab ? state.totalCustomers : state.totalEmployees;
+
+  // ── Tab change ─────────────────────────────────────────
+  const handleTabChange = useCallback((tab) => {
+    dispatch({ type: 'SET_TAB', payload: tab });
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tab);
+    window.history.pushState({}, '', url);
   }, []);
-
-  // ── Computed data ──────────────────────────────────────
-  const customerKpis = useMemo(() => computeCustomerKpis(state.customers), [state.customers]);
-  const employeeKpis = useMemo(() => computeEmployeeKpis(state.employees), [state.employees]);
-
-  const filteredCustomers = useMemo(() => filterCustomers(state.customers, state.filters), [state.customers, state.filters]);
-  const filteredEmployees = useMemo(() => filterEmployees(state.employees, state.filters), [state.employees, state.filters]);
-
-  const isCustomerTab = state.activeTab === 'customers';
-  const currentList = isCustomerTab ? filteredCustomers : filteredEmployees;
-  const totalFiltered = currentList.length;
-
-  // Pagination
-  const startIdx = (state.currentPage - 1) * state.rowsPerPage;
-  const pageItems = currentList.slice(startIdx, startIdx + state.rowsPerPage);
 
   // ── Handler callbacks ──────────────────────────────────
   const handleFilterChange = useCallback((key, value) => {
@@ -372,19 +419,20 @@ const AccountManagementPage = () => {
   }, []);
 
   const handleLockCustomer = useCallback((customer) => {
-    if (customer) {
-      dispatch({ type: 'OPEN_MODAL', modalType: 'lock', account: customer });
-    }
+    if (customer) dispatch({ type: 'OPEN_MODAL', modalType: 'lock', account: customer });
   }, []);
 
   const handleUnlockCustomer = useCallback((customer) => {
-    if (customer) {
-      dispatch({ type: 'OPEN_MODAL', modalType: 'unlock', account: customer });
-    }
+    if (customer) dispatch({ type: 'OPEN_MODAL', modalType: 'unlock', account: customer });
   }, []);
 
-  const handleResetPasswordCustomer = useCallback((customer) => {
-    showToast(`Đã gửi email đặt lại mật khẩu cho ${customer.fullName}`, 'success');
+  const handleResetPasswordCustomer = useCallback(async (customer) => {
+    try {
+      await adminCustomerAPI.resetPassword(customer.customerId);
+      showToast(`Đã đặt lại mật khẩu cho ${customer.fullName}`, 'success');
+    } catch (err) {
+      showToast(err.message || 'Lỗi đặt lại mật khẩu', 'error');
+    }
   }, [showToast]);
 
   // ── Employee actions ───────────────────────────────────
@@ -393,15 +441,11 @@ const AccountManagementPage = () => {
   }, []);
 
   const handleLockEmployee = useCallback((employee) => {
-    if (employee) {
-      dispatch({ type: 'OPEN_MODAL', modalType: 'lock', account: employee });
-    }
+    if (employee) dispatch({ type: 'OPEN_MODAL', modalType: 'lock', account: employee });
   }, []);
 
   const handleUnlockEmployee = useCallback((employee) => {
-    if (employee) {
-      dispatch({ type: 'OPEN_MODAL', modalType: 'unlock', account: employee });
-    }
+    if (employee) dispatch({ type: 'OPEN_MODAL', modalType: 'unlock', account: employee });
   }, []);
 
   const handleDeleteEmployee = useCallback((employee) => {
@@ -412,88 +456,133 @@ const AccountManagementPage = () => {
     dispatch({ type: 'OPEN_MODAL', modalType: 'delete', account: employee });
   }, [showToast]);
 
-  const handleResetPasswordEmployee = useCallback((employee) => {
-    showToast(`Đã gửi email đặt lại mật khẩu cho ${employee.fullName}`, 'success');
+  const handleResetPasswordEmployee = useCallback(async (employee) => {
+    try {
+      await adminEmployeeAPI.resetPassword(employee.employeeId);
+      showToast(`Đã đặt lại mật khẩu cho ${employee.fullName}`, 'success');
+    } catch (err) {
+      showToast(err.message || 'Lỗi đặt lại mật khẩu', 'error');
+    }
   }, [showToast]);
 
-  const handleChangeRole = useCallback((employee, newRole) => {
-    dispatch({ type: 'UPDATE_EMPLOYEE_ROLE', employeeId: employee.employeeId, roleName: newRole });
-    showToast(`Đã cập nhật vai trò của ${employee.fullName} thành ${newRole}`, 'success');
-  }, [showToast]);
+  const handleChangeRole = useCallback(async (employee, newRoleName) => {
+    try {
+      // Find roleId from roles list
+      const role = state.roles.find((r) => r.roleName === newRoleName);
+      if (!role) {
+        showToast('Vai trò không tìm thấy', 'error');
+        return;
+      }
+      await adminEmployeeAPI.changeRole(employee.employeeId, role.roleId);
+      showToast(`Đã cập nhật vai trò của ${employee.fullName} thành ${newRoleName}`, 'success');
+      reloadCurrentList();
+    } catch (err) {
+      showToast(err.message || 'Lỗi cập nhật vai trò', 'error');
+    }
+  }, [state.roles, showToast, reloadCurrentList]);
 
-  // ── Modal confirm ──────────────────────────────────────
-  const handleModalConfirm = useCallback(({ reason }) => {
+  // ── Modal confirm (lock / unlock / delete) ─────────────
+  const handleModalConfirm = useCallback(async ({ reason }) => {
     const { modalType, modalAccount } = state;
     if (!modalAccount) return;
 
     const isCustomerAccount = !!modalAccount.customerId;
 
-    if (modalType === 'lock') {
-      if (isCustomerAccount) {
-        dispatch({ type: 'UPDATE_CUSTOMER_STATUS', customerId: modalAccount.customerId, status: 0 });
-      } else {
-        dispatch({ type: 'UPDATE_EMPLOYEE_STATUS', employeeId: modalAccount.employeeId, status: 0 });
+    try {
+      if (modalType === 'lock') {
+        if (isCustomerAccount) {
+          await adminCustomerAPI.lock(modalAccount.customerId, reason);
+        } else {
+          await adminEmployeeAPI.lock(modalAccount.employeeId, reason);
+        }
+        showToast(`Đã khóa tài khoản ${modalAccount.fullName}`, 'warning');
+      } else if (modalType === 'unlock') {
+        if (isCustomerAccount) {
+          await adminCustomerAPI.unlock(modalAccount.customerId);
+        } else {
+          await adminEmployeeAPI.unlock(modalAccount.employeeId);
+        }
+        showToast(`Đã mở khóa tài khoản ${modalAccount.fullName}`, 'success');
+      } else if (modalType === 'delete') {
+        await adminEmployeeAPI.delete(modalAccount.employeeId);
+        showToast(`Đã xóa nhân viên ${modalAccount.fullName}`, 'warning');
       }
-      showToast(`Đã khóa tài khoản ${modalAccount.fullName}`, 'warning');
-    } else if (modalType === 'unlock') {
-      if (isCustomerAccount) {
-        dispatch({ type: 'UPDATE_CUSTOMER_STATUS', customerId: modalAccount.customerId, status: 1 });
-      } else {
-        dispatch({ type: 'UPDATE_EMPLOYEE_STATUS', employeeId: modalAccount.employeeId, status: 1 });
-      }
-      showToast(`Đã mở khóa tài khoản ${modalAccount.fullName}`, 'success');
-    } else if (modalType === 'delete') {
-      dispatch({ type: 'DELETE_EMPLOYEE', employeeId: modalAccount.employeeId });
-      showToast(`Đã xóa nhân viên ${modalAccount.fullName}`, 'warning');
+      dispatch({ type: 'CLOSE_MODAL' });
+      reloadCurrentList();
+    } catch (err) {
+      showToast(err.message || 'Thao tác thất bại', 'error');
+      dispatch({ type: 'CLOSE_MODAL' });
     }
+  }, [state.modalType, state.modalAccount, showToast, reloadCurrentList]);
 
-    dispatch({ type: 'CLOSE_MODAL' });
-  }, [state.modalType, state.modalAccount, showToast]);
-
-  // ── Form save ──────────────────────────────────────────
-  const handleFormSave = useCallback((formData) => {
+  // ── Form save (create / update) ────────────────────────
+  const handleFormSave = useCallback(async (formData) => {
     const isEdit = state.formMode === 'edit';
 
-    if (isCustomerTab) {
-      if (isEdit) {
-        dispatch({ type: 'EDIT_CUSTOMER', customer: { ...state.formAccount, ...formData } });
-        showToast('Đã cập nhật thông tin', 'success');
+    try {
+      if (isCustomerTab) {
+        if (isEdit) {
+          await adminCustomerAPI.update(state.formAccount.customerId, {
+            fullName: formData.fullName,
+            email: formData.email,
+            phone: formData.phone || null,
+            gender: mapGenderToApi(formData.gender),
+            dateOfBirth: formData.dateOfBirth || null,
+            status: formData.status === 1 ? true : formData.status === 0 ? false : null,
+          });
+          showToast('Đã cập nhật thông tin', 'success');
+        } else {
+          await adminCustomerAPI.create({
+            fullName: formData.fullName,
+            email: formData.email,
+            password: formData.password,
+            phone: formData.phone || null,
+            gender: mapGenderToApi(formData.gender),
+            dateOfBirth: formData.dateOfBirth || null,
+            status: true,
+          });
+          showToast('Đã thêm tài khoản thành công', 'success');
+        }
       } else {
-        const newCustomer = {
-          ...formData,
-          customerId: Date.now(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          verifiedAt: null,
-          totalOrders: 0,
-          totalSpending: 0,
-          avatar: null,
-        };
-        dispatch({ type: 'ADD_CUSTOMER', customer: newCustomer });
-        showToast('Đã thêm tài khoản thành công', 'success');
-      }
-    } else {
-      if (isEdit) {
-        dispatch({ type: 'EDIT_EMPLOYEE', employee: { ...state.formAccount, ...formData } });
-        showToast('Đã cập nhật thông tin', 'success');
-      } else {
-        const newEmployee = {
-          ...formData,
-          employeeId: Date.now(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          roleId: formData.roleName === 'ADMIN' ? 1 : formData.roleName === 'MANAGER' ? 2 : 3,
-          avatar: null,
-        };
-        dispatch({ type: 'ADD_EMPLOYEE', employee: newEmployee });
-        showToast('Đã thêm tài khoản thành công', 'success');
-      }
-    }
+        // Employee
+        const role = state.roles.find((r) => r.roleName === formData.roleName);
+        const roleId = role ? role.roleId : null;
 
-    dispatch({ type: 'CLOSE_SLIDEOVER' });
-  }, [state.formMode, state.formAccount, isCustomerTab, showToast]);
+        if (isEdit) {
+          await adminEmployeeAPI.update(state.formAccount.employeeId, {
+            fullName: formData.fullName,
+            email: formData.email,
+            phone: formData.phone || null,
+            roleId,
+            position: formData.position || null,
+            department: formData.department || null,
+            status: formData.status === 1 ? true : formData.status === 0 ? false : null,
+          });
+          showToast('Đã cập nhật thông tin', 'success');
+        } else {
+          await adminEmployeeAPI.create({
+            fullName: formData.fullName,
+            email: formData.email,
+            password: formData.password,
+            phone: formData.phone || null,
+            roleId,
+            position: formData.position || null,
+            department: formData.department || null,
+            status: true,
+          });
+          showToast('Đã thêm tài khoản thành công', 'success');
+        }
+      }
+      dispatch({ type: 'CLOSE_SLIDEOVER' });
+      reloadCurrentList();
+    } catch (err) {
+      showToast(err.message || 'Thao tác thất bại', 'error');
+    }
+  }, [state.formMode, state.formAccount, state.roles, isCustomerTab, showToast, reloadCurrentList]);
 
   /* ── Render ────────────────────────────────────────────── */
+  const totalPages = isCustomerTab ? state.totalCustomerPages : state.totalEmployeePages;
+
   return (
     <AdminLayout
       activeSection="user-management"
@@ -510,23 +599,23 @@ const AccountManagementPage = () => {
       {/* Tab switcher */}
       <AccountTabSwitcher
         activeTab={state.activeTab}
-        customerCount={state.customers.length}
-        employeeCount={state.employees.length}
+        customerCount={state.customerKpis.total}
+        employeeCount={state.employeeKpis.total}
         onTabChange={handleTabChange}
       />
 
       {/* KPI cards */}
       <AccountKpiCards
         activeTab={state.activeTab}
-        customerKpis={customerKpis}
-        employeeKpis={employeeKpis}
+        customerKpis={state.customerKpis}
+        employeeKpis={state.employeeKpis}
       />
 
       {/* Filter bar */}
       <AccountFilterBar
         activeTab={state.activeTab}
         filters={state.filters}
-        totalCount={isCustomerTab ? state.customers.length : state.employees.length}
+        totalCount={isCustomerTab ? state.customerKpis.total : state.employeeKpis.total}
         filteredCount={totalFiltered}
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}

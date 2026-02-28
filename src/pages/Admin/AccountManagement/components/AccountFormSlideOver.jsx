@@ -96,10 +96,14 @@ const AccountFormSlideOver = ({ mode, activeTab, account, onClose, onSave }) => 
     }
     setSaving(true);
     setApiError(null);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 600));
-    setSaving(false);
-    onSave(form);
+    try {
+      await onSave(form);
+      // parent handles close & toast on success
+    } catch (err) {
+      setApiError(err?.message || 'Đã xảy ra lỗi, vui lòng thử lại.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const pwStrength = getPasswordStrength(form.password);

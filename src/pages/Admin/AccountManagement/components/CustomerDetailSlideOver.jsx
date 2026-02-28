@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, ShoppingBag, Check, AlertTriangle } from 'lucide-react';
+import { X, MapPin, ShoppingBag, Check, AlertTriangle, Loader } from 'lucide-react';
 import {
   getCustomerStatus,
   getMemberTier,
@@ -8,10 +8,8 @@ import {
   formatVND,
   formatDate,
   formatDateTime,
-  relativeTime,
-  mockAddresses,
-  mockOrders,
 } from '../mockAccountData';
+import { adminCustomerAPI } from '../accountApi';
 
 /* ── Helper badges ────────────────────────────────────────── */
 const StatusBadge = ({ customer }) => {
@@ -124,8 +122,7 @@ const InfoTab = ({ customer, onToggleStatus }) => {
 };
 
 /* ── Tab: Đơn hàng ────────────────────────────────────────── */
-const OrdersTab = ({ customer, onToast }) => {
-  const orders = mockOrders.filter((o) => o.customerId === customer.customerId);
+const OrdersTab = ({ orders = [], onToast }) => {
   const delivered = orders.filter((o) => o.status === 'Đã giao').length;
   const shipping = orders.filter((o) => o.status === 'Đang giao').length;
   const cancelled = orders.filter((o) => o.status === 'Đã hủy').length;
@@ -192,9 +189,7 @@ const OrdersTab = ({ customer, onToast }) => {
 };
 
 /* ── Tab: Địa chỉ ─────────────────────────────────────────── */
-const AddressesTab = ({ customer }) => {
-  const addresses = mockAddresses.filter((a) => a.customerId === customer.customerId);
-
+const AddressesTab = ({ addresses = [] }) => {
   if (addresses.length === 0) {
     return (
       <div className="am-empty-state am-fade-in">
@@ -216,7 +211,7 @@ const AddressesTab = ({ customer }) => {
             {addr.isDefault && <span className="am-badge-default">Mặc định</span>}
           </div>
           <div className="am-address-text">
-            {addr.streetAddress}, {addr.ward}, {addr.district}, {addr.province}
+            {[addr.line1, addr.line2, addr.city, addr.state].filter(Boolean).join(', ')}
           </div>
         </div>
       ))}
@@ -230,10 +225,32 @@ const AddressesTab = ({ customer }) => {
 const CustomerDetailSlideOver = ({ customer, onClose, onEdit, onLock, onUnlock, onToast, initialTab }) => {
   const [activeTab, setActiveTab] = useState(initialTab || 'info');
   const [closing, setClosing] = useState(false);
+  const [detail, setDetail] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   useEffect(() => {
     setActiveTab(initialTab || 'info');
   }, [initialTab, customer]);
+
+  // Fetch full customer detail (with addresses) from API
+  useEffect(() => {
+    if (!customer?.customerId) return;
+    let cancelled = false;
+    setLoadingDetail(true);
+    adminCustomerAPI.getById(customer.customerId)
+      .then((res) => {
+        if (!cancelled) {
+          const d = res?.data ?? res;
+          setDetail({
+            ...d,
+            status: d.status === true ? 1 : d.status === false ? 0 : d.status,
+          });
+        }
+      })
+      .catch(() => { /* use summary data from list */ })
+      .finally(() => { if (!cancelled) setLoadingDetail(false); });
+    return () => { cancelled = true; };
+  }, [customer?.customerId]);
 
   const handleClose = () => {
     setClosing(true);
@@ -247,9 +264,17 @@ const CustomerDetailSlideOver = ({ customer, onClose, onEdit, onLock, onUnlock, 
 
   if (!customer) return null;
 
+  // Use detail data when available, fallback to list-level customer prop
+  const displayCustomer = detail || {
+    ...customer,
+    status: customer.status === true ? 1 : customer.status === false ? 0 : customer.status,
+  };
+  const addresses = detail?.addresses ?? [];
+  const orders = detail?.recentOrders ?? [];
+
   const color = getAvatarColor(customer.customerId);
-  const orderCount = mockOrders.filter((o) => o.customerId === customer.customerId).length;
-  const addressCount = mockAddresses.filter((a) => a.customerId === customer.customerId).length;
+  const orderCount = displayCustomer.totalOrders ?? orders.length;
+  const addressCount = addresses.length;
 
   return (
     <>
@@ -259,21 +284,21 @@ const CustomerDetailSlideOver = ({ customer, onClose, onEdit, onLock, onUnlock, 
         <div className="am-slideover-header">
           <div className="am-slideover-header-info">
             <div className="am-slideover-avatar" style={{ background: color.bg, color: color.text }}>
-              {customer.avatar ? <img src={customer.avatar} alt="" /> : getInitials(customer.fullName)}
+              {displayCustomer.avatar ? <img src={displayCustomer.avatar} alt="" /> : getInitials(displayCustomer.fullName)}
             </div>
             <div>
-              <h2 className="am-slideover-name">{customer.fullName}</h2>
+              <h2 className="am-slideover-name">{displayCustomer.fullName}</h2>
               <div className="am-slideover-meta">
-                ID: #{String(customer.customerId).padStart(5, '0')} · Đăng ký {formatDate(customer.createdAt)}
+                ID: #{String(displayCustomer.customerId).padStart(5, '0')} · Đăng ký {formatDate(displayCustomer.createdAt)}
               </div>
               <div className="am-slideover-badges">
-                <StatusBadge customer={customer} />
-                <TierBadge spending={customer.totalSpending} />
+                <StatusBadge customer={displayCustomer} />
+                <TierBadge spending={displayCustomer.totalSpending} />
               </div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-            <button className="am-btn am-btn-outline am-btn-sm" onClick={() => onEdit(customer)}>Chỉnh sửa</button>
+            <button className="am-btn am-btn-outline am-btn-sm" onClick={() => onEdit(displayCustomer)}>Chỉnh sửa</button>
             <button className="am-slideover-close" onClick={handleClose}><X size={18} /></button>
           </div>
         </div>
@@ -302,20 +327,25 @@ const CustomerDetailSlideOver = ({ customer, onClose, onEdit, onLock, onUnlock, 
 
         {/* Content */}
         <div className="am-slideover-content">
-          {activeTab === 'info' && <InfoTab customer={customer} onToggleStatus={handleToggleStatus} />}
-          {activeTab === 'orders' && <OrdersTab customer={customer} onToast={onToast} />}
-          {activeTab === 'addresses' && <AddressesTab customer={customer} />}
+          {loadingDetail && (
+            <div style={{ textAlign: 'center', padding: 32, color: '#94a3b8' }}>
+              <Loader size={24} className="am-spin" /> Đang tải...
+            </div>
+          )}
+          {activeTab === 'info' && <InfoTab customer={displayCustomer} onToggleStatus={handleToggleStatus} />}
+          {activeTab === 'orders' && <OrdersTab orders={orders} onToast={onToast} />}
+          {activeTab === 'addresses' && <AddressesTab addresses={addresses} />}
         </div>
 
         {/* Footer */}
         <div className="am-slideover-footer">
           <div>
-            {customer.status === 1 ? (
-              <button className="am-btn am-btn-outline am-btn-sm" style={{ color: '#ef4444', borderColor: '#fecaca' }} onClick={() => onLock(customer)}>
+            {displayCustomer.status === 1 ? (
+              <button className="am-btn am-btn-outline am-btn-sm" style={{ color: '#ef4444', borderColor: '#fecaca' }} onClick={() => onLock(displayCustomer)}>
                 Khóa tài khoản
               </button>
             ) : (
-              <button className="am-btn am-btn-outline am-btn-sm" style={{ color: '#16a34a', borderColor: '#bbf7d0' }} onClick={() => onUnlock(customer)}>
+              <button className="am-btn am-btn-outline am-btn-sm" style={{ color: '#16a34a', borderColor: '#bbf7d0' }} onClick={() => onUnlock(displayCustomer)}>
                 Mở khóa
               </button>
             )}
