@@ -151,7 +151,7 @@ const TabBasicInfo = ({ data, onChange, errors = {}, categories = [], brands = [
                 const id = m.materialId ?? m.id;
                 return (
                   <option key={id} value={String(id)}>
-                    {m.name}
+                    {m.materialName ?? m.name}
                   </option>
                 );
               })}

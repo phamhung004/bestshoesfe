@@ -597,11 +597,41 @@ const ProductManagementPage = () => {
     }
 
     // ── Step 3: Manage images for each variant ───────────────
-    for (const [tempVariantId, images] of Object.entries(variantImages)) {
-      const realVariantId = variantIdMap[tempVariantId] ?? tempVariantId;
+    // NOTE: key "shared" is a UI-only bucket, not a real variantId for backend API.
+    // Apply shared images to variants that don't have their own image list.
+    const sharedImages = Array.isArray(variantImages?.shared) ? variantImages.shared : [];
+
+    for (const variant of variants) {
+      const tempVariantId = String(variant.id);
+      const variantSpecificImages = Array.isArray(variantImages?.[tempVariantId])
+        ? variantImages[tempVariantId]
+        : [];
+      const images = variantSpecificImages.length > 0 ? variantSpecificImages : sharedImages;
+
+      const resolvedVariantId = variantIdMap[variant.id] ?? variant.id;
+      const realVariantId = Number(resolvedVariantId);
+      if (!Number.isFinite(realVariantId)) continue;
+
+      // ── Delete images that were removed in the UI ─────────
+      // Compare original server images vs current UI state and delete removed ones
+      const originalVariant = (existingProduct?.variants || []).find((v) => v.id === variant.id);
+      if (originalVariant) {
+        const originalImageIds = (originalVariant.images || []).map((img) => img.id);
+        const currentImageIds = new Set(
+          images.filter((img) => typeof img.id === 'number').map((img) => img.id)
+        );
+        for (const origId of originalImageIds) {
+          if (!currentImageIds.has(origId)) {
+            await productImageAPI.delete(origId).catch(() => {});
+          }
+        }
+      }
+
+      if (!images || images.length === 0) continue;
+
       // Find existing images (id is a number) vs new files (id is a string like "ts-idx")
       const existingImages = images.filter((img) => typeof img.id === 'number');
-      const newImages      = images.filter((img) => typeof img.id !== 'number' && img.file instanceof File);
+      const newImages = images.filter((img) => typeof img.id !== 'number' && img.file instanceof File);
 
       // Upload new files
       const uploadedImages = [];
@@ -625,10 +655,13 @@ const ProductManagementPage = () => {
         }
       }
 
-      // Reorder if there are existing images
-      if (existingImages.length > 0) {
-        const orderedIds = [...existingImages.map((i) => i.id), ...uploadedImages.map((i) => i.id)];
-        await productImageAPI.reorder(realVariantId, orderedIds).catch(() => {});
+      // Reorder all current images (existing kept + newly uploaded)
+      const allCurrentIds = [
+        ...existingImages.map((i) => i.id),
+        ...uploadedImages.map((i) => i.id),
+      ];
+      if (allCurrentIds.length > 0) {
+        await productImageAPI.reorder(realVariantId, allCurrentIds).catch(() => {});
       }
     }
 

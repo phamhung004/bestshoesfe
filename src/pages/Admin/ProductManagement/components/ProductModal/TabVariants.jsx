@@ -5,10 +5,22 @@ import { formatPrice } from '../../../../../utils/formatPrice';
 
 /** Normalise a size object from either mock or API format */
 const normSize = (s) =>
-  typeof s === 'string' ? { id: null, name: s } : { id: s.id ?? null, name: s.name };
+  typeof s === 'string'
+    ? { id: null, name: s }
+    : { id: s.sizeId ?? s.id ?? null, name: s.sizeName ?? s.name };
 
 /** Normalise a color object from either mock or API format */
-const normColor = (c) => ({ id: c.id, name: c.name, code: c.code ?? '#cccccc' });
+const normalizeColorCode = (code) => {
+  if (!code) return '#cccccc';
+  const trimmed = String(code).trim();
+  return trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+};
+
+const normColor = (c) => ({
+  id:   c.colorId   ?? c.id,
+  name: c.colorName ?? c.name,
+  code: normalizeColorCode(c.colorCode ?? c.code),
+});
 
 /** Generate variant combinations (additive — preserves existing) */
 const generateVariants = (sizes, colors, existing) => {
@@ -208,7 +220,12 @@ const TabVariants = ({ variants = [], onChange, errors = {}, sizes: sizeProp, co
               >
                 <span
                   className="pm-color-swatch-inner"
-                  style={{ background: color.code, border: color.code === '#f5f5f5' ? '1px solid #e2e8f0' : 'none' }}
+                  style={{
+                    background: color.code,
+                    border: ['#fff', '#ffffff', '#f5f5f5'].includes((color.code || '').toLowerCase())
+                      ? '1px solid #e2e8f0'
+                      : 'none',
+                  }}
                 />
               </button>
             );
