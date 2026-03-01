@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { mockOrders, STATUS_CONFIG, formatVND } from './mockOrders';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { STATUS_CONFIG, formatVND, normalizeOrder } from './mockOrders';
+import { orderAPI } from '../../../../services/api';
 import OrderKpiCards from './OrderKpiCards';
 import OrderFilters from './OrderFilters';
 import OrderTable from './OrderTable';
@@ -9,19 +10,14 @@ import './OrderManagement.css';
 
 /**
  * OrderManagement — parent orchestrator component.
- * Manages filters, sorting, pagination, selection, slide-over,
- * toast notifications, and cancel confirmations.
+ * Connects to backend API for all data operations.
  */
 const OrderManagement = () => {
     // ── State ─────────────────────────────────────────────────────
-    const [orders, setOrders] = useState(mockOrders);
+    const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    // Simulate initial loading
-    useEffect(() => {
-        const t = setTimeout(() => setLoading(false), 800);
-        return () => clearTimeout(t);
-    }, []);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalElements, setTotalElements] = useState(0);
 
     // Filter state
     const [filters, setFilters] = useState({
@@ -46,6 +42,7 @@ const OrderManagement = () => {
 
     // Slide-over state
     const [selectedOrder, setSelectedOrder] = useState(null);
+    const [selectedOrderDetail, setSelectedOrderDetail] = useState(null);
 
     // Toast state
     const [toast, setToast] = useState(null);
@@ -53,99 +50,124 @@ const OrderManagement = () => {
     // Confirm dialog state
     const [confirmDialog, setConfirmDialog] = useState(null);
 
+    // Status counts (computed from a separate full query or tracked)
+    const [statusCounts, setStatusCounts] = useState({ 'Tất cả': 0 });
+
+    // Ref to prevent race conditions
+    const fetchIdRef = useRef(0);
+
     // ── Today's date string for the subtitle ──────────────────────
-    const todayLabel = (() => {
-        const d = new Date('2026-02-24T10:00:00+07:00');
+    const todayLabel = useMemo(() => {
+        const d = new Date();
         const days = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
         const months = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
         return `${days[d.getDay()]}, ${d.getDate()} tháng ${months[d.getMonth()]}, ${d.getFullYear()}`;
-    })();
+    }, []);
 
-    // ── Filter logic ──────────────────────────────────────────────
-    const filteredOrders = useMemo(() => {
-        let result = [...orders];
+    // ── Fetch orders from backend ─────────────────────────────────
+    const fetchOrders = useCallback(async () => {
+        const fetchId = ++fetchIdRef.current;
+        setLoading(true);
 
-        // Tab filter (overrides status dropdown when not "Tất cả")
-        if (activeTab !== 'Tất cả') {
-            result = result.filter((o) => o.status === activeTab);
-        }
+        try {
+            // Build request body for the search API
+            const requestBody = {
+                search: filters.search || undefined,
+                status: activeTab !== 'Tất cả' ? activeTab : (filters.status || undefined),
+                paymentStatus: filters.paymentStatus || undefined,
+                orderType: filters.orderType || undefined,
+                dateFrom: filters.dateFrom || undefined,
+                dateTo: filters.dateTo || undefined,
+                sortBy: sortConfig.key || 'created_at',
+                sortDir: sortConfig.dir || 'desc',
+                pageNum: currentPage - 1,  // backend is 0-based
+                pageSize: rowsPerPage,
+            };
 
-        // Search filter
-        if (filters.search) {
-            const q = filters.search.toLowerCase();
-            result = result.filter((o) =>
-                o.order_number.toLowerCase().includes(q) ||
-                o.customer_name.toLowerCase().includes(q) ||
-                o.customer_phone.includes(q)
-            );
-        }
+            const response = await orderAPI.search(requestBody);
 
-        // Dropdown filters
-        if (filters.status) {
-            result = result.filter((o) => o.status === filters.status);
-        }
-        if (filters.paymentStatus) {
-            result = result.filter((o) => o.payment_status === filters.paymentStatus);
-        }
-        if (filters.orderType) {
-            result = result.filter((o) => o.order_type === filters.orderType);
-        }
+            // Only apply if this is still the latest fetch
+            if (fetchId !== fetchIdRef.current) return;
 
-        // Date range filter
-        if (filters.dateFrom) {
-            result = result.filter((o) => o.created_at >= filters.dateFrom);
-        }
-        if (filters.dateTo) {
-            const endDate = filters.dateTo + 'T23:59:59';
-            result = result.filter((o) => o.created_at <= endDate);
-        }
-
-        return result;
-    }, [orders, filters, activeTab]);
-
-    // ── Status counts for tabs ────────────────────────────────────
-    const statusCounts = useMemo(() => {
-        const counts = { 'Tất cả': orders.length };
-        Object.keys(STATUS_CONFIG).forEach((s) => {
-            counts[s] = orders.filter((o) => o.status === s).length;
-        });
-        return counts;
-    }, [orders]);
-
-    // ── Sorting logic ─────────────────────────────────────────────
-    const sortedOrders = useMemo(() => {
-        const result = [...filteredOrders];
-        if (!sortConfig.key) return result;
-
-        result.sort((a, b) => {
-            let aVal = a[sortConfig.key];
-            let bVal = b[sortConfig.key];
-
-            // Handle numeric vs string comparison
-            if (typeof aVal === 'number') {
-                return sortConfig.dir === 'asc' ? aVal - bVal : bVal - aVal;
+            const pageData = response?.data;
+            if (pageData) {
+                const normalized = (pageData.content || []).map(normalizeOrder);
+                setOrders(normalized);
+                setTotalPages(pageData.totalPages || 1);
+                setTotalElements(pageData.totalElements || 0);
             }
-            aVal = String(aVal || '').toLowerCase();
-            bVal = String(bVal || '').toLowerCase();
-            if (aVal < bVal) return sortConfig.dir === 'asc' ? -1 : 1;
-            if (aVal > bVal) return sortConfig.dir === 'asc' ? 1 : -1;
-            return 0;
-        });
+        } catch (err) {
+            console.error('Failed to fetch orders:', err);
+            if (fetchId === fetchIdRef.current) {
+                setOrders([]);
+                setTotalPages(1);
+                setTotalElements(0);
+            }
+        } finally {
+            if (fetchId === fetchIdRef.current) {
+                setLoading(false);
+            }
+        }
+    }, [filters, activeTab, sortConfig, currentPage, rowsPerPage]);
 
-        return result;
-    }, [filteredOrders, sortConfig]);
+    // ── Fetch status counts for tabs ──────────────────────────────
+    const fetchStatusCounts = useCallback(async () => {
+        try {
+            // Fetch total count (no filters)
+            const allRes = await orderAPI.search({ pageNum: 0, pageSize: 1 });
+            const allTotal = allRes?.data?.totalElements || 0;
 
-    // ── Pagination logic ──────────────────────────────────────────
-    const totalPages = Math.max(1, Math.ceil(sortedOrders.length / rowsPerPage));
-    const paginatedOrders = useMemo(() => {
-        const start = (currentPage - 1) * rowsPerPage;
-        return sortedOrders.slice(start, start + rowsPerPage);
-    }, [sortedOrders, currentPage, rowsPerPage]);
+            const statuses = ['Chờ xác nhận', 'Đã xác nhận', 'Đang giao', 'Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'];
+            const counts = { 'Tất cả': allTotal };
+
+            // Fetch counts per status in parallel
+            const results = await Promise.all(
+                statuses.map((s) =>
+                    orderAPI.search({ status: s, pageNum: 0, pageSize: 1 })
+                        .then((res) => ({ status: s, count: res?.data?.totalElements || 0 }))
+                        .catch(() => ({ status: s, count: 0 }))
+                )
+            );
+
+            results.forEach(({ status, count }) => {
+                counts[status] = count;
+            });
+
+            setStatusCounts(counts);
+        } catch (err) {
+            console.error('Failed to fetch status counts:', err);
+        }
+    }, []);
+
+    // ── Trigger fetch on filter/sort/page changes ─────────────────
+    useEffect(() => {
+        fetchOrders();
+    }, [fetchOrders]);
+
+    // Fetch status counts on mount and after mutations
+    useEffect(() => {
+        fetchStatusCounts();
+    }, [fetchStatusCounts]);
 
     // Reset to page 1 when filters change
     useEffect(() => {
         setCurrentPage(1);
     }, [filters, activeTab, rowsPerPage]);
+
+    // ── Fetch order detail for slide-over ─────────────────────────
+    const fetchOrderDetail = useCallback(async (order) => {
+        setSelectedOrder(order); // show slide-over immediately with summary data
+        try {
+            const response = await orderAPI.getById(order.order_id);
+            if (response?.data) {
+                setSelectedOrderDetail(normalizeOrder(response.data));
+            }
+        } catch (err) {
+            console.error('Failed to fetch order detail:', err);
+            // Keep the summary data as fallback
+            setSelectedOrderDetail(order);
+        }
+    }, []);
 
     // ── Handlers ──────────────────────────────────────────────────
     const handleFilterChange = useCallback((key, value) => {
@@ -159,7 +181,6 @@ const OrderManagement = () => {
 
     const handleTabChange = useCallback((tab) => {
         setActiveTab(tab);
-        // Clear dropdown status filter when using tabs
         setFilters((prev) => ({ ...prev, status: '' }));
     }, []);
 
@@ -180,12 +201,12 @@ const OrderManagement = () => {
     }, []);
 
     const handleToggleSelectAll = useCallback(() => {
-        if (selectedIds.size === paginatedOrders.length) {
+        if (selectedIds.size === orders.length) {
             setSelectedIds(new Set());
         } else {
-            setSelectedIds(new Set(paginatedOrders.map((o) => o.order_id)));
+            setSelectedIds(new Set(orders.map((o) => o.order_id)));
         }
-    }, [paginatedOrders, selectedIds]);
+    }, [orders, selectedIds]);
 
     const handleDeselectAll = useCallback(() => {
         setSelectedIds(new Set());
@@ -208,59 +229,111 @@ const OrderManagement = () => {
         window.print();
     }, []);
 
+    // ── Cancel order (API) ────────────────────────────────────────
     const handleCancelOrder = useCallback((order) => {
         setConfirmDialog({
             title: 'Hủy đơn hàng?',
             message: `Bạn có chắc chắn muốn hủy đơn #${order.order_number}? Thao tác này không thể hoàn tác.`,
-            onConfirm: () => {
-                setOrders((prev) =>
-                    prev.map((o) => o.order_id === order.order_id ? { ...o, status: 'Đã hủy' } : o)
-                );
-                showToast(`Đã hủy đơn #${order.order_number}`);
-                setConfirmDialog(null);
-                setSelectedOrder(null);
+            onConfirm: async () => {
+                try {
+                    await orderAPI.cancel(order.order_id);
+                    showToast(`Đã hủy đơn #${order.order_number}`);
+                    setConfirmDialog(null);
+                    setSelectedOrder(null);
+                    setSelectedOrderDetail(null);
+                    fetchOrders();
+                    fetchStatusCounts();
+                } catch (err) {
+                    showToast('❌ Lỗi: ' + (err?.message || 'Không thể hủy đơn hàng'));
+                    setConfirmDialog(null);
+                }
             },
             onCancel: () => setConfirmDialog(null),
         });
-    }, [showToast]);
+    }, [showToast, fetchOrders, fetchStatusCounts]);
 
-    const handleStatusChange = useCallback((orderId, newStatus) => {
-        setOrders((prev) =>
-            prev.map((o) => o.order_id === orderId ? { ...o, status: newStatus } : o)
-        );
-        // Update selected order if open in slide-over
-        setSelectedOrder((prev) =>
-            prev && prev.order_id === orderId ? { ...prev, status: newStatus } : prev
-        );
-        showToast(`Đã cập nhật trạng thái → ${newStatus}`);
-    }, [showToast]);
+    // ── Update status (API) ───────────────────────────────────────
+    const handleStatusChange = useCallback(async (orderId, newStatus) => {
+        try {
+            await orderAPI.updateStatus(orderId, { status: newStatus });
+            showToast(`Đã cập nhật trạng thái → ${newStatus}`);
+            // Refresh the detail if open
+            if (selectedOrderDetail && selectedOrderDetail.order_id === orderId) {
+                setSelectedOrderDetail((prev) => prev ? { ...prev, status: newStatus } : prev);
+            }
+            fetchOrders();
+            fetchStatusCounts();
+        } catch (err) {
+            showToast('❌ Lỗi: ' + (err?.message || 'Không thể cập nhật trạng thái'));
+        }
+    }, [showToast, fetchOrders, fetchStatusCounts, selectedOrderDetail]);
 
-    const handleBulkConfirm = useCallback(() => {
-        setOrders((prev) =>
-            prev.map((o) => selectedIds.has(o.order_id) && o.status === 'Chờ xác nhận'
-                ? { ...o, status: 'Đã xác nhận' }
-                : o
-            )
-        );
-        showToast(`Đã xác nhận ${selectedIds.size} đơn hàng`);
-        setSelectedIds(new Set());
-    }, [selectedIds, showToast]);
+    // ── Bulk confirm (API) ────────────────────────────────────────
+    const handleBulkConfirm = useCallback(async () => {
+        try {
+            await orderAPI.bulkConfirm({ orderIds: [...selectedIds] });
+            showToast(`Đã xác nhận ${selectedIds.size} đơn hàng`);
+            setSelectedIds(new Set());
+            fetchOrders();
+            fetchStatusCounts();
+        } catch (err) {
+            showToast('❌ Lỗi: ' + (err?.message || 'Không thể xác nhận hàng loạt'));
+        }
+    }, [selectedIds, showToast, fetchOrders, fetchStatusCounts]);
 
+    // ── Bulk cancel (API) ─────────────────────────────────────────
     const handleBulkCancel = useCallback(() => {
         setConfirmDialog({
             title: 'Hủy nhiều đơn hàng?',
             message: `Bạn có chắc chắn muốn hủy ${selectedIds.size} đơn hàng đã chọn?`,
-            onConfirm: () => {
-                setOrders((prev) =>
-                    prev.map((o) => selectedIds.has(o.order_id) ? { ...o, status: 'Đã hủy' } : o)
-                );
-                showToast(`Đã hủy ${selectedIds.size} đơn hàng`);
-                setSelectedIds(new Set());
-                setConfirmDialog(null);
+            onConfirm: async () => {
+                try {
+                    await orderAPI.bulkCancel({ orderIds: [...selectedIds] });
+                    showToast(`Đã hủy ${selectedIds.size} đơn hàng`);
+                    setSelectedIds(new Set());
+                    setConfirmDialog(null);
+                    fetchOrders();
+                    fetchStatusCounts();
+                } catch (err) {
+                    showToast('❌ Lỗi: ' + (err?.message || 'Không thể hủy hàng loạt'));
+                    setConfirmDialog(null);
+                }
             },
             onCancel: () => setConfirmDialog(null),
         });
-    }, [selectedIds, showToast]);
+    }, [selectedIds, showToast, fetchOrders, fetchStatusCounts]);
+
+    // ── Export CSV (API) ──────────────────────────────────────────
+    const handleExportCsv = useCallback(async () => {
+        try {
+            const requestBody = {
+                search: filters.search || undefined,
+                status: activeTab !== 'Tất cả' ? activeTab : (filters.status || undefined),
+                paymentStatus: filters.paymentStatus || undefined,
+                orderType: filters.orderType || undefined,
+                dateFrom: filters.dateFrom || undefined,
+                dateTo: filters.dateTo || undefined,
+            };
+            const response = await fetch('http://localhost:8080/api/admin/orders/export-csv', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody),
+            });
+            if (!response.ok) throw new Error('Export failed');
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'orders.csv';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            showToast('✅ Đã xuất CSV thành công');
+        } catch (err) {
+            showToast('❌ Lỗi khi xuất CSV');
+        }
+    }, [filters, activeTab, showToast]);
 
     // ── Render ────────────────────────────────────────────────────
     return (
@@ -272,7 +345,7 @@ const OrderManagement = () => {
                     <p>{todayLabel}</p>
                 </div>
                 <div className="om-header-actions">
-                    <button className="om-btn om-btn-outline">
+                    <button className="om-btn om-btn-outline" onClick={handleExportCsv}>
                         📥 Xuất CSV
                     </button>
                     <button className="om-btn om-btn-primary">
@@ -281,8 +354,8 @@ const OrderManagement = () => {
                 </div>
             </div>
 
-            {/* KPI cards */}
-            <OrderKpiCards orders={orders} />
+            {/* KPI cards — now fetches its own data from backend */}
+            <OrderKpiCards />
 
             {/* Filters & tabs */}
             <OrderFilters
@@ -292,7 +365,7 @@ const OrderManagement = () => {
                 activeTab={activeTab}
                 onTabChange={handleTabChange}
                 statusCounts={statusCounts}
-                resultCount={filteredOrders.length}
+                resultCount={totalElements}
             />
 
             {/* Bulk actions bar */}
@@ -305,7 +378,7 @@ const OrderManagement = () => {
                     <button className="om-btn om-btn-outline om-btn-sm" onClick={handlePrintOrder}>
                         🖨️ In hóa đơn
                     </button>
-                    <button className="om-btn om-btn-outline om-btn-sm">
+                    <button className="om-btn om-btn-outline om-btn-sm" onClick={handleExportCsv}>
                         📊 Xuất Excel
                     </button>
                     <button className="om-btn om-btn-danger-outline om-btn-sm" onClick={handleBulkCancel}>
@@ -319,22 +392,22 @@ const OrderManagement = () => {
 
             {/* Orders table */}
             <OrderTable
-                orders={paginatedOrders}
+                orders={orders}
                 selectedIds={selectedIds}
                 onToggleSelect={handleToggleSelect}
                 onToggleSelectAll={handleToggleSelectAll}
-                onRowClick={setSelectedOrder}
+                onRowClick={fetchOrderDetail}
                 sortConfig={sortConfig}
                 onSort={handleSort}
                 onCopyOrderNum={handleCopyOrderNum}
                 onPrintOrder={handlePrintOrder}
                 onCancelOrder={handleCancelOrder}
-                allSelected={selectedIds.size > 0 && selectedIds.size === paginatedOrders.length}
+                allSelected={selectedIds.size > 0 && selectedIds.size === orders.length}
                 loading={loading}
             />
 
             {/* Pagination */}
-            {!loading && sortedOrders.length > 0 && (
+            {!loading && orders.length > 0 && (
                 <OrderPagination
                     currentPage={currentPage}
                     totalPages={totalPages}
@@ -346,8 +419,8 @@ const OrderManagement = () => {
 
             {/* Slide-over detail panel */}
             <OrderSlideOver
-                order={selectedOrder}
-                onClose={() => setSelectedOrder(null)}
+                order={selectedOrderDetail || selectedOrder}
+                onClose={() => { setSelectedOrder(null); setSelectedOrderDetail(null); }}
                 onStatusChange={handleStatusChange}
                 onCopyOrderNum={handleCopyOrderNum}
                 onCancelOrder={handleCancelOrder}

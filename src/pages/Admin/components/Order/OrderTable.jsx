@@ -193,7 +193,7 @@ const OrderTable = ({
 
                                     {/* Product */}
                                     <td>
-                                        {firstItem && (
+                                        {firstItem ? (
                                             <div className="om-product-cell">
                                                 <img
                                                     className="om-product-thumb"
@@ -211,7 +211,9 @@ const OrderTable = ({
                                                     )}
                                                 </div>
                                             </div>
-                                        )}
+                                        ) : order.item_count != null ? (
+                                            <span className="om-product-count">{order.item_count} sản phẩm</span>
+                                        ) : null}
                                     </td>
 
                                     {/* Total amount */}

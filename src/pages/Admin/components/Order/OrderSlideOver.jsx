@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    formatVND, formatDate, getInitials, getCustomerById, getCouponById,
+    formatVND, formatDate, getInitials,
     STATUS_CONFIG, PAYMENT_CONFIG, ALL_STATUSES,
 } from './mockOrders';
 
 /**
  * OrderSlideOver: right drawer showing full order details
  * Props:
- *  - order: selected order object (null = hidden)
+ *  - order: normalized order object from API (null = hidden)
  *  - onClose: () => void
  *  - onStatusChange: (orderId, newStatus) => void
  *  - onCopyOrderNum: (orderNumber) => void
@@ -38,8 +38,6 @@ const OrderSlideOver = ({
 
     if (!order) return null;
 
-    const customer = getCustomerById(order.customer_id);
-    const coupon = order.coupon_id ? getCouponById(order.coupon_id) : null;
     const statusCfg = STATUS_CONFIG[order.status] || {};
     const paymentCfg = PAYMENT_CONFIG[order.payment_status] || {};
 
@@ -145,10 +143,6 @@ const OrderSlideOver = ({
                             <div className="om-so-customer-details">
                                 <strong>{order.customer_name}</strong>
                                 <span>📱 {order.customer_phone}</span>
-                                <span>✉️ {customer?.email || '—'}</span>
-                                <span>
-                                    {customer?.gender || '—'} · {customer?.date_of_birth || '—'}
-                                </span>
                             </div>
                         </div>
                     </div>
@@ -204,7 +198,7 @@ const OrderSlideOver = ({
                         </div>
                         {order.coupon_discount_amount > 0 && (
                             <div className="om-so-pricing-row discount">
-                                <span>Giảm giá {coupon ? `(${coupon.code})` : ''}</span>
+                                <span>Giảm giá (Mã giảm giá)</span>
                                 <span>−{formatVND(order.coupon_discount_amount)}</span>
                             </div>
                         )}
@@ -227,11 +221,6 @@ const OrderSlideOver = ({
                                 {order.payment_status}
                             </span>
                         </div>
-                        {coupon && (
-                            <div style={{ fontSize: 13, color: 'var(--gray-600)' }}>
-                                Mã giảm giá: <strong>{coupon.code}</strong> — {coupon.name}
-                            </div>
-                        )}
                     </div>
 
                     {/* Order timeline */}
