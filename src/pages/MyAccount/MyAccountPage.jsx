@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import AccountSidebar from './AccountSidebar';
 import OverviewTab from './tabs/OverviewTab';
@@ -7,6 +7,7 @@ import ProfileTab from './tabs/ProfileTab';
 import AddressTab from './tabs/AddressTab';
 import PasswordTab from './tabs/PasswordTab';
 import ReviewsTab from './tabs/ReviewsTab';
+import { getProfile } from '../../api/accountApi';
 import './MyAccountPage.css';
 
 const TAB_HASHES = {
@@ -34,7 +35,45 @@ const getInitialTab = () => {
 
 const MyAccountPage = () => {
     const [activeTab, setActiveTab] = useState(getInitialTab);
-    const [customerName, setCustomerName] = useState(null);
+    const [customer, setCustomer] = useState(null);
+    const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    const fetchProfile = useCallback(async () => {
+        try {
+            const res = await getProfile();
+            const data = res.data;
+            setCustomer({
+                customerId: data.customerId,
+                fullName: data.fullName,
+                email: data.email,
+                phone: data.phone,
+                dateOfBirth: data.dateOfBirth,
+                gender: data.gender,
+                createdAt: data.createdAt,
+            });
+            if (data.stats) {
+                setStats({
+                    totalOrders: data.stats.totalOrders || 0,
+                    totalSpend: data.stats.totalSpend || 0,
+                    reviewCount: data.stats.reviewCount || 0,
+                    addressCount: data.stats.addressCount || 0,
+                    pendingReviews: data.stats.pendingReviews || 0,
+                    activeOrders: data.stats.activeOrders || 0,
+                    loyaltyPoints: data.stats.loyaltyPoints || 0,
+                    memberTier: data.stats.memberTier || 'bronze',
+                });
+            }
+        } catch (err) {
+            console.error('Failed to load profile:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchProfile();
+    }, [fetchProfile]);
 
     useEffect(() => {
         window.location.hash = TAB_HASHES[activeTab];
@@ -46,6 +85,20 @@ const MyAccountPage = () => {
     }, [activeTab]);
 
     const handleTabChange = (tab) => setActiveTab(tab);
+
+    const handleNameChange = (newName) => {
+        setCustomer(prev => prev ? { ...prev, fullName: newName } : prev);
+    };
+
+    if (loading) {
+        return (
+            <div className="acc-page-wrapper">
+                <div className="acc-container" style={{ textAlign: 'center', padding: '80px 0' }}>
+                    <span className="acc-spinner" /> Đang tải...
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="acc-page-wrapper">
@@ -66,14 +119,15 @@ const MyAccountPage = () => {
                     <AccountSidebar
                         activeTab={activeTab}
                         onTabChange={handleTabChange}
-                        customerName={customerName}
+                        customer={customer}
+                        stats={stats}
                     />
 
                     {/* Main Content */}
                     <main className="acc-main-content">
-                        {activeTab === 'overview' && <OverviewTab onTabChange={handleTabChange} />}
+                        {activeTab === 'overview' && <OverviewTab onTabChange={handleTabChange} customer={customer} stats={stats} />}
                         {activeTab === 'orders' && <OrdersTab />}
-                        {activeTab === 'profile' && <ProfileTab onNameChange={setCustomerName} />}
+                        {activeTab === 'profile' && <ProfileTab customer={customer} stats={stats} onNameChange={handleNameChange} onProfileUpdate={fetchProfile} />}
                         {activeTab === 'addresses' && <AddressTab />}
                         {activeTab === 'password' && <PasswordTab />}
                         {activeTab === 'reviews' && <ReviewsTab />}

@@ -22,18 +22,21 @@ const WriteReviewModal = ({ product, onClose, onSubmit }) => {
         };
     }, [onClose]);
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const errs = {};
         if (rating === 0) errs.rating = 'Vui lòng chọn số sao';
         if (!content.trim() || content.trim().length < 10) errs.content = 'Nội dung đánh giá ít nhất 10 ký tự';
         if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
         setSubmitting(true);
-        setTimeout(() => {
-            onSubmit({ rating, title, content, qualityRating, sizeRating, deliveryRating });
-            setSubmitting(false);
+        try {
+            await onSubmit({ rating, title, content, qualityRating, sizeRating, deliveryRating });
             onClose();
-        }, 900);
+        } catch (err) {
+            // error handled by parent
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -47,11 +50,11 @@ const WriteReviewModal = ({ product, onClose, onSubmit }) => {
                 <div className="acc-modal-body">
                     {/* Product info */}
                     <div className="acc-review-product-header">
-                        <div className="acc-review-thumb" style={{ background: product.thumb_color }}>
+                        <div className="acc-review-thumb" style={{ background: product.thumbColor }}>
                             <span>👟</span>
                         </div>
                         <div>
-                            <div className="acc-review-product-name">{product.product_name}</div>
+                            <div className="acc-review-product-name">{product.productName}</div>
                             <div className="acc-review-product-variant">{product.variant}</div>
                         </div>
                     </div>

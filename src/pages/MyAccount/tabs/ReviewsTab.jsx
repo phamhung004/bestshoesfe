@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { Star } from 'lucide-react';
-import { MOCK_REVIEWS_WRITTEN, MOCK_REVIEWS_PENDING, formatDate } from '../mockAccountData';
+import React, { useState, useEffect } from 'react';
+import { Star, Loader } from 'lucide-react';
+import { formatDate } from '../mockAccountData';
+import { getMyReviews, getPendingReviews, createReview, deleteReview } from '../../../api/accountApi';
 import WriteReviewModal from '../components/WriteReviewModal';
 import StarSelector from '../components/StarSelector';
 
 const ReviewsTab = () => {
     const [activeSubTab, setActiveSubTab] = useState('written');
-    const [writtenReviews, setWrittenReviews] = useState(MOCK_REVIEWS_WRITTEN);
-    const [pendingReviews, setPendingReviews] = useState(MOCK_REVIEWS_PENDING);
+    const [writtenReviews, setWrittenReviews] = useState([]);
+    const [pendingReviews, setPendingReviews] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [writeModal, setWriteModal] = useState(null);
     const [expandedReplies, setExpandedReplies] = useState({});
     const [toast, setToast] = useState(null);
@@ -17,30 +19,61 @@ const ReviewsTab = () => {
         setTimeout(() => setToast(null), 3000);
     };
 
+    const fetchReviews = async () => {
+        try {
+            const [writtenRes, pendingRes] = await Promise.all([
+                getMyReviews(),
+                getPendingReviews(),
+            ]);
+            setWrittenReviews(writtenRes.data || []);
+            setPendingReviews(pendingRes.data || []);
+        } catch (err) {
+            console.error('Failed to load reviews:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => { fetchReviews(); }, []);
+
     const toggleReply = (id) => setExpandedReplies(prev => ({ ...prev, [id]: !prev[id] }));
 
-    const handleWriteReview = (pendingItem, data) => {
-        const newReview = {
-            review_id: Date.now(),
-            product_name: pendingItem.product_name,
-            variant: pendingItem.variant,
-            rating: data.rating,
-            title: data.title,
-            content: data.content,
-            created_at: new Date().toISOString(),
-            thumb_color: pendingItem.thumb_color,
-            shop_reply: null,
-        };
-        setWrittenReviews(prev => [newReview, ...prev]);
-        setPendingReviews(prev => prev.filter(p => p.pending_id !== pendingItem.pending_id));
-        setActiveSubTab('written');
-        showToast('✓ Đánh giá đã được gửi thành công!');
+    const handleWriteReview = async (pendingItem, data) => {
+        try {
+            await createReview({
+                orderItemId: pendingItem.pendingId,
+                rating: data.rating,
+                title: data.title || null,
+                content: data.content,
+                qualityRating: data.qualityRating || null,
+                sizeRating: data.sizeRating || null,
+                deliveryRating: data.deliveryRating || null,
+            });
+            await fetchReviews();
+            setActiveSubTab('written');
+            showToast('✓ Đánh giá đã được gửi thành công!');
+        } catch (err) {
+            showToast('✗ ' + (err.response?.data?.message || 'Gửi đánh giá thất bại'));
+        }
     };
 
-    const handleDeleteReview = (id) => {
-        setWrittenReviews(prev => prev.filter(r => r.review_id !== id));
-        showToast('Đã xóa đánh giá!');
+    const handleDeleteReview = async (id) => {
+        try {
+            await deleteReview(id);
+            setWrittenReviews(prev => prev.filter(r => r.reviewId !== id));
+            showToast('Đã xóa đánh giá!');
+        } catch (err) {
+            showToast('✗ ' + (err.response?.data?.message || 'Xóa thất bại'));
+        }
     };
+
+    if (loading) {
+        return (
+            <div className="acc-tab-content" style={{ textAlign: 'center', padding: '60px 0' }}>
+                <Loader size={24} className="acc-spinner" /> Đang tải...
+            </div>
+        );
+    }
 
     return (
         <div className="acc-tab-content">
@@ -78,30 +111,30 @@ const ReviewsTab = () => {
                         </div>
                     ) : (
                         writtenReviews.map(review => (
-                            <div key={review.review_id} className="acc-review-card">
-                                <div className="acc-review-thumb" style={{ background: review.thumb_color }}>
+                            <div key={review.reviewId} className="acc-review-card">
+                                <div className="acc-review-thumb" style={{ background: review.thumbColor }}>
                                     <span>👟</span>
                                 </div>
                                 <div className="acc-review-body">
-                                    <div className="acc-review-product">{review.product_name}</div>
+                                    <div className="acc-review-product">{review.productName}</div>
                                     <div className="acc-review-variant">{review.variant}</div>
                                     <div className="acc-review-stars-row">
                                         <StarSelector value={review.rating} readOnly size={18} />
-                                        <span className="acc-review-date">{formatDate(review.created_at)}</span>
+                                        <span className="acc-review-date">{formatDate(review.createdAt)}</span>
                                     </div>
                                     {review.title && <div className="acc-review-title">{review.title}</div>}
                                     <p className="acc-review-content">{review.content}</p>
                                     <div className="acc-review-actions">
                                         <button className="acc-review-edit-btn">Chỉnh sửa</button>
-                                        <button className="acc-review-delete-btn" onClick={() => handleDeleteReview(review.review_id)}>Xóa</button>
+                                        <button className="acc-review-delete-btn" onClick={() => handleDeleteReview(review.reviewId)}>Xóa</button>
                                     </div>
-                                    {review.shop_reply && (
+                                    {review.shopReply && (
                                         <div className="acc-review-reply-wrap">
-                                            <button className="acc-review-reply-toggle" onClick={() => toggleReply(review.review_id)}>
+                                            <button className="acc-review-reply-toggle" onClick={() => toggleReply(review.reviewId)}>
                                                 💬 Phản hồi từ BestShoes
                                             </button>
-                                            {expandedReplies[review.review_id] && (
-                                                <div className="acc-review-reply-content">{review.shop_reply}</div>
+                                            {expandedReplies[review.reviewId] && (
+                                                <div className="acc-review-reply-content">{review.shopReply}</div>
                                             )}
                                         </div>
                                     )}
@@ -123,14 +156,14 @@ const ReviewsTab = () => {
                         </div>
                     ) : (
                         pendingReviews.map(item => (
-                            <div key={item.pending_id} className="acc-review-card acc-review-card-pending">
-                                <div className="acc-review-thumb" style={{ background: item.thumb_color }}>
+                            <div key={item.pendingId} className="acc-review-card acc-review-card-pending">
+                                <div className="acc-review-thumb" style={{ background: item.thumbColor }}>
                                     <span>👟</span>
                                 </div>
                                 <div className="acc-review-body">
-                                    <div className="acc-review-product">{item.product_name}</div>
+                                    <div className="acc-review-product">{item.productName}</div>
                                     <div className="acc-review-variant">{item.variant}</div>
-                                    <div className="acc-review-order-ref">Từ đơn hàng #{item.order_number}</div>
+                                    <div className="acc-review-order-ref">Từ đơn hàng #{item.orderNumber}</div>
                                     <button
                                         className="acc-btn-primary-sm acc-write-review-btn"
                                         onClick={() => setWriteModal(item)}

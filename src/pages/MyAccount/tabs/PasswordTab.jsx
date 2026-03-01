@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
 import PasswordStrengthMeter, { RULES } from '../components/PasswordStrengthMeter';
+import { changePassword } from '../../../api/accountApi';
 
 const PasswordTab = () => {
     const [current, setCurrent] = useState('');
@@ -19,20 +20,24 @@ const PasswordTab = () => {
     const mismatch = confirm && newPw !== confirm;
     const canSubmit = current && newPw && confirm && passwordsMatch && score >= 2;
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!canSubmit) return;
-        // Simulate wrong current password if 'wrong'
-        if (current === 'wrong') {
-            setBanner({ type: 'error', msg: '✗ Mật khẩu hiện tại không đúng. Vui lòng thử lại.' });
-            return;
-        }
         setSaving(true);
         setBanner(null);
-        setTimeout(() => {
-            setSaving(false);
+        try {
+            await changePassword({
+                currentPassword: current,
+                newPassword: newPw,
+                confirmPassword: confirm,
+            });
             setBanner({ type: 'success', msg: '✓ Mật khẩu đã được cập nhật thành công! Bạn sẽ được yêu cầu đăng nhập lại tại các thiết bị khác.' });
             setCurrent(''); setNewPw(''); setConfirm('');
-        }, 1200);
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Cập nhật mật khẩu thất bại';
+            setBanner({ type: 'error', msg: `✗ ${msg}` });
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (

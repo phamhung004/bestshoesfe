@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import { Search, Copy, ChevronRight, ShoppingBag, Star, Truck, X, Package } from 'lucide-react';
-import { MOCK_ORDERS, formatVND, formatDate } from '../mockAccountData';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, Copy, ChevronRight, ShoppingBag, Star, Truck, X, Package, Loader } from 'lucide-react';
+import { formatVND, formatDate } from '../mockAccountData';
+import { getMyOrders, cancelOrder } from '../../../api/accountApi';
 import OrderDetailModal from '../components/OrderDetailModal';
 
 const ALL_STATUSES = ['Tất cả', 'Chờ xác nhận', 'Đã xác nhận', 'Đang giao', 'Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'];
@@ -20,35 +21,75 @@ const statusBadgeClass = (status) => {
 const payBadgeClass = (status) => status === 'Đã thanh toán' ? 'acc-pay-badge acc-pay-paid' : 'acc-pay-badge acc-pay-unpaid';
 
 const OrdersTab = () => {
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [activeStatus, setActiveStatus] = useState('Tất cả');
     const [search, setSearch] = useState('');
     const [detailOrder, setDetailOrder] = useState(null);
     const [toast, setToast] = useState(null);
+    const [cancellingId, setCancellingId] = useState(null);
 
-    const showToast = (msg) => {
-        setToast(msg);
+    const showToast = (msg, type = 'info') => {
+        setToast({ msg, type });
         setTimeout(() => setToast(null), 2500);
     };
 
-    const statusCounts = useMemo(() => {
-        const counts = { 'Tất cả': MOCK_ORDERS.length };
-        ALL_STATUSES.slice(1).forEach(s => {
-            counts[s] = MOCK_ORDERS.filter(o => o.status === s).length;
-        });
-        return counts;
+    useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                const res = await getMyOrders();
+                setOrders(res.data?.data || []);
+            } catch (err) {
+                console.error('Failed to fetch orders:', err);
+                showToast('Không thể tải đơn hàng', 'error');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchOrders();
     }, []);
 
+    const statusCounts = useMemo(() => {
+        const counts = { 'Tất cả': orders.length };
+        ALL_STATUSES.slice(1).forEach(s => {
+            counts[s] = orders.filter(o => o.status === s).length;
+        });
+        return counts;
+    }, [orders]);
+
     const filtered = useMemo(() => {
-        let orders = MOCK_ORDERS;
-        if (activeStatus !== 'Tất cả') orders = orders.filter(o => o.status === activeStatus);
-        if (search.trim()) orders = orders.filter(o => o.order_number.toLowerCase().includes(search.toLowerCase().trim()));
-        return orders;
-    }, [activeStatus, search]);
+        let result = orders;
+        if (activeStatus !== 'Tất cả') result = result.filter(o => o.status === activeStatus);
+        if (search.trim()) result = result.filter(o => o.orderNumber.toLowerCase().includes(search.toLowerCase().trim()));
+        return result;
+    }, [orders, activeStatus, search]);
 
     const handleCopy = (orderNum) => {
         navigator.clipboard.writeText(orderNum).catch(() => { });
         showToast(`Đã sao chép ${orderNum}`);
     };
+
+    const handleCancel = async (orderNumber) => {
+        if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
+        setCancellingId(orderNumber);
+        try {
+            await cancelOrder(orderNumber);
+            setOrders(prev => prev.map(o => o.orderNumber === orderNumber ? { ...o, status: 'Đã hủy' } : o));
+            showToast('Đã hủy đơn hàng thành công');
+        } catch (err) {
+            showToast(err.response?.data?.message || 'Không thể hủy đơn hàng', 'error');
+        } finally {
+            setCancellingId(null);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="acc-tab-content" style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
+                <Loader size={32} className="acc-spinner" />
+            </div>
+        );
+    }
 
     return (
         <div className="acc-tab-content">
@@ -97,15 +138,15 @@ const OrdersTab = () => {
             ) : (
                 <div className="acc-orders-list">
                     {filtered.map(order => (
-                        <div key={order.order_id} className="acc-order-card">
+                        <div key={order.orderId} className="acc-order-card">
                             {/* Header */}
                             <div className="acc-order-card-header">
                                 <div className="acc-order-card-header-left">
-                                    <span className="acc-order-num">{order.order_number}</span>
-                                    <button className="acc-copy-btn" onClick={() => handleCopy(order.order_number)} title="Sao chép mã đơn">
+                                    <span className="acc-order-num">{order.orderNumber}</span>
+                                    <button className="acc-copy-btn" onClick={() => handleCopy(order.orderNumber)} title="Sao chép mã đơn">
                                         <Copy size={14} />
                                     </button>
-                                    <span className="acc-order-date">{formatDate(order.created_at)}</span>
+                                    <span className="acc-order-date">{formatDate(order.createdAt)}</span>
                                 </div>
                                 <span className={`acc-status-badge ${statusBadgeClass(order.status)}`}>{order.status}</span>
                             </div>
@@ -114,12 +155,12 @@ const OrdersTab = () => {
                             <div className="acc-order-items-row">
                                 {order.items.map((item, idx) => (
                                     idx < 3 && (
-                                        <div key={item.order_item_id} className="acc-order-item-chip">
-                                            <div className="acc-order-item-thumb" style={{ background: item.thumb_color }}>
-                                                <span className="acc-item-emoji">{item.thumb_emoji}</span>
+                                        <div key={item.orderItemId} className="acc-order-item-chip">
+                                            <div className="acc-order-item-thumb" style={{ background: item.thumbColor }}>
+                                                <span className="acc-item-emoji">{item.thumbEmoji}</span>
                                             </div>
                                             <div className="acc-order-item-detail">
-                                                <span className="acc-order-item-name">{item.product_name}</span>
+                                                <span className="acc-order-item-name">{item.productName}</span>
                                                 <span className="acc-order-item-variant">{item.variant}</span>
                                             </div>
                                         </div>
@@ -133,11 +174,11 @@ const OrdersTab = () => {
                             {/* Footer */}
                             <div className="acc-order-card-footer">
                                 <div className="acc-order-footer-left">
-                                    <span className={payBadgeClass(order.payment_status)}>{order.payment_status}</span>
-                                    <span className={`acc-type-chip${order.order_type === 'In-store' ? ' teal' : ''}`}>{order.order_type}</span>
+                                    <span className={payBadgeClass(order.paymentStatus)}>{order.paymentStatus}</span>
+                                    <span className={`acc-type-chip${order.orderType === 'In-store' ? ' teal' : ''}`}>{order.orderType}</span>
                                 </div>
                                 <div className="acc-order-total-center">
-                                    Tổng: <strong>{formatVND(order.total_amount)}</strong>
+                                    Tổng: <strong>{formatVND(order.totalAmount)}</strong>
                                 </div>
                                 <div className="acc-order-actions">
                                     {order.status === 'Đang giao' && (
@@ -150,7 +191,13 @@ const OrdersTab = () => {
                                         </>
                                     )}
                                     {order.status === 'Chờ xác nhận' && (
-                                        <button className="acc-btn-danger-sm">Hủy đơn</button>
+                                        <button
+                                            className="acc-btn-danger-sm"
+                                            onClick={() => handleCancel(order.orderNumber)}
+                                            disabled={cancellingId === order.orderNumber}
+                                        >
+                                            {cancellingId === order.orderNumber ? 'Đang hủy...' : 'Hủy đơn'}
+                                        </button>
                                     )}
                                     <button className="acc-btn-ghost-sm" onClick={() => setDetailOrder(order)}>
                                         Chi tiết <ChevronRight size={14} />
@@ -168,7 +215,7 @@ const OrdersTab = () => {
             )}
 
             {/* Toast */}
-            {toast && <div className="acc-toast acc-toast-info">{toast}</div>}
+            {toast && <div className={`acc-toast acc-toast-${toast.type || 'info'}`}>{toast.msg}</div>}
         </div>
     );
 };

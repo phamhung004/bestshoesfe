@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight, Package, DollarSign, Star, Award, Zap, User, MapPin, Lock } from 'lucide-react';
-import { MOCK_CUSTOMER, MOCK_ORDERS, ACCOUNT_STATS, MEMBERSHIP_TIERS, formatVND, formatDate, getTierFromSpend, getTierEmoji } from '../mockAccountData';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, Package, DollarSign, Star, Award, User, MapPin, Lock } from 'lucide-react';
+import { MEMBERSHIP_TIERS, formatVND, formatDate, getTierFromSpend, getTierEmoji } from '../mockAccountData';
+import { getMyOrders } from '../../../api/accountApi';
 
 const CountUp = ({ target, duration = 600 }) => {
     const [val, setVal] = useState(0);
@@ -29,29 +30,42 @@ const statusBadgeClass = (status) => {
     return map[status] || '';
 };
 
-const OverviewTab = ({ onTabChange }) => {
+const OverviewTab = ({ onTabChange, customer, stats }) => {
     const [barWidth, setBarWidth] = useState(0);
-    const tier = getTierFromSpend(ACCOUNT_STATS.totalSpend);
+    const [recentOrders, setRecentOrders] = useState([]);
+
+    const totalSpend = stats?.totalSpend || 0;
+    const tier = getTierFromSpend(totalSpend);
     const nextTierIdx = MEMBERSHIP_TIERS.findIndex(t => t.id === tier.id) + 1;
     const nextTier = MEMBERSHIP_TIERS[nextTierIdx];
     const progressPct = nextTier
-        ? Math.min((ACCOUNT_STATS.totalSpend / nextTier.threshold) * 100, 100)
+        ? Math.min((totalSpend / nextTier.threshold) * 100, 100)
         : 100;
-    const remaining = nextTier ? nextTier.threshold - ACCOUNT_STATS.totalSpend : 0;
+    const remaining = nextTier ? nextTier.threshold - totalSpend : 0;
 
     useEffect(() => {
         const timer = setTimeout(() => setBarWidth(progressPct), 150);
         return () => clearTimeout(timer);
     }, [progressPct]);
 
-    const recentOrders = MOCK_ORDERS.slice(0, 3);
+    useEffect(() => {
+        const fetchRecentOrders = async () => {
+            try {
+                const res = await getMyOrders();
+                setRecentOrders((res.data?.data || []).slice(0, 3));
+            } catch (err) {
+                console.error('Failed to fetch recent orders:', err);
+            }
+        };
+        fetchRecentOrders();
+    }, []);
 
     return (
         <div className="acc-tab-content">
             {/* Welcome Banner */}
             <div className="acc-welcome-banner">
                 <div className="acc-welcome-left">
-                    <h2 className="acc-welcome-title">Xin chào, {MOCK_CUSTOMER.full_name.split(' ').pop()}! 👋</h2>
+                    <h2 className="acc-welcome-title">Xin chào, {(customer?.fullName || '').split(' ').pop()}! 👋</h2>
                     <p className="acc-welcome-sub">Chào mừng bạn quay trở lại BestShoes</p>
                 </div>
                 <button className="acc-welcome-cta" onClick={() => onTabChange('orders')}>
@@ -63,27 +77,27 @@ const OverviewTab = ({ onTabChange }) => {
             <div className="acc-stats-grid">
                 <div className="acc-stat-card">
                     <div className="acc-stat-icon acc-stat-icon-indigo"><Package size={22} /></div>
-                    <div className="acc-stat-num-big"><CountUp target={ACCOUNT_STATS.totalOrders} /></div>
+                    <div className="acc-stat-num-big"><CountUp target={stats?.totalOrders || 0} /></div>
                     <div className="acc-stat-label-sm">đơn hàng</div>
-                    <div className="acc-stat-sub acc-sub-indigo">{ACCOUNT_STATS.activeOrders} đang giao</div>
+                    <div className="acc-stat-sub acc-sub-indigo">{stats?.activeOrders || 0} đang giao</div>
                 </div>
                 <div className="acc-stat-card">
                     <div className="acc-stat-icon acc-stat-icon-green"><DollarSign size={22} /></div>
-                    <div className="acc-stat-num-big acc-stat-num-sm-text">{formatVND(ACCOUNT_STATS.totalSpend)}</div>
+                    <div className="acc-stat-num-big acc-stat-num-sm-text">{formatVND(totalSpend)}</div>
                     <div className="acc-stat-label-sm">tổng chi tiêu</div>
-                    <div className="acc-stat-sub acc-sub-green">↑ 15% so với tháng trước</div>
+                    <div className="acc-stat-sub acc-sub-green">Hạng {tier.label}</div>
                 </div>
                 <div className="acc-stat-card">
                     <div className="acc-stat-icon acc-stat-icon-amber"><Star size={22} /></div>
-                    <div className="acc-stat-num-big"><CountUp target={ACCOUNT_STATS.loyaltyPoints} duration={800} /></div>
+                    <div className="acc-stat-num-big"><CountUp target={stats?.loyaltyPoints || 0} duration={800} /></div>
                     <div className="acc-stat-label-sm">điểm thưởng</div>
-                    <div className="acc-stat-sub acc-sub-amber">≈ {formatVND(ACCOUNT_STATS.loyaltyPoints * 100)} giá trị</div>
+                    <div className="acc-stat-sub acc-sub-amber">≈ {formatVND((stats?.loyaltyPoints || 0) * 100)} giá trị</div>
                 </div>
                 <div className="acc-stat-card">
                     <div className="acc-stat-icon acc-stat-icon-purple"><Award size={22} /></div>
-                    <div className="acc-stat-num-big"><CountUp target={ACCOUNT_STATS.reviewCount} /></div>
+                    <div className="acc-stat-num-big"><CountUp target={stats?.reviewCount || 0} /></div>
                     <div className="acc-stat-label-sm">đánh giá</div>
-                    <div className="acc-stat-sub acc-sub-purple">Xếp hạng TB: 4.8★</div>
+                    <div className="acc-stat-sub acc-sub-purple">{stats?.pendingReviews || 0} chờ đánh giá</div>
                 </div>
             </div>
 
@@ -94,28 +108,31 @@ const OverviewTab = ({ onTabChange }) => {
             </div>
             <div className="acc-recent-orders">
                 {recentOrders.map(order => (
-                    <div key={order.order_id} className="acc-recent-order-card">
+                    <div key={order.orderId} className="acc-recent-order-card">
                         <div className="acc-recent-order-left">
-                            <span className="acc-order-num">{order.order_number}</span>
-                            <span className="acc-recent-order-date">{formatDate(order.created_at)}</span>
+                            <span className="acc-order-num">{order.orderNumber}</span>
+                            <span className="acc-recent-order-date">{formatDate(order.createdAt)}</span>
                         </div>
                         <div className="acc-recent-order-center">
-                            <div className="acc-recent-thumb" style={{ background: order.items[0].thumb_color }}>
-                                <span>{order.items[0].thumb_emoji}</span>
+                            <div className="acc-recent-thumb" style={{ background: order.items?.[0]?.thumbColor || '#eee' }}>
+                                <span>{order.items?.[0]?.thumbEmoji || '👟'}</span>
                             </div>
                             <div className="acc-recent-item-info">
-                                <span className="acc-recent-item-name">{order.items[0].product_name}</span>
-                                {order.items.length > 1 && (
+                                <span className="acc-recent-item-name">{order.items?.[0]?.productName}</span>
+                                {order.items?.length > 1 && (
                                     <span className="acc-recent-more">+{order.items.length - 1} sản phẩm khác</span>
                                 )}
                             </div>
                         </div>
                         <div className="acc-recent-order-right">
-                            <span className="acc-recent-total">{formatVND(order.total_amount)}</span>
+                            <span className="acc-recent-total">{formatVND(order.totalAmount)}</span>
                             <span className={`acc-status-badge ${statusBadgeClass(order.status)}`}>{order.status}</span>
                         </div>
                     </div>
                 ))}
+                {recentOrders.length === 0 && (
+                    <p style={{ textAlign: 'center', color: '#888', padding: '20px 0' }}>Bạn chưa có đơn hàng nào</p>
+                )}
             </div>
 
             {/* Membership Progress */}

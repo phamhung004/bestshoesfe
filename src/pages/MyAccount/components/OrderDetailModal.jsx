@@ -48,7 +48,7 @@ const OrderDetailModal = ({ order, onClose }) => {
     const activeStep = getStepIndex(order.status);
     const isDelivered = order.status === 'Đã giao';
     const daysSinceDelivery = isDelivered
-        ? Math.floor((Date.now() - new Date(order.updated_at)) / 86400000)
+        ? Math.floor((Date.now() - new Date(order.updatedAt)) / 86400000)
         : 999;
 
     return (
@@ -58,10 +58,10 @@ const OrderDetailModal = ({ order, onClose }) => {
                 <div className="acc-modal-header">
                     <div>
                         <div className="acc-modal-title-row">
-                            <span className="acc-order-num">{order.order_number}</span>
+                            <span className="acc-order-num">{order.orderNumber}</span>
                             <StatusBadge status={order.status} />
                         </div>
-                        <p className="acc-modal-sub">{formatDate(order.created_at)}</p>
+                        <p className="acc-modal-sub">{formatDate(order.createdAt)}</p>
                     </div>
                     <button className="acc-modal-close" onClick={onClose}><X size={20} /></button>
                 </div>
@@ -90,9 +90,9 @@ const OrderDetailModal = ({ order, onClose }) => {
                                             <span className={`acc-timeline-label${isCurrent ? ' active' : isPending ? ' pending' : ''}`}>{step}</span>
                                             {!isPending && (
                                                 <span className="acc-timeline-time">
-                                                    {i === 0 ? formatDate(order.created_at)
-                                                        : i === 1 ? formatDate(order.updated_at)
-                                                            : isCurrent ? 'Đang cập nhật...' : formatDate(order.updated_at)}
+                                                    {i === 0 ? formatDate(order.createdAt)
+                                                        : i === 1 ? formatDate(order.updatedAt)
+                                                            : isCurrent ? 'Đang cập nhật...' : formatDate(order.updatedAt)}
                                                 </span>
                                             )}
                                         </div>
@@ -106,9 +106,9 @@ const OrderDetailModal = ({ order, onClose }) => {
                     <div className="acc-detail-section">
                         <h4 className="acc-section-label"><MapPin size={14} /> Địa chỉ giao hàng</h4>
                         <div className="acc-address-card-detail">
-                            <div className="acc-address-name">{order.customer_name} · {order.customer_phone}</div>
+                            <div className="acc-address-name">{order.customerName} · {order.customerPhone}</div>
                             <div className="acc-address-line">
-                                {order.shipping_address}, {order.shipping_ward}, {order.shipping_district}, {order.shipping_province}
+                                {order.shippingAddress}, {order.shippingWard}, {order.shippingDistrict}, {order.shippingProvince}
                             </div>
                         </div>
                     </div>
@@ -118,16 +118,16 @@ const OrderDetailModal = ({ order, onClose }) => {
                         <h4 className="acc-section-label"><Package size={14} /> Sản phẩm</h4>
                         <div className="acc-items-table">
                             {order.items.map((item, idx) => (
-                                <div key={item.order_item_id} className={`acc-item-row${idx % 2 === 1 ? ' alt' : ''}`}>
-                                    <div className="acc-item-thumb" style={{ background: item.thumb_color }}>
-                                        <span className="acc-item-emoji">{item.thumb_emoji}</span>
+                                <div key={item.orderItemId} className={`acc-item-row${idx % 2 === 1 ? ' alt' : ''}`}>
+                                    <div className="acc-item-thumb" style={{ background: item.thumbColor }}>
+                                        <span className="acc-item-emoji">{item.thumbEmoji}</span>
                                     </div>
                                     <div className="acc-item-info">
-                                        <div className="acc-item-name">{item.product_name}</div>
+                                        <div className="acc-item-name">{item.productName}</div>
                                         <div className="acc-item-variant">{item.variant}</div>
                                     </div>
                                     <div className="acc-item-qty">x{item.quantity}</div>
-                                    <div className="acc-item-price">{formatVND(item.total_price)}</div>
+                                    <div className="acc-item-price">{formatVND(item.totalPrice)}</div>
                                 </div>
                             ))}
                         </div>
@@ -143,19 +143,19 @@ const OrderDetailModal = ({ order, onClose }) => {
                             </div>
                             <div className="acc-pricing-row">
                                 <span>Phí vận chuyển</span>
-                                <span className={order.shipping_cost === 0 ? 'acc-free' : ''}>
-                                    {order.shipping_cost === 0 ? 'Miễn phí' : formatVND(order.shipping_cost)}
+                                <span className={Number(order.shippingCost) === 0 ? 'acc-free' : ''}>
+                                    {Number(order.shippingCost) === 0 ? 'Miễn phí' : formatVND(order.shippingCost)}
                                 </span>
                             </div>
-                            {order.coupon_discount_amount > 0 && (
+                            {Number(order.couponDiscountAmount) > 0 && (
                                 <div className="acc-pricing-row acc-discount">
                                     <span>Giảm giá</span>
-                                    <span>-{formatVND(order.coupon_discount_amount)}</span>
+                                    <span>-{formatVND(order.couponDiscountAmount)}</span>
                                 </div>
                             )}
                             <div className="acc-pricing-row acc-total-row">
                                 <span>Tổng cộng</span>
-                                <span className="acc-total-val">{formatVND(order.total_amount)}</span>
+                                <span className="acc-total-val">{formatVND(order.totalAmount)}</span>
                             </div>
                         </div>
                     </div>
@@ -164,9 +164,9 @@ const OrderDetailModal = ({ order, onClose }) => {
                     <div className="acc-detail-section">
                         <h4 className="acc-section-label"><CreditCard size={14} /> Thanh toán</h4>
                         <div className="acc-payment-info">
-                            <span>Phương thức: <strong>{order.order_type === 'In-store' ? 'Tại quầy' : 'COD / Chuyển khoản'}</strong></span>
-                            <span className={`acc-pay-badge${order.payment_status === 'Đã thanh toán' ? ' acc-pay-paid' : ' acc-pay-unpaid'}`}>
-                                {order.payment_status}
+                            <span>Phương thức: <strong>{order.orderType === 'In-store' ? 'Tại quầy' : 'COD / Chuyển khoản'}</strong></span>
+                            <span className={`acc-pay-badge${order.paymentStatus === 'Đã thanh toán' ? ' acc-pay-paid' : ' acc-pay-unpaid'}`}>
+                                {order.paymentStatus}
                             </span>
                         </div>
                     </div>

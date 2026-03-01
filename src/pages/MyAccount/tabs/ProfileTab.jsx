@@ -1,19 +1,36 @@
-import React, { useState } from 'react';
-import { MOCK_CUSTOMER, formatDate } from '../mockAccountData';
+import React, { useState, useEffect } from 'react';
+import { formatDate, getTierFromSpend, getTierEmoji } from '../mockAccountData';
+import { updateProfile } from '../../../api/accountApi';
 
 const phoneRegex = /^(0|\+84)(3|5|7|8|9)\d{8}$/;
 
-const ProfileTab = ({ onNameChange }) => {
+// Gender mapping: frontend Vietnamese ↔ backend enum
+const genderToBackend = { 'Nam': 'Male', 'Nữ': 'Female', 'Khác': 'Other' };
+const genderToFrontend = { 'MALE': 'Nam', 'FEMALE': 'Nữ', 'OTHER': 'Khác', 'Male': 'Nam', 'Female': 'Nữ', 'Other': 'Khác' };
+
+const ProfileTab = ({ customer, stats, onNameChange, onProfileUpdate }) => {
     const [form, setForm] = useState({
-        full_name: MOCK_CUSTOMER.full_name,
-        gender: MOCK_CUSTOMER.gender,
-        phone: MOCK_CUSTOMER.phone,
-        date_of_birth: MOCK_CUSTOMER.date_of_birth,
-        email: MOCK_CUSTOMER.email,
+        fullName: '',
+        gender: 'Nam',
+        phone: '',
+        dateOfBirth: '',
+        email: '',
     });
     const [errors, setErrors] = useState({});
     const [saving, setSaving] = useState(false);
     const [toast, setToast] = useState(null);
+
+    useEffect(() => {
+        if (customer) {
+            setForm({
+                fullName: customer.fullName || '',
+                gender: genderToFrontend[customer.gender] || 'Khác',
+                phone: customer.phone || '',
+                dateOfBirth: customer.dateOfBirth || '',
+                email: customer.email || '',
+            });
+        }
+    }, [customer]);
 
     const set = (field, value) => {
         setForm(prev => ({ ...prev, [field]: value }));
@@ -22,36 +39,47 @@ const ProfileTab = ({ onNameChange }) => {
 
     const validate = () => {
         const errs = {};
-        if (!form.full_name.trim() || form.full_name.trim().length < 2)
-            errs.full_name = 'Vui lòng nhập họ và tên (ít nhất 2 ký tự)';
-        if (/\d/.test(form.full_name)) errs.full_name = 'Họ tên không được chứa số';
+        if (!form.fullName.trim() || form.fullName.trim().length < 2)
+            errs.fullName = 'Vui lòng nhập họ và tên (ít nhất 2 ký tự)';
+        if (/\d/.test(form.fullName)) errs.fullName = 'Họ tên không được chứa số';
         const digits = form.phone.replace(/\s/g, '');
-        if (!digits || !phoneRegex.test(digits)) errs.phone = 'Số điện thoại không hợp lệ';
-        if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-            errs.email = 'Email không đúng định dạng';
+        if (digits && !phoneRegex.test(digits)) errs.phone = 'Số điện thoại không hợp lệ';
         return errs;
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const errs = validate();
         if (Object.keys(errs).length > 0) { setErrors(errs); return; }
         setSaving(true);
-        setTimeout(() => {
-            setSaving(false);
-            onNameChange && onNameChange(form.full_name);
+        try {
+            await updateProfile({
+                fullName: form.fullName.trim(),
+                phone: form.phone.trim() || null,
+                gender: genderToBackend[form.gender] || 'Other',
+                dateOfBirth: form.dateOfBirth || null,
+            });
+            onNameChange && onNameChange(form.fullName);
+            onProfileUpdate && onProfileUpdate();
             setToast('✓ Cập nhật thành công!');
             setTimeout(() => setToast(null), 3000);
-        }, 1200);
+        } catch (err) {
+            setToast('✗ ' + (err.response?.data?.message || 'Cập nhật thất bại'));
+            setTimeout(() => setToast(null), 3000);
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleCancel = () => {
-        setForm({
-            full_name: MOCK_CUSTOMER.full_name,
-            gender: MOCK_CUSTOMER.gender,
-            phone: MOCK_CUSTOMER.phone,
-            date_of_birth: MOCK_CUSTOMER.date_of_birth,
-            email: MOCK_CUSTOMER.email,
-        });
+        if (customer) {
+            setForm({
+                fullName: customer.fullName || '',
+                gender: genderToFrontend[customer.gender] || 'Khác',
+                phone: customer.phone || '',
+                dateOfBirth: customer.dateOfBirth || '',
+                email: customer.email || '',
+            });
+        }
         setErrors({});
     };
 
@@ -68,7 +96,7 @@ const ProfileTab = ({ onNameChange }) => {
                 {/* Avatar Section */}
                 <div className="acc-form-avatar-section">
                     <div className="acc-form-avatar">
-                        <span className="acc-avatar-initial-lg">{form.full_name.charAt(0).toUpperCase()}</span>
+                        <span className="acc-avatar-initial-lg">{(form.fullName || '?').charAt(0).toUpperCase()}</span>
                     </div>
                     <div>
                         <button className="acc-avatar-change-btn">Thay đổi ảnh đại diện</button>
@@ -81,11 +109,11 @@ const ProfileTab = ({ onNameChange }) => {
                     <div className="acc-form-group">
                         <label className="acc-form-label">Họ và tên <span className="acc-required">*</span></label>
                         <input
-                            className={`acc-form-input${errors.full_name ? ' error' : ''}`}
-                            value={form.full_name}
-                            onChange={e => set('full_name', e.target.value)}
+                            className={`acc-form-input${errors.fullName ? ' error' : ''}`}
+                            value={form.fullName}
+                            onChange={e => set('fullName', e.target.value)}
                         />
-                        {errors.full_name && <p className="acc-form-error">{errors.full_name}</p>}
+                        {errors.fullName && <p className="acc-form-error">{errors.fullName}</p>}
                     </div>
                     <div className="acc-form-group">
                         <label className="acc-form-label">Giới tính</label>
@@ -119,21 +147,20 @@ const ProfileTab = ({ onNameChange }) => {
                         <input
                             type="date"
                             className="acc-form-input acc-date-input"
-                            value={form.date_of_birth}
-                            onChange={e => set('date_of_birth', e.target.value)}
+                            value={form.dateOfBirth}
+                            onChange={e => set('dateOfBirth', e.target.value)}
                         />
                     </div>
                 </div>
 
                 <div className="acc-form-group">
-                    <label className="acc-form-label">Email <span className="acc-required">*</span></label>
+                    <label className="acc-form-label">Email</label>
                     <input
-                        className={`acc-form-input${errors.email ? ' error' : ''}`}
+                        className="acc-form-input"
                         value={form.email}
-                        onChange={e => set('email', e.target.value)}
+                        disabled
                     />
-                    {errors.email && <p className="acc-form-error">{errors.email}</p>}
-                    <p className="acc-form-helper">🔒 Email dùng để đăng nhập — thay đổi cẩn thận</p>
+                    <p className="acc-form-helper">🔒 Email dùng để đăng nhập — không thể thay đổi</p>
                 </div>
 
                 {/* Account Info (read-only) */}
@@ -142,15 +169,15 @@ const ProfileTab = ({ onNameChange }) => {
                     <div className="acc-form-grid-2">
                         <div className="acc-info-row">
                             <span className="acc-info-label">Mã khách hàng</span>
-                            <span className="acc-info-val acc-mono">#KH000001</span>
+                            <span className="acc-info-val acc-mono">#{customer?.customerId ? String(customer.customerId).padStart(6, '0') : '---'}</span>
                         </div>
                         <div className="acc-info-row">
                             <span className="acc-info-label">Hạng thành viên</span>
-                            <span className="acc-info-val">⭐ Vàng</span>
+                            <span className="acc-info-val">{stats?.memberTier ? `${getTierEmoji(stats.memberTier)} ${stats.memberTier === 'bronze' ? 'Đồng' : stats.memberTier === 'silver' ? 'Bạc' : stats.memberTier === 'gold' ? 'Vàng' : 'Kim cương'}` : '--'}</span>
                         </div>
                         <div className="acc-info-row">
                             <span className="acc-info-label">Ngày tham gia</span>
-                            <span className="acc-info-val">{formatDate(MOCK_CUSTOMER.created_at)}</span>
+                            <span className="acc-info-val">{customer?.createdAt ? formatDate(customer.createdAt) : '--'}</span>
                         </div>
                         <div className="acc-info-row">
                             <span className="acc-info-label">Trạng thái</span>

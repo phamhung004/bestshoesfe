@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import {
     LayoutDashboard, Package, User, MapPin, Lock, Star, LogOut, ChevronRight, X
 } from 'lucide-react';
-import { MOCK_CUSTOMER, ACCOUNT_STATS, formatMemberSince, getTierFromSpend, getTierEmoji } from './mockAccountData';
+import { useAuth } from '../../context/AuthContext';
+import { formatMemberSince, getTierFromSpend, getTierEmoji } from './mockAccountData';
 
 const NAV_ITEMS = [
     { id: 'overview', label: 'Tổng quan', icon: LayoutDashboard, count: null },
@@ -13,13 +14,28 @@ const NAV_ITEMS = [
     { id: 'reviews', label: 'Đánh giá của tôi', icon: Star, count: 'reviewCount' },
 ];
 
-const AccountSidebar = ({ activeTab, onTabChange, customerName }) => {
+const AccountSidebar = ({ activeTab, onTabChange, customer, stats }) => {
     const [showLogout, setShowLogout] = useState(false);
-    const tier = getTierFromSpend(ACCOUNT_STATS.totalSpend);
+    const { logout } = useAuth();
+    const totalSpend = stats?.totalSpend || 0;
+    const tier = getTierFromSpend(totalSpend);
     const tierEmoji = getTierEmoji(tier.id);
     const tierLabel = `${tierEmoji} Thành viên ${tier.label}`;
-    const displayName = customerName || MOCK_CUSTOMER.full_name;
+    const displayName = customer?.fullName || 'Khách hàng';
     const initial = displayName.charAt(0).toUpperCase();
+    const email = customer?.email || '';
+    const createdAt = customer?.createdAt || '';
+    const sidebarStats = {
+        totalOrders: stats?.totalOrders || 0,
+        reviewCount: stats?.reviewCount || 0,
+        addressCount: stats?.addressCount || 0,
+    };
+
+    const handleLogout = () => {
+        setShowLogout(false);
+        logout();
+        window.location.href = '/login';
+    };
 
     return (
         <>
@@ -33,23 +49,23 @@ const AccountSidebar = ({ activeTab, onTabChange, customerName }) => {
                         <button className="acc-avatar-camera" title="Thay đổi ảnh">📷</button>
                     </div>
                     <div className="acc-profile-name">{displayName}</div>
-                    <div className="acc-profile-email">{MOCK_CUSTOMER.email}</div>
+                    <div className="acc-profile-email">{email}</div>
                     <div className="acc-tier-badge">{tierLabel}</div>
-                    <div className="acc-member-since">{formatMemberSince(MOCK_CUSTOMER.created_at)}</div>
+                    <div className="acc-member-since">{formatMemberSince(createdAt)}</div>
 
                     <div className="acc-stats-row">
                         <div className="acc-stat-item">
-                            <span className="acc-stat-num">{ACCOUNT_STATS.totalOrders}</span>
+                            <span className="acc-stat-num">{sidebarStats.totalOrders}</span>
                             <span className="acc-stat-lbl">Đơn hàng</span>
                         </div>
                         <div className="acc-stat-divider" />
                         <div className="acc-stat-item">
-                            <span className="acc-stat-num">{ACCOUNT_STATS.reviewCount}</span>
+                            <span className="acc-stat-num">{sidebarStats.reviewCount}</span>
                             <span className="acc-stat-lbl">Đánh giá</span>
                         </div>
                         <div className="acc-stat-divider" />
                         <div className="acc-stat-item">
-                            <span className="acc-stat-num">{ACCOUNT_STATS.addressCount}</span>
+                            <span className="acc-stat-num">{sidebarStats.addressCount}</span>
                             <span className="acc-stat-lbl">Địa chỉ</span>
                         </div>
                     </div>
@@ -59,7 +75,7 @@ const AccountSidebar = ({ activeTab, onTabChange, customerName }) => {
                 <nav className="acc-nav-card">
                     {NAV_ITEMS.map((item) => {
                         const Icon = item.icon;
-                        const count = item.count ? ACCOUNT_STATS[item.count] : null;
+                        const count = item.count ? sidebarStats[item.count] : null;
                         const isActive = activeTab === item.id;
                         return (
                             <button
@@ -122,7 +138,7 @@ const AccountSidebar = ({ activeTab, onTabChange, customerName }) => {
                         </div>
                         <div className="acc-modal-footer">
                             <button className="acc-btn-ghost" onClick={() => setShowLogout(false)}>Hủy</button>
-                            <button className="acc-btn-danger" onClick={() => setShowLogout(false)}>Đăng xuất</button>
+                            <button className="acc-btn-danger" onClick={handleLogout}>Đăng xuất</button>
                         </div>
                     </div>
                 </div>

@@ -7,14 +7,14 @@ const phoneRegex = /^(0|\+84)(3|5|7|8|9)\d{8}$/;
 const AddEditAddressModal = ({ address, onClose, onSave }) => {
     const isEdit = !!address;
     const [form, setForm] = useState({
-        recipient_name: address?.recipient_name || '',
+        recipientName: address?.recipientName || '',
         phone: address?.phone || '',
         country: address?.country || '',
         state: address?.state || '',
         city: address?.city || '',
         line1: address?.line1 || '',
         line2: address?.line2 || '',
-        is_default: address?.is_default === 1 || false,
+        isDefault: address?.isDefault || false,
     });
     const [errors, setErrors] = useState({});
     const [saving, setSaving] = useState(false);
@@ -44,8 +44,8 @@ const AddEditAddressModal = ({ address, onClose, onSave }) => {
 
     const validate = () => {
         const errs = {};
-        if (!form.recipient_name.trim() || form.recipient_name.trim().length < 2)
-            errs.recipient_name = 'Vui lòng nhập tên người nhận';
+        if (!form.recipientName.trim() || form.recipientName.trim().length < 2)
+            errs.recipientName = 'Vui lòng nhập tên người nhận';
         const digits = form.phone.replace(/\s/g, '');
         if (!digits || !phoneRegex.test(digits))
             errs.phone = 'Số điện thoại không hợp lệ (VD: 0912345678)';
@@ -57,19 +57,20 @@ const AddEditAddressModal = ({ address, onClose, onSave }) => {
         return errs;
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const errs = validate();
         if (Object.keys(errs).length > 0) { setErrors(errs); return; }
         setSaving(true);
-        setTimeout(() => {
-            onSave({
+        try {
+            await onSave({
                 ...form,
-                is_default: form.is_default ? 1 : 0,
-                address_id: address?.address_id || Date.now(),
+                addressId: address?.addressId || null,
             });
+        } catch (err) {
+            // error handled by parent
+        } finally {
             setSaving(false);
-            onClose();
-        }, 800);
+        }
     };
 
     return (
@@ -85,12 +86,12 @@ const AddEditAddressModal = ({ address, onClose, onSave }) => {
                         <div className="acc-form-group">
                             <label className="acc-form-label">Tên người nhận <span className="acc-required">*</span></label>
                             <input
-                                className={`acc-form-input${errors.recipient_name ? ' error' : ''}`}
-                                value={form.recipient_name}
-                                onChange={e => set('recipient_name', e.target.value)}
+                                className={`acc-form-input${errors.recipientName ? ' error' : ''}`}
+                                value={form.recipientName}
+                                onChange={e => set('recipientName', e.target.value)}
                                 placeholder="Nguyễn Văn A"
                             />
-                            {errors.recipient_name && <p className="acc-form-error">{errors.recipient_name}</p>}
+                            {errors.recipientName && <p className="acc-form-error">{errors.recipientName}</p>}
                         </div>
                         <div className="acc-form-group">
                             <label className="acc-form-label">Số điện thoại <span className="acc-required">*</span></label>
@@ -169,8 +170,8 @@ const AddEditAddressModal = ({ address, onClose, onSave }) => {
                     <label className="acc-checkbox-row">
                         <input
                             type="checkbox"
-                            checked={form.is_default}
-                            onChange={e => set('is_default', e.target.checked)}
+                            checked={form.isDefault}
+                            onChange={e => set('isDefault', e.target.checked)}
                             className="acc-checkbox"
                         />
                         <span>Đặt làm địa chỉ mặc định</span>
