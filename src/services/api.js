@@ -627,6 +627,58 @@ export const analyticsAPI = {
   getInventoryHealth: () => apiCall('/analytics/inventory/health'),
 };
 
+// ============================================================
+// Order API functions (Admin Order Management)
+// ============================================================
+export const orderAPI = {
+  // Search/filter/sort orders with pagination
+  search: (params) => apiCall('/admin/orders/list', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  }),
+
+  // Get order detail by ID
+  getById: (id) => apiCall(`/admin/orders/${id}`),
+
+  // Create manual order
+  create: (order) => apiCall('/admin/orders/create', {
+    method: 'POST',
+    body: JSON.stringify(order),
+  }),
+
+  // Update order status
+  updateStatus: (id, data) => apiCall(`/admin/orders/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  // Cancel a single order
+  cancel: (id) => apiCall(`/admin/orders/${id}/cancel`, {
+    method: 'PUT',
+  }),
+
+  // Bulk confirm orders
+  bulkConfirm: (data) => apiCall('/admin/orders/bulk-confirm', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  // Bulk cancel orders
+  bulkCancel: (data) => apiCall('/admin/orders/bulk-cancel', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  // Get KPI dashboard data
+  getKpi: () => apiCall('/admin/orders/kpi'),
+
+  // Export orders as CSV
+  exportCsv: (params = {}) => apiCall('/admin/orders/export-csv', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  }),
+};
+
 
 export default {
   brandAPI,
@@ -643,5 +695,6 @@ export default {
   employeeAPI,
   roleAPI,
   analyticsAPI,
+  orderAPI,
 
 };
