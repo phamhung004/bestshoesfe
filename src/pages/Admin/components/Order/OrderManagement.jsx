@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { STATUS_CONFIG, formatVND, normalizeOrder } from './mockOrders';
+import { formatVND } from '../../../../utils/formatPrice';
+import { normalizeOrder } from './orderMappers';
+import { STATUS_CONFIG } from './orderConstants';
 import { orderAPI } from '../../../../services/api';
 import OrderKpiCards from './OrderKpiCards';
 import OrderFilters from './OrderFilters';

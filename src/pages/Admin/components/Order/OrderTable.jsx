@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { formatVND } from '../../../../utils/formatPrice';
 import {
-    formatVND, formatDate, relativeTime, getInitials,
-    STATUS_CONFIG, PAYMENT_CONFIG,
-} from './mockOrders';
+    formatDate, relativeTime, getInitials,
+} from './orderHelpers';
+import { STATUS_CONFIG, PAYMENT_CONFIG } from './orderConstants';
 
 /**
  * OrderTable: data table with sorting, bulk select, action buttons

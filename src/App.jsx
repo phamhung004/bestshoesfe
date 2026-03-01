@@ -9,6 +9,7 @@ import Footer from "./components/Footer";
 import Toast from "./components/Toast";
 import { ToastProvider } from "./context/ToastContext";
 import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage/HomePage";
 import Catalog from "./pages/Catalog2/CatalogPage";
@@ -65,9 +66,11 @@ function App() {
   return (
     <ToastProvider>
       <AuthProvider>
-        <Router>
-          <AppContent />
-        </Router>
+        <CartProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </CartProvider>
       </AuthProvider>
     </ToastProvider>
   );

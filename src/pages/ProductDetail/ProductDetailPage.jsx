@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProductDetail } from '../../hooks/useProductDetail';
+import { useCart } from '../../context/CartContext';
 import { formatVND } from '../../utils/formatPrice';
 import ProductDetailSkeleton from '../../components/common/ProductDetailSkeleton';
 import ErrorState from '../../components/common/ErrorState';
@@ -11,6 +12,8 @@ import './ProductDetailPage.css';
 const ProductDetailPage = () => {
     const { productId } = useParams();
     const navigate = useNavigate();
+    const { addToCart } = useCart();
+    const [addingToCart, setAddingToCart] = useState(false);
 
     const {
         product,
@@ -202,18 +205,22 @@ const ProductDetailPage = () => {
 
                     {/* CTA */}
                     <button
-                        className={`pdp-add-btn ${(!selectedVariant || !isInStock) ? 'disabled' : ''}`}
-                        disabled={!selectedVariant || !isInStock}
-                        onClick={() => {
-                            // TODO: integrate with cart context
-                            alert(`Đã thêm "${product.name}" vào giỏ hàng!`);
+                        className={`pdp-add-btn ${(!selectedVariant || !isInStock || addingToCart) ? 'disabled' : ''}`}
+                        disabled={!selectedVariant || !isInStock || addingToCart}
+                        onClick={async () => {
+                            if (!selectedVariant || !isInStock || addingToCart) return;
+                            setAddingToCart(true);
+                            await addToCart(selectedVariant.variantId, 1);
+                            setAddingToCart(false);
                         }}
                     >
-                        {!selectedVariant
-                            ? 'Vui lòng chọn màu & size'
-                            : !isInStock
-                                ? 'Hết hàng'
-                                : 'Thêm vào giỏ hàng'}
+                        {addingToCart
+                            ? 'Đang thêm...'
+                            : !selectedVariant
+                                ? 'Vui lòng chọn màu & size'
+                                : !isInStock
+                                    ? 'Hết hàng'
+                                    : 'Thêm vào giỏ hàng'}
                     </button>
 
                     {/* Highlights */}

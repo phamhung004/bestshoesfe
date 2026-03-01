@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
 import './Header.css'
 
 function Header() {
@@ -13,34 +14,13 @@ function Header() {
   const location = useLocation()
   const navigate = useNavigate()
   const { isAuthenticated, user, logout } = useAuth()
+  const { cartItems: ctxCartItems, totalItems: cartCount, totalAmount: cartSubtotal } = useCart()
   const searchInputRef = useRef(null)
   const miniCartRef = useRef(null)
   const megaMenuTimeoutRef = useRef(null)
 
   // Mock data
   const wishlistCount = 1
-  const cartItems = [
-    {
-      id: 1,
-      name: 'Nike Air Max 270',
-      size: '42',
-      color: 'Đen/Trắng',
-      qty: 1,
-      price: 3290000,
-      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=80&h=80&fit=crop'
-    },
-    {
-      id: 2,
-      name: 'Adidas Ultraboost 22',
-      size: '43',
-      color: 'Xám',
-      qty: 1,
-      price: 4190000,
-      image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=80&h=80&fit=crop'
-    }
-  ]
-  const cartCount = cartItems.reduce((sum, item) => sum + item.qty, 0)
-  const cartSubtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -318,7 +298,7 @@ function Header() {
                 <div className="bs-minicart__header">
                   <h4>Giỏ hàng ({cartCount})</h4>
                 </div>
-                {cartItems.length === 0 ? (
+                {ctxCartItems.length === 0 ? (
                   <div className="bs-minicart__empty">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -330,15 +310,14 @@ function Header() {
                 ) : (
                   <>
                     <div className="bs-minicart__items">
-                      {cartItems.map((item) => (
-                        <div key={item.id} className="bs-minicart__item">
-                          <img src={item.image} alt={item.name} className="bs-minicart__item-img" />
+                      {ctxCartItems.slice(0, 5).map((item) => (
+                        <div key={item.cart_item_id} className="bs-minicart__item">
+                          <img src={item.image_url || 'https://placehold.co/80x80/FAFAFA/111111?text=Shoe'} alt={item.product?.name} className="bs-minicart__item-img" />
                           <div className="bs-minicart__item-info">
-                            <p className="bs-minicart__item-name">{item.name}</p>
-                            <p className="bs-minicart__item-meta">Size: {item.size} · {item.color}</p>
+                            <p className="bs-minicart__item-name">{item.product?.name}</p>
+                            <p className="bs-minicart__item-meta">SL: {item.quantity}</p>
                             <div className="bs-minicart__item-row">
-                              <span className="bs-minicart__item-qty">SL: {item.qty}</span>
-                              <span className="bs-minicart__item-price">{formatPrice(item.price)}</span>
+                              <span className="bs-minicart__item-price">{formatPrice(item.variant?.price)}</span>
                             </div>
                           </div>
                         </div>

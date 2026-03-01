@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
 import CheckoutStepIndicator from './components/CheckoutStepIndicator';
 import FreeShippingBar from './components/FreeShippingBar';
 import CartItemCard from './components/CartItemCard';
@@ -9,21 +10,25 @@ import OrderSummary from './components/OrderSummary';
 import EmptyCartState from './components/EmptyCartState';
 import UpsellSection from './components/UpsellSection';
 import {
-    INITIAL_CART_ITEMS,
-    INITIAL_SAVED_ITEMS,
     getItemSubtotal,
     formatVND,
 } from './mockCartData';
 import './CartPage.css';
 
 const CartPage = () => {
-    const [cartItems, setCartItems] = useState(INITIAL_CART_ITEMS);
-    const [savedItems, setSavedItems] = useState(INITIAL_SAVED_ITEMS);
+    const { cartItems: apiCartItems, totalItems: apiTotalItems, loading, updateQuantity, removeItem, addToCart, fetchCart } = useCart();
+    const [cartItems, setCartItems] = useState([]);
+    const [savedItems, setSavedItems] = useState([]);
     const [selectedItems, setSelectedItems] = useState([]);
     const [confirmDeleteId, setConfirmDeleteId] = useState(null);
     const [couponState, setCouponState] = useState(null);
     const [undoItem, setUndoItem] = useState(null);
     const [undoTimeout, setUndoTimeout] = useState(null);
+
+    // Sync cart items from context
+    useEffect(() => {
+        setCartItems(apiCartItems);
+    }, [apiCartItems]);
 
     // Calculate totals
     const subtotal = cartItems.reduce((sum, item) => sum + getItemSubtotal(item), 0);
@@ -32,6 +37,7 @@ const CartPage = () => {
     // Quantity change
     const handleQtyChange = useCallback((cartItemId, newQty) => {
         if (newQty < 1) return;
+        // Optimistic update
         setCartItems(prev =>
             prev.map(item =>
                 item.cart_item_id === cartItemId
@@ -39,32 +45,41 @@ const CartPage = () => {
                     : item
             )
         );
-    }, []);
+        // Sync with server
+        updateQuantity(cartItemId, newQty);
+    }, [updateQuantity]);
 
     // Remove item
     const handleRemoveItem = useCallback((cartItemId) => {
         const itemToRemove = cartItems.find(i => i.cart_item_id === cartItemId);
         if (!itemToRemove) return;
 
+        // Optimistic removal from local UI
         setCartItems(prev => prev.filter(i => i.cart_item_id !== cartItemId));
         setSelectedItems(prev => prev.filter(id => id !== cartItemId));
         setConfirmDeleteId(null);
 
+        // Delete on server immediately so data is persisted even if page reloads
+        removeItem(cartItemId);
+
         // Show undo toast
         if (undoTimeout) clearTimeout(undoTimeout);
         setUndoItem(itemToRemove);
-        const timeout = setTimeout(() => setUndoItem(null), 5000);
+        const timeout = setTimeout(() => {
+            setUndoItem(null);
+        }, 5000);
         setUndoTimeout(timeout);
-    }, [cartItems, undoTimeout]);
+    }, [cartItems, undoTimeout, removeItem]);
 
-    // Undo remove
-    const handleUndo = useCallback(() => {
+    // Undo remove — re-add the item via API since it was already deleted
+    const handleUndo = useCallback(async () => {  
         if (undoItem) {
-            setCartItems(prev => [...prev, undoItem]);
             setUndoItem(null);
             if (undoTimeout) clearTimeout(undoTimeout);
+            // Re-add via API (this also refreshes context cartItems → local state)
+            await addToCart(undoItem.variant_id, undoItem.quantity);
         }
-    }, [undoItem, undoTimeout]);
+    }, [undoItem, undoTimeout, addToCart]);
 
     // Save item for later
     const handleSaveItem = useCallback((cartItemId) => {

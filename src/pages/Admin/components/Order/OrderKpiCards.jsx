@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { formatVND } from './mockOrders';
+import { formatVND } from '../../../../utils/formatPrice';
 import { orderAPI } from '../../../../services/api';
 
 /**

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { formatVND } from '../../../../utils/formatPrice';
 import {
-    formatVND, formatDate, getInitials,
-    STATUS_CONFIG, PAYMENT_CONFIG, ALL_STATUSES,
-} from './mockOrders';
+    formatDate, getInitials,
+} from './orderHelpers';
+import { STATUS_CONFIG, PAYMENT_CONFIG, ALL_STATUSES } from './orderConstants';
 
 /**
  * OrderSlideOver: right drawer showing full order details

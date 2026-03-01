@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { formatVND, getBrandName, getColorInfo, getSizeName, getItemPrice, getItemSubtotal } from '../mockCartData';
+import { formatVND, getItemPrice, getItemSubtotal } from '../mockCartData';
 
 const CartItemCard = ({
     item,
@@ -13,9 +13,10 @@ const CartItemCard = ({
     onCancelDelete,
     animationDelay = 0,
 }) => {
-    const colorInfo = getColorInfo(item.variant.color_id);
-    const sizeName = getSizeName(item.variant.size_id);
-    const brandName = getBrandName(item.product.brand_id);
+    const colorName = item.variant?.color_name || '';
+    const colorCode = item.variant?.color_code || '#ccc';
+    const sizeName = item.variant?.size_name || '';
+    const brandName = item.product?.brand_name || '';
     const unitPrice = getItemPrice(item);
     const subtotal = getItemSubtotal(item);
     const hasPromo = item.promotion && item.promotion.discount_percentage;
@@ -54,9 +55,9 @@ const CartItemCard = ({
                     <div className="cart-item-variant-row">
                         <span
                             className="cart-item-color-dot"
-                            style={{ backgroundColor: colorInfo.color_code }}
+                            style={{ backgroundColor: colorCode }}
                         />
-                        <span>{colorInfo.color_name}</span>
+                        <span>{colorName}</span>
                         <span className="cart-item-variant-sep">·</span>
                         <span>Size: {sizeName}</span>
                         <span className="cart-item-variant-sep">·</span>

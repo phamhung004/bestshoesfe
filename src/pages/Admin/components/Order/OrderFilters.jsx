@@ -1,5 +1,5 @@
 import React from 'react';
-import { ALL_STATUSES, STATUS_CONFIG } from './mockOrders';
+import { ALL_STATUSES, STATUS_CONFIG } from './orderConstants';
 
 /**
  * OrderFilters: search bar, dropdown filters, date range, status tabs
