@@ -1,13 +1,15 @@
 import React from 'react';
-import { formatVND, getBrandName, getColor, getSizeName, getPriceRange } from './mockPOSData';
+import { formatVND, getPriceRange } from './posUtils';
+import { usePOS } from './POSContext';
 
 /**
  * ProductCard — individual product card in the POS grid.
  * Click card → opens variant modal; click button → adds cheapest variant.
  */
 const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
-    const activeVariants = product.variants.filter(v => v.status === 1);
-    const brandName = getBrandName(product.brand_id);
+    const { getBrandName, getSizeName, getColor } = usePOS();
+    const activeVariants = product.variants.filter(v => v.status === 'ACTIVE');
+    const brandName = getBrandName(product.brandId);
     const priceRange = getPriceRange(activeVariants);
 
     // Show first 3 variants as chips, rest as "+N more"
@@ -24,7 +26,7 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
         onQuickAdd(product, cheapest);
     };
 
-    const isPulsing = pulseId === product.product_id;
+    const isPulsing = pulseId === product.productId;
 
     return (
         <div
@@ -37,7 +39,7 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
         >
             <img
                 className="pos-card-img"
-                src={product.image_url}
+                src={product.imageUrl}
                 alt={product.name}
                 loading="lazy"
             />
@@ -48,14 +50,14 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
 
                 <div className="pos-card-variants">
                     {displayVariants.map((v) => {
-                        const color = getColor(v.color_id);
+                        const color = getColor(v.colorId);
                         return (
-                            <span key={v.variant_id} className="pos-card-var-chip">
+                            <span key={v.variantId} className="pos-card-var-chip">
                                 <span
                                     className="pos-card-var-dot"
-                                    style={{ background: color.color_code }}
+                                    style={{ background: color.colorCode }}
                                 />
-                                {getSizeName(v.size_id)}
+                                {getSizeName(v.sizeId)}
                             </span>
                         );
                     })}

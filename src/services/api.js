@@ -680,6 +680,42 @@ export const orderAPI = {
 };
 
 
+// ============================================================
+// POS API functions (Bán hàng tại quầy)
+// ============================================================
+export const posAPI = {
+  // Get products for POS browser (grouped by product with active variants)
+  getProducts: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.search) queryParams.append('search', params.search);
+    if (params.categoryId) queryParams.append('categoryId', params.categoryId);
+    if (params.brandId) queryParams.append('brandId', params.brandId);
+    const qs = queryParams.toString();
+    return apiCall(`/admin/pos/products${qs ? `?${qs}` : ''}`);
+  },
+
+  // Quick search customers by name, phone, or email
+  searchCustomers: (q = '') =>
+    apiCall(`/admin/pos/customers/search?q=${encodeURIComponent(q)}`),
+
+  // POS Checkout — create an in-store order with cash payment
+  checkout: (request) => apiCall('/admin/pos/checkout', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  }),
+
+  // Get recent POS (In-store) orders
+  getRecentOrders: (limit = 10) =>
+    apiCall(`/admin/pos/recent-orders?limit=${limit}`),
+
+  // Validate a coupon code for POS
+  validateCoupon: (code, orderAmount) => apiCall('/admin/pos/validate-coupon', {
+    method: 'POST',
+    body: JSON.stringify({ code, orderAmount }),
+  }),
+};
+
+
 export default {
   brandAPI,
   categoryAPI,
@@ -696,5 +732,5 @@ export default {
   roleAPI,
   analyticsAPI,
   orderAPI,
-
+  posAPI,
 };

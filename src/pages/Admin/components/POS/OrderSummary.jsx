@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatVND } from './mockPOSData';
+import { formatVND } from './posUtils';
 
 /**
  * OrderSummary — pricing breakdown: subtotal, shipping, discount, total.

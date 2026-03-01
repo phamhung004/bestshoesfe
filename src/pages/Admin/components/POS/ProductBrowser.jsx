@@ -1,47 +1,59 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ProductCard from './ProductCard';
-import { products, categories, brands, sizes, colors, getBrandName, getCategoryName } from './mockPOSData';
+import { usePOS } from './POSContext';
+import { posAPI } from '../../../../services/api';
 
 /**
  * ProductBrowser — left panel: search, filters, product grid.
+ * Loads products from real API.
  */
 const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
+    const { categories, brands, sizes, colors, loading: refLoading } = usePOS();
+
     const [search, setSearch] = useState('');
     const [activeCat, setActiveCat] = useState(null);   // null = all
     const [activeBrand, setActiveBrand] = useState(null);
     const [activeSize, setActiveSize] = useState(null);
     const [activeColor, setActiveColor] = useState(null);
+    const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Simulate initial loading
-    React.useEffect(() => {
-        const t = setTimeout(() => setLoading(false), 800);
-        return () => clearTimeout(t);
-    }, []);
+    // Fetch products from backend whenever search/category/brand changes
+    const fetchProducts = useCallback(async () => {
+        try {
+            setLoading(true);
+            const params = {};
+            if (search) params.search = search;
+            if (activeCat) params.categoryId = activeCat;
+            if (activeBrand) params.brandId = activeBrand;
+            const res = await posAPI.getProducts(params);
+            setProducts(res.data || []);
+        } catch (err) {
+            console.error('Failed to load POS products:', err);
+            setProducts([]);
+        } finally {
+            setLoading(false);
+        }
+    }, [search, activeCat, activeBrand]);
 
-    // Filter products
-    const filtered = useMemo(() => {
-        return products.filter(p => {
-            if (p.status !== 1) return false;
-            // Search by name
-            if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
-            // Category filter
-            if (activeCat && p.category_id !== activeCat) return false;
-            // Brand filter
-            if (activeBrand && p.brand_id !== activeBrand) return false;
-            // Size filter — product must have a variant with this size
-            if (activeSize) {
-                const hasSize = p.variants.some(v => v.size_id === activeSize && v.status === 1);
-                if (!hasSize) return false;
-            }
-            // Color filter
-            if (activeColor) {
-                const hasColor = p.variants.some(v => v.color_id === activeColor && v.status === 1);
-                if (!hasColor) return false;
-            }
-            return true;
-        });
-    }, [search, activeCat, activeBrand, activeSize, activeColor]);
+    // Debounce search, immediate for filter changes
+    useEffect(() => {
+        const timer = setTimeout(fetchProducts, search ? 400 : 0);
+        return () => clearTimeout(timer);
+    }, [fetchProducts]);
+
+    // Client-side filtering for size/color (backend already returns active variants)
+    const filtered = products.filter(p => {
+        if (activeSize) {
+            const hasSize = p.variants.some(v => v.sizeId === activeSize && v.status === 'ACTIVE');
+            if (!hasSize) return false;
+        }
+        if (activeColor) {
+            const hasColor = p.variants.some(v => v.colorId === activeColor && v.status === 'ACTIVE');
+            if (!hasColor) return false;
+        }
+        return true;
+    });
 
     return (
         <div className="pos-left-panel">
@@ -71,9 +83,9 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
                     </button>
                     {categories.map(c => (
                         <button
-                            key={c.category_id}
-                            className={`pos-cat-pill${activeCat === c.category_id ? ' active' : ''}`}
-                            onClick={() => setActiveCat(activeCat === c.category_id ? null : c.category_id)}
+                            key={c.categoryId}
+                            className={`pos-cat-pill${activeCat === c.categoryId ? ' active' : ''}`}
+                            onClick={() => setActiveCat(activeCat === c.categoryId ? null : c.categoryId)}
                         >
                             {c.name}
                         </button>
@@ -91,7 +103,7 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
                 >
                     <option value="">Tất cả thương hiệu</option>
                     {brands.map(b => (
-                        <option key={b.brand_id} value={b.brand_id}>{b.name}</option>
+                        <option key={b.brandId} value={b.brandId}>{b.name}</option>
                     ))}
                 </select>
 
@@ -107,11 +119,11 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
                     </button>
                     {sizes.map(s => (
                         <button
-                            key={s.size_id}
-                            className={`pos-size-chip${activeSize === s.size_id ? ' active' : ''}`}
-                            onClick={() => setActiveSize(activeSize === s.size_id ? null : s.size_id)}
+                            key={s.sizeId}
+                            className={`pos-size-chip${activeSize === s.sizeId ? ' active' : ''}`}
+                            onClick={() => setActiveSize(activeSize === s.sizeId ? null : s.sizeId)}
                         >
-                            {s.size_name}
+                            {s.sizeName}
                         </button>
                     ))}
                 </div>
@@ -122,12 +134,12 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
                 <div className="pos-color-dots">
                     {Array.isArray(colors) && colors.map(c => (
                         <button
-                            key={c.color_id}
-                            className={`pos-color-dot-filter${activeColor === c.color_id ? ' active' : ''}`}
-                            style={{ background: c.color_code }}
-                            onClick={() => setActiveColor(activeColor === c.color_id ? null : c.color_id)}
-                            aria-label={`Lọc màu ${c.color_name}`}
-                            title={c.color_name}
+                            key={c.colorId}
+                            className={`pos-color-dot-filter${activeColor === c.colorId ? ' active' : ''}`}
+                            style={{ background: c.colorCode }}
+                            onClick={() => setActiveColor(activeColor === c.colorId ? null : c.colorId)}
+                            aria-label={`Lọc màu ${c.colorName}`}
+                            title={c.colorName}
                         />
                     ))}
                 </div>
@@ -135,7 +147,7 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
 
             {/* Product grid */}
             <div className="pos-product-grid-wrap">
-                {loading ? (
+                {loading || refLoading ? (
                     <div className="pos-product-grid">
                         {Array.from({ length: 6 }).map((_, i) => (
                             <div key={i} className="pos-skeleton-card">
@@ -159,7 +171,7 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
                     <div className="pos-product-grid">
                         {filtered.map(p => (
                             <ProductCard
-                                key={p.product_id}
+                                key={p.productId}
                                 product={p}
                                 onCardClick={onProductClick}
                                 onQuickAdd={onAddToCart}

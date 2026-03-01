@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { formatVND, getSizeName, getColor } from './mockPOSData';
+import { formatVND } from './posUtils';
+import { usePOS } from './POSContext';
 
 /**
  * CartItem — single row in the order cart.
  */
 const CartItem = ({ item, onUpdateQty, onRemove }) => {
+    const { getSizeName, getColor } = usePOS();
     const [removing, setRemoving] = useState(false);
-    const color = getColor(item.color_id);
+    const color = getColor(item.colorId);
 
     const handleRemove = () => {
         setRemoving(true);
@@ -21,15 +23,15 @@ const CartItem = ({ item, onUpdateQty, onRemove }) => {
         >
             <img
                 className="pos-cart-item-img"
-                src={item.image_url}
+                src={item.imageUrl}
                 alt={item.productName}
             />
             <div className="pos-cart-item-info">
                 <div className="pos-cart-item-name">{item.productName}</div>
                 <div className="pos-cart-item-variant">
-                    Size: {getSizeName(item.size_id)} / Màu: {color.color_name}
+                    Size: {getSizeName(item.sizeId)} / Màu: {color.colorName}
                 </div>
-                <div className="pos-cart-item-price">{formatVND(item.unit_price)}</div>
+                <div className="pos-cart-item-price">{formatVND(item.unitPrice)}</div>
             </div>
 
             <div className="pos-cart-item-qty">
@@ -50,7 +52,7 @@ const CartItem = ({ item, onUpdateQty, onRemove }) => {
             </div>
 
             <div className="pos-cart-item-total">
-                {formatVND(item.unit_price * item.quantity)}
+                {formatVND(item.unitPrice * item.quantity)}
             </div>
 
             <button

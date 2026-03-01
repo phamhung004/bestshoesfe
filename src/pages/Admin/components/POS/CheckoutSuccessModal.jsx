@@ -1,16 +1,15 @@
 import React from 'react';
-import { formatVND, formatDateTime, getSizeName, getColor } from './mockPOSData';
+import { formatVND, formatDateTime } from './posUtils';
 
 /**
  * CheckoutSuccessModal — shown after successful checkout.
+ * Receives POSCheckoutResponse from backend with nested OrderItemResponse items.
  * Includes print receipt trigger + new order button.
  */
 const CheckoutSuccessModal = ({ order, onNewOrder, onClose }) => {
     const handlePrint = () => {
         window.print();
     };
-
-    const paymentLabel = { cash: 'Tiền mặt', card: 'Thẻ/Chuyển khoản', ewallet: 'Ví điện tử' };
 
     return (
         <>
@@ -23,23 +22,23 @@ const CheckoutSuccessModal = ({ order, onNewOrder, onClose }) => {
                         <div className="pos-success-details">
                             <div className="pos-success-row">
                                 <span>Mã đơn:</span>
-                                <strong style={{ fontFamily: "'Courier New', monospace" }}>{order.order_number}</strong>
+                                <strong style={{ fontFamily: "'Courier New', monospace" }}>{order.orderNumber}</strong>
                             </div>
-                            {order.customer_name && (
+                            {order.customerName && (
                                 <div className="pos-success-row">
                                     <span>Khách hàng:</span>
-                                    <strong>{order.customer_name}</strong>
+                                    <strong>{order.customerName}</strong>
                                 </div>
                             )}
                             <div className="pos-success-row">
                                 <span>Thanh toán:</span>
-                                <strong>{paymentLabel[order.paymentMethod] || order.paymentMethod}</strong>
+                                <strong>Tiền mặt</strong>
                             </div>
                             <div className="pos-success-row">
                                 <span>Thời gian:</span>
-                                <strong>{formatDateTime(order.created_at)}</strong>
+                                <strong>{formatDateTime(order.createdAt)}</strong>
                             </div>
-                            {order.cashReceived > 0 && order.paymentMethod === 'cash' && (
+                            {order.cashReceived > 0 && (
                                 <>
                                     <div className="pos-success-row">
                                         <span>Khách đưa:</span>
@@ -47,13 +46,13 @@ const CheckoutSuccessModal = ({ order, onNewOrder, onClose }) => {
                                     </div>
                                     <div className="pos-success-row">
                                         <span>Tiền thừa:</span>
-                                        <strong>{formatVND(order.cashReceived - order.total_amount)}</strong>
+                                        <strong>{formatVND(order.changeAmount || 0)}</strong>
                                     </div>
                                 </>
                             )}
                         </div>
 
-                        <div className="pos-success-total">{formatVND(order.total_amount)}</div>
+                        <div className="pos-success-total">{formatVND(order.totalAmount)}</div>
 
                         <div className="pos-success-actions">
                             <button className="pos-success-print-btn" onClick={handlePrint}>
@@ -72,37 +71,37 @@ const CheckoutSuccessModal = ({ order, onNewOrder, onClose }) => {
                 <div className="pos-receipt-center">
                     <h2>THE BEST SHOES</h2>
                     <h3>Bán hàng tại quầy</h3>
-                    <div>{order.order_number}</div>
-                    <div>{formatDateTime(order.created_at)}</div>
+                    <div>{order.orderNumber}</div>
+                    <div>{formatDateTime(order.createdAt)}</div>
                 </div>
                 <hr className="pos-receipt-hr" />
-                {order.customer_name && (
+                {order.customerName && (
                     <>
-                        <div className="pos-receipt-row"><span>Khách:</span><span>{order.customer_name}</span></div>
-                        {order.customer_phone && <div className="pos-receipt-row"><span>SĐT:</span><span>{order.customer_phone}</span></div>}
+                        <div className="pos-receipt-row"><span>Khách:</span><span>{order.customerName}</span></div>
+                        {order.customerPhone && <div className="pos-receipt-row"><span>SĐT:</span><span>{order.customerPhone}</span></div>}
                         <hr className="pos-receipt-hr" />
                     </>
                 )}
-                {order.items.map((item, i) => (
+                {order.items && order.items.map((item, i) => (
                     <div key={i}>
                         <div className="pos-receipt-item-name">
-                            {item.productName} - Size {getSizeName(item.size_id)} / {getColor(item.color_id).color_name}
+                            {item.product?.name || 'Sản phẩm'} - Size {item.size?.sizeName || '?'} / {item.color?.colorName || '?'}
                         </div>
                         <div className="pos-receipt-item-detail">
-                            <span>{item.quantity} × {formatVND(item.unit_price)}</span>
-                            <span>{formatVND(item.unit_price * item.quantity)}</span>
+                            <span>{item.quantity} × {formatVND(item.unitPrice)}</span>
+                            <span>{formatVND(item.totalPrice || item.unitPrice * item.quantity)}</span>
                         </div>
                     </div>
                 ))}
                 <hr className="pos-receipt-hr" />
                 <div className="pos-receipt-row"><span>Tạm tính:</span><span>{formatVND(order.subtotal)}</span></div>
-                {order.coupon_discount_amount > 0 && (
-                    <div className="pos-receipt-row"><span>Giảm giá:</span><span>−{formatVND(order.coupon_discount_amount)}</span></div>
+                {order.couponDiscountAmount > 0 && (
+                    <div className="pos-receipt-row"><span>Giảm giá:</span><span>−{formatVND(order.couponDiscountAmount)}</span></div>
                 )}
-                <div className="pos-receipt-row pos-receipt-total"><span>TỔNG CỘNG:</span><span>{formatVND(order.total_amount)}</span></div>
-                <div className="pos-receipt-row"><span>Thanh toán:</span><span>{paymentLabel[order.paymentMethod] || order.paymentMethod}</span></div>
-                {order.cashReceived > 0 && order.paymentMethod === 'cash' && (
-                    <div className="pos-receipt-row"><span>Tiền thừa:</span><span>{formatVND(order.cashReceived - order.total_amount)}</span></div>
+                <div className="pos-receipt-row pos-receipt-total"><span>TỔNG CỘNG:</span><span>{formatVND(order.totalAmount)}</span></div>
+                <div className="pos-receipt-row"><span>Thanh toán:</span><span>Tiền mặt</span></div>
+                {order.cashReceived > 0 && (
+                    <div className="pos-receipt-row"><span>Tiền thừa:</span><span>{formatVND(order.changeAmount || 0)}</span></div>
                 )}
                 <hr className="pos-receipt-hr" />
                 <div className="pos-receipt-footer">

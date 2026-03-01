@@ -1,39 +1,41 @@
 import React, { useState, useMemo } from 'react';
-import { formatVND, getSizeName, getColor, getBrandName, sizes, colors } from './mockPOSData';
+import { formatVND } from './posUtils';
+import { usePOS } from './POSContext';
 
 /**
  * VariantPickerModal — size × color picker for a product.
  * Shows available variants, price, stock, quantity stepper, add-to-cart.
  */
 const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
+    const { sizes, colors, getSizeName, getColor, getBrandName } = usePOS();
     const [selectedSize, setSelectedSize] = useState(null);
     const [selectedColor, setSelectedColor] = useState(null);
     const [quantity, setQuantity] = useState(1);
 
-    const activeVariants = product.variants.filter(v => v.status === 1);
+    const activeVariants = product.variants.filter(v => v.status === 'ACTIVE');
 
     // Unique sizes and colors available for this product
-    const availableSizeIds = [...new Set(activeVariants.map(v => v.size_id))];
-    const availableColorIds = [...new Set(activeVariants.map(v => v.color_id))];
-    const productSizes = sizes.filter(s => availableSizeIds.includes(s.size_id));
-    const productColors = colors.filter(c => availableColorIds.includes(c.color_id));
+    const availableSizeIds = [...new Set(activeVariants.map(v => v.sizeId))];
+    const availableColorIds = [...new Set(activeVariants.map(v => v.colorId))];
+    const productSizes = sizes.filter(s => availableSizeIds.includes(s.sizeId));
+    const productColors = colors.filter(c => availableColorIds.includes(c.colorId));
 
     // Find selected variant
     const selectedVariant = useMemo(() => {
         if (!selectedSize || !selectedColor) return null;
-        return activeVariants.find(v => v.size_id === selectedSize && v.color_id === selectedColor) || null;
+        return activeVariants.find(v => v.sizeId === selectedSize && v.colorId === selectedColor) || null;
     }, [selectedSize, selectedColor, activeVariants]);
 
     // Check if a size+color combination exists
     const hasVariant = (sizeId, colorId) =>
-        activeVariants.some(v => v.size_id === sizeId && v.color_id === colorId);
+        activeVariants.some(v => v.sizeId === sizeId && v.colorId === colorId);
 
     // Check if a size has any available colors
     const sizeHasStock = (sizeId) =>
-        activeVariants.some(v => v.size_id === sizeId && v.stock > 0);
+        activeVariants.some(v => v.sizeId === sizeId && v.stock > 0);
 
     const colorHasStock = (colorId) =>
-        activeVariants.some(v => v.color_id === colorId && v.stock > 0 && (!selectedSize || v.size_id === selectedSize));
+        activeVariants.some(v => v.colorId === colorId && v.stock > 0 && (!selectedSize || v.sizeId === selectedSize));
 
     const handleAdd = () => {
         if (!selectedVariant || selectedVariant.stock <= 0) return;
@@ -46,10 +48,10 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
             <div className="pos-modal" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="pos-modal-header">
-                    <img className="pos-modal-thumb" src={product.image_url} alt={product.name} />
+                    <img className="pos-modal-thumb" src={product.imageUrl} alt={product.name} />
                     <div>
                         <div className="pos-modal-title">{product.name}</div>
-                        <div className="pos-modal-brand">{getBrandName(product.brand_id)}</div>
+                        <div className="pos-modal-brand">{getBrandName(product.brandId)}</div>
                     </div>
                     <button className="pos-modal-close" onClick={onClose} aria-label="Đóng">×</button>
                 </div>
@@ -60,15 +62,15 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
                         <div className="pos-modal-label">Kích cỡ</div>
                         <div className="pos-modal-sizes">
                             {productSizes.map(s => {
-                                const hasStock = sizeHasStock(s.size_id);
+                                const hasStock = sizeHasStock(s.sizeId);
                                 return (
                                     <button
-                                        key={s.size_id}
-                                        className={`pos-modal-size-btn${selectedSize === s.size_id ? ' active' : ''}${!hasStock ? ' disabled' : ''}`}
-                                        onClick={() => hasStock && setSelectedSize(s.size_id)}
+                                        key={s.sizeId}
+                                        className={`pos-modal-size-btn${selectedSize === s.sizeId ? ' active' : ''}${!hasStock ? ' disabled' : ''}`}
+                                        onClick={() => hasStock && setSelectedSize(s.sizeId)}
                                         disabled={!hasStock}
                                     >
-                                        {s.size_name}
+                                        {s.sizeName}
                                     </button>
                                 );
                             })}
@@ -80,16 +82,16 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
                         <div className="pos-modal-label">Màu sắc</div>
                         <div className="pos-modal-colors">
                             {Array.isArray(productColors) && productColors.map(c => {
-                                const hasStock = colorHasStock(c.color_id);
+                                const hasStock = colorHasStock(c.colorId);
                                 return (
                                     <button
-                                        key={c.color_id}
-                                        className={`pos-modal-color-btn${selectedColor === c.color_id ? ' active' : ''}${!hasStock ? ' disabled' : ''}`}
-                                        onClick={() => hasStock && setSelectedColor(c.color_id)}
+                                        key={c.colorId}
+                                        className={`pos-modal-color-btn${selectedColor === c.colorId ? ' active' : ''}${!hasStock ? ' disabled' : ''}`}
+                                        onClick={() => hasStock && setSelectedColor(c.colorId)}
                                         disabled={!hasStock}
                                     >
-                                        <span className="pos-modal-color-swatch" style={{ background: c.color_code }} />
-                                        {c.color_name}
+                                        <span className="pos-modal-color-swatch" style={{ background: c.colorCode }} />
+                                        {c.colorName}
                                     </button>
                                 );
                             })}

@@ -5,13 +5,13 @@ import CouponInput from './CouponInput';
 import OrderSummary from './OrderSummary';
 import PaymentSelector from './PaymentSelector';
 import RecentOrdersDropdown from './RecentOrdersDropdown';
-import { formatVND } from './mockPOSData';
+import { formatVND } from './posUtils';
 
 /**
  * OrderCart — right panel: header, customer, cart items, coupon, summary, payment, checkout.
  */
 const OrderCart = ({
-    orderNumber, cartItems, subtotal, discountAmount, totalAmount,
+    cartItems, subtotal, discountAmount, totalAmount,
     onUpdateQty, onRemoveItem, onClearCart,
     isWalkIn, setIsWalkIn, selectedCustomer, setSelectedCustomer,
     guestName, setGuestName, guestPhone, setGuestPhone,
@@ -30,7 +30,6 @@ const OrderCart = ({
             <div className="pos-cart-header">
                 <div className="pos-cart-header-left">
                     <h2>Đơn hàng mới</h2>
-                    <div className="pos-order-number">{orderNumber}</div>
                 </div>
                 <div className="pos-cart-header-btns">
                     <RecentOrdersDropdown />

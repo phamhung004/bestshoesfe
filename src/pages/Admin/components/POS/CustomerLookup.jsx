@@ -1,12 +1,16 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { customers, getInitials } from './mockPOSData';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { getInitials } from './posUtils';
+import { posAPI } from '../../../../services/api';
 
 /**
  * CustomerLookup — walk-in toggle + customer search/select.
+ * Uses real API for customer search.
  */
 const CustomerLookup = ({ isWalkIn, setIsWalkIn, selectedCustomer, setSelectedCustomer, guestName, setGuestName, guestPhone, setGuestPhone }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [filtered, setFiltered] = useState([]);
+    const [searching, setSearching] = useState(false);
     const wrapRef = useRef(null);
 
     // Close suggestions on outside click
@@ -18,14 +22,25 @@ const CustomerLookup = ({ isWalkIn, setIsWalkIn, selectedCustomer, setSelectedCu
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    const filtered = useMemo(() => {
-        if (!searchQuery.trim()) return [];
-        const q = searchQuery.toLowerCase();
-        return customers.filter(c =>
-            c.full_name.toLowerCase().includes(q) ||
-            c.phone.includes(q) ||
-            c.email.toLowerCase().includes(q)
-        );
+    // Debounced search when query changes
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setFiltered([]);
+            return;
+        }
+        setSearching(true);
+        const timer = setTimeout(async () => {
+            try {
+                const res = await posAPI.searchCustomers(searchQuery);
+                setFiltered(res.data || []);
+            } catch (err) {
+                console.error('Customer search failed:', err);
+                setFiltered([]);
+            } finally {
+                setSearching(false);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
     }, [searchQuery]);
 
     const handleSelect = (customer) => {
@@ -73,9 +88,9 @@ const CustomerLookup = ({ isWalkIn, setIsWalkIn, selectedCustomer, setSelectedCu
             ) : selectedCustomer ? (
                 /* Selected customer card */
                 <div className="pos-selected-customer">
-                    <div className="pos-customer-avatar">{getInitials(selectedCustomer.full_name)}</div>
+                    <div className="pos-customer-avatar">{getInitials(selectedCustomer.fullName)}</div>
                     <div className="pos-customer-info">
-                        <h4>{selectedCustomer.full_name}</h4>
+                        <h4>{selectedCustomer.fullName}</h4>
                         <p>{selectedCustomer.phone} · {selectedCustomer.email}</p>
                     </div>
                     <button
@@ -97,10 +112,10 @@ const CustomerLookup = ({ isWalkIn, setIsWalkIn, selectedCustomer, setSelectedCu
                     {showSuggestions && filtered.length > 0 && (
                         <div className="pos-customer-suggestions">
                             {filtered.map(c => (
-                                <div key={c.customer_id} className="pos-customer-option" onClick={() => handleSelect(c)}>
-                                    <div className="pos-customer-avatar">{getInitials(c.full_name)}</div>
+                                <div key={c.customerId} className="pos-customer-option" onClick={() => handleSelect(c)}>
+                                    <div className="pos-customer-avatar">{getInitials(c.fullName)}</div>
                                     <div className="pos-customer-info">
-                                        <h4>{c.full_name}</h4>
+                                        <h4>{c.fullName}</h4>
                                         <p>{c.phone} · {c.email}</p>
                                     </div>
                                 </div>

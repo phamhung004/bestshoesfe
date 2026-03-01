@@ -3,7 +3,9 @@ import ProductBrowser from './ProductBrowser';
 import VariantPickerModal from './VariantPickerModal';
 import OrderCart from './OrderCart';
 import CheckoutSuccessModal from './CheckoutSuccessModal';
-import { generateOrderNumber, formatVND, getSizeName, getColor } from './mockPOSData';
+import { POSProvider } from './POSContext';
+import { posAPI } from '../../../../services/api';
+import { formatVND } from './posUtils';
 import './POSPage.css';
 
 /**
@@ -12,7 +14,6 @@ import './POSPage.css';
  */
 const POSPage = () => {
     // ── Order & cart state ──────────────────────────────────────
-    const [orderNumber, setOrderNumber] = useState(() => generateOrderNumber());
     const [cartItems, setCartItems] = useState([]);
     const [pulseProductId, setPulseProductId] = useState(null);
     const [cartBounce, setCartBounce] = useState(false);
@@ -38,14 +39,14 @@ const POSPage = () => {
 
     // ── Computed values ─────────────────────────────────────────
     const subtotal = useMemo(
-        () => cartItems.reduce((sum, item) => sum + item.unit_price * item.quantity, 0),
+        () => cartItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0),
         [cartItems]
     );
     const totalAmount = Math.max(0, subtotal - discountAmount);
 
     // ── Cart actions ────────────────────────────────────────────
     const addToCart = useCallback((product, variant, qty = 1) => {
-        const cartKey = `${variant.variant_id}`;
+        const cartKey = `${variant.variantId}`;
 
         setCartItems(prev => {
             const existing = prev.find(i => i.cartKey === cartKey);
@@ -56,19 +57,19 @@ const POSPage = () => {
             }
             return [...prev, {
                 cartKey,
-                variant_id: variant.variant_id,
-                product_id: product.product_id,
+                variantId: variant.variantId,
+                productId: product.productId,
                 productName: product.name,
-                image_url: product.image_url,
-                size_id: variant.size_id,
-                color_id: variant.color_id,
-                unit_price: variant.price,
+                imageUrl: product.imageUrl,
+                sizeId: variant.sizeId,
+                colorId: variant.colorId,
+                unitPrice: variant.price,
                 quantity: qty,
             }];
         });
 
         // Pulse animation on the product card
-        setPulseProductId(product.product_id);
+        setPulseProductId(product.productId);
         setTimeout(() => setPulseProductId(null), 600);
 
         // Cart badge bounce
@@ -98,53 +99,51 @@ const POSPage = () => {
     }, []);
 
     // ── Checkout ────────────────────────────────────────────────
-    const handleCheckout = useCallback(() => {
+    const handleCheckout = useCallback(async () => {
         if (cartItems.length === 0) return;
         setIsCheckingOut(true);
 
-        // Simulate API call
-        setTimeout(() => {
+        try {
             const customerName = isWalkIn
                 ? (guestName || 'Khách lẻ')
-                : (selectedCustomer?.full_name || 'Khách lẻ');
+                : (selectedCustomer?.fullName || 'Khách lẻ');
             const customerPhone = isWalkIn
                 ? guestPhone
                 : (selectedCustomer?.phone || '');
 
-            const order = {
-                order_number: orderNumber,
-                customer_name: customerName,
-                customer_phone: customerPhone,
-                customer_id: selectedCustomer?.customer_id || null,
-                coupon_id: appliedCoupon?.coupon_id || null,
-                order_type: 'In-store',
-                subtotal,
-                shipping_cost: 0,
-                coupon_discount_amount: discountAmount,
-                total_amount: totalAmount,
-                status: 'Đã xác nhận',
-                payment_status: 'Đã thanh toán',
-                paymentMethod,
-                cashReceived: paymentMethod === 'cash' ? cashReceived : 0,
-                created_at: new Date().toISOString(),
-                items: cartItems,
+            const request = {
+                customerId: selectedCustomer?.customerId || null,
+                customerName,
+                customerPhone,
+                couponId: appliedCoupon?.couponId || null,
+                cashReceived: cashReceived || 0,
+                items: cartItems.map(item => ({
+                    variantId: item.variantId,
+                    quantity: item.quantity,
+                })),
             };
 
+            const res = await posAPI.checkout(request);
+            const order = res.data; // POSCheckoutResponse from ApiResponse.data
             setSuccessOrder(order);
+        } catch (err) {
+            console.error('Checkout failed:', err);
+            const msg = err.response?.data?.message || 'Thanh toán thất bại. Vui lòng thử lại.';
+            alert(msg);
+        } finally {
             setIsCheckingOut(false);
-        }, 1200);
-    }, [cartItems, isWalkIn, guestName, guestPhone, selectedCustomer, orderNumber, appliedCoupon, subtotal, discountAmount, totalAmount, paymentMethod, cashReceived]);
+        }
+    }, [cartItems, isWalkIn, guestName, guestPhone, selectedCustomer, appliedCoupon, cashReceived]);
 
     const handleNewOrder = useCallback(() => {
         setSuccessOrder(null);
         clearCart();
-        setOrderNumber(generateOrderNumber());
         setPaymentMethod('cash');
     }, [clearCart]);
 
     // ── Variant picker handler from ProductBrowser ──────────────
     const handleProductClick = useCallback((product) => {
-        const inStockVariants = product.variants.filter(v => v.status === 1 && v.stock > 0);
+        const inStockVariants = product.variants.filter(v => v.status === 'ACTIVE' && v.stock > 0);
         // If only 1 variant in stock, add directly
         if (inStockVariants.length === 1) {
             addToCart(product, inStockVariants[0]);
@@ -154,6 +153,7 @@ const POSPage = () => {
     }, [addToCart]);
 
     return (
+        <POSProvider>
         <div className="pos-layout">
             {/* Left panel — product browser */}
             <ProductBrowser
@@ -164,7 +164,6 @@ const POSPage = () => {
 
             {/* Right panel — order cart */}
             <OrderCart
-                orderNumber={orderNumber}
                 cartItems={cartItems}
                 subtotal={subtotal}
                 discountAmount={discountAmount}
@@ -213,6 +212,7 @@ const POSPage = () => {
                 />
             )}
         </div>
+        </POSProvider>
     );
 };
 

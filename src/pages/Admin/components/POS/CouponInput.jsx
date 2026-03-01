@@ -1,49 +1,40 @@
 import React, { useState } from 'react';
-import { coupons, formatVND } from './mockPOSData';
+import { formatVND } from './posUtils';
+import { posAPI } from '../../../../services/api';
 
 /**
- * CouponInput — coupon code input + validation.
+ * CouponInput — coupon code input + server-side validation via API.
  */
 const CouponInput = ({ subtotal, appliedCoupon, setAppliedCoupon, setDiscountAmount }) => {
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
+    const [validating, setValidating] = useState(false);
 
-    const handleApply = () => {
+    const handleApply = async () => {
         setError('');
         const trimmed = code.trim().toUpperCase();
         if (!trimmed) return;
 
-        // Find coupon
-        const coupon = coupons.find(c => c.code === trimmed);
-        if (!coupon) { setError('Mã giảm giá không tồn tại'); return; }
-        if (coupon.status !== 1) { setError('Mã giảm giá đã hết hiệu lực'); return; }
+        setValidating(true);
+        try {
+            const res = await posAPI.validateCoupon(trimmed, subtotal);
+            const couponData = res.data; // POSCouponResponse
 
-        // Check date range
-        const now = new Date();
-        if (now < new Date(coupon.start_date) || now > new Date(coupon.end_date)) {
-            setError('Mã giảm giá đã hết hạn'); return;
-        }
-
-        // Check minimum amount
-        if (subtotal < coupon.minimum_amount) {
-            setError(`Đơn hàng tối thiểu ${formatVND(coupon.minimum_amount)} để sử dụng mã này`);
-            return;
-        }
-
-        // Calculate discount
-        let discount = 0;
-        if (coupon.type === 'Percentage') {
-            discount = subtotal * (coupon.value / 100);
-            if (coupon.maximum_discount && discount > coupon.maximum_discount) {
-                discount = coupon.maximum_discount;
+            if (!couponData.valid) {
+                setError(couponData.message || 'Mã giảm giá không hợp lệ');
+                return;
             }
-        } else {
-            discount = coupon.value;
-        }
 
-        setAppliedCoupon(coupon);
-        setDiscountAmount(discount);
-        setCode('');
+            setAppliedCoupon(couponData);
+            setDiscountAmount(couponData.discountAmount || 0);
+            setCode('');
+        } catch (err) {
+            console.error('Coupon validation failed:', err);
+            const msg = err.response?.data?.message || 'Không thể xác thực mã giảm giá';
+            setError(msg);
+        } finally {
+            setValidating(false);
+        }
     };
 
     const handleRemove = () => {
@@ -63,8 +54,15 @@ const CouponInput = ({ subtotal, appliedCoupon, setAppliedCoupon, setDiscountAmo
                             onChange={e => setCode(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleApply()}
                             aria-label="Mã giảm giá"
+                            disabled={validating}
                         />
-                        <button className="pos-coupon-apply-btn" onClick={handleApply}>Áp dụng</button>
+                        <button
+                            className="pos-coupon-apply-btn"
+                            onClick={handleApply}
+                            disabled={validating}
+                        >
+                            {validating ? '...' : 'Áp dụng'}
+                        </button>
                     </div>
                     {error && <div className="pos-coupon-error">{error}</div>}
                 </>
