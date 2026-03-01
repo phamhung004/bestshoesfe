@@ -52,7 +52,7 @@ const OverviewTab = ({ onTabChange, customer, stats }) => {
         const fetchRecentOrders = async () => {
             try {
                 const res = await getMyOrders();
-                setRecentOrders((res.data?.data || []).slice(0, 3));
+                setRecentOrders((res.data || []).slice(0, 3));
             } catch (err) {
                 console.error('Failed to fetch recent orders:', err);
             }

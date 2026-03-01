@@ -38,7 +38,7 @@ const OrdersTab = () => {
         const fetchOrders = async () => {
             try {
                 const res = await getMyOrders();
-                setOrders(res.data?.data || []);
+                setOrders(res.data || []);
             } catch (err) {
                 console.error('Failed to fetch orders:', err);
                 showToast('Không thể tải đơn hàng', 'error');
