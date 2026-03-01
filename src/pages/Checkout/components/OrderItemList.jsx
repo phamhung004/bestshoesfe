@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { formatVND, getSizeName, getColorInfo, getItemSubtotal } from '../mockCheckoutData';
+import { formatVND, getItemSubtotal } from '../checkoutConstants';
 
 const OrderItemList = ({ items }) => {
     const [expanded, setExpanded] = useState(false);
@@ -17,8 +17,6 @@ const OrderItemList = ({ items }) => {
             </div>
             <div className={`co-items-list ${expanded ? 'expanded' : 'collapsed'}`}>
                 {items.map((item) => {
-                    const sizeName = getSizeName(item.variant.size_id);
-                    const colorInfo = getColorInfo(item.variant.color_id);
                     const subtotal = getItemSubtotal(item);
                     return (
                         <div key={item.cart_item_id} className="co-item-row">
@@ -31,7 +29,7 @@ const OrderItemList = ({ items }) => {
                             <div className="co-item-info">
                                 <p className="co-item-name">{item.product.name}</p>
                                 <p className="co-item-variant">
-                                    Size {sizeName} · {colorInfo.color_name}
+                                    Size {item.variant.size_name} · {item.variant.color_name}
                                 </p>
                             </div>
                             <span className="co-item-price">{formatVND(subtotal)}</span>

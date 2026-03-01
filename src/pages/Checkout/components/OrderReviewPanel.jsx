@@ -13,6 +13,12 @@ const OrderReviewPanel = ({
     total,
     isSubmitting,
     onSubmit,
+    couponCode,
+    couponLoading,
+    couponError,
+    onCouponCodeChange,
+    onApplyCoupon,
+    onRemoveCoupon,
 }) => {
     return (
         <div className="co-review-card co-right-entrance">
@@ -26,7 +32,16 @@ const OrderReviewPanel = ({
             <OrderItemList items={items} />
 
             {/* Coupon */}
-            <CouponSection coupon={coupon} discountAmount={discountAmount} />
+            <CouponSection
+                coupon={coupon}
+                discountAmount={discountAmount}
+                couponCode={couponCode}
+                couponLoading={couponLoading}
+                couponError={couponError}
+                onCouponCodeChange={onCouponCodeChange}
+                onApplyCoupon={onApplyCoupon}
+                onRemoveCoupon={onRemoveCoupon}
+            />
 
             {/* Price breakdown */}
             <PriceBreakdown

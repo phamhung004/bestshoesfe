@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PAYMENT_METHODS } from '../mockCheckoutData';
+import { PAYMENT_METHODS } from '../checkoutConstants';
 
 const PaymentMethodSelector = ({
     selectedMethod,

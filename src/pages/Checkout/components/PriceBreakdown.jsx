@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatVND } from '../mockCheckoutData';
+import { formatVND } from '../checkoutConstants';
 
 const PriceBreakdown = ({ subtotal, shippingCost, discountAmount, total }) => {
     return (

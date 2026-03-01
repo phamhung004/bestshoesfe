@@ -1,5 +1,5 @@
 import React from 'react';
-import { DELIVERY_OPTIONS } from '../mockCheckoutData';
+import { DELIVERY_OPTIONS } from '../checkoutConstants';
 
 const DeliveryTimeSelector = ({ selectedTime, onSelect }) => {
     return (

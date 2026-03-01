@@ -3,10 +3,8 @@ import { Link } from 'react-router-dom';
 import CheckoutStepIndicator from '../../Cart/components/CheckoutStepIndicator';
 import {
     formatVND,
-    getSizeName,
-    getColorInfo,
     getItemSubtotal,
-} from '../mockCheckoutData';
+} from '../checkoutConstants';
 
 const OrderSuccessState = ({ orderData, items, total }) => {
     const [copied, setCopied] = useState(false);
@@ -110,8 +108,6 @@ const OrderSuccessState = ({ orderData, items, total }) => {
                         {/* Items */}
                         <div className="co-success-items">
                             {items.map((item) => {
-                                const sizeName = getSizeName(item.variant.size_id);
-                                const colorInfo = getColorInfo(item.variant.color_id);
                                 const subtotal = getItemSubtotal(item);
                                 return (
                                     <div key={item.cart_item_id} className="co-success-item">
@@ -123,7 +119,7 @@ const OrderSuccessState = ({ orderData, items, total }) => {
                                         <div className="co-success-item-info">
                                             <p className="co-success-item-name">{item.product.name}</p>
                                             <p className="co-success-item-meta">
-                                                Size {sizeName} · {colorInfo.color_name} · ×{item.quantity}
+                                                Size {item.variant.size_name} · {item.variant.color_name} · ×{item.quantity}
                                             </p>
                                         </div>
                                         <span className="co-success-item-price">

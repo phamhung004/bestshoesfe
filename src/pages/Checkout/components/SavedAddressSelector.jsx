@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatAddress } from '../mockCheckoutData';
+import { formatAddress } from '../checkoutConstants';
 
 const SavedAddressSelector = ({
     addresses,
@@ -21,13 +21,13 @@ const SavedAddressSelector = ({
             <div className="co-saved-grid">
                 {addresses.map((addr) => (
                     <div
-                        key={addr.address_id}
-                        className={`co-saved-card ${selectedAddressId === addr.address_id ? 'selected' : ''}`}
-                        onClick={() => onSelectAddress(addr.address_id)}
+                        key={addr.addressId}
+                        className={`co-saved-card ${selectedAddressId === addr.addressId ? 'selected' : ''}`}
+                        onClick={() => onSelectAddress(addr.addressId)}
                     >
                         <div className="co-saved-card-top">
-                            <span className="co-saved-card-name">{addr.recipient_name}</span>
-                            {addr.is_default === 1 && (
+                            <span className="co-saved-card-name">{addr.recipientName}</span>
+                            {addr.isDefault && (
                                 <span className="co-saved-default-badge">Mặc định</span>
                             )}
                             <button className="co-saved-edit-link" onClick={(e) => e.stopPropagation()}>
