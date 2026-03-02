@@ -1505,3 +1505,249 @@
         min-height: 100vh;
     }
 }
+
+/* ═══════════════════════════════════════════════════════
+   SKELETON LOADERS
+   ═══════════════════════════════════════════════════════ */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+    background: linear-gradient(90deg,
+        #e5e7eb 25%,
+        #f3f4f6 50%,
+        #e5e7eb 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease infinite;
+    border-radius: 8px;
+}
+
+/* Category skeleton */
+.skeleton-card {
+    min-height: 220px;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.skeleton-card .skeleton-shimmer {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+}
+
+/* Product card skeleton */
+.skeleton-product-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.skeleton-product-img {
+    width: 100%;
+    aspect-ratio: 1;
+}
+
+.skeleton-product-body {
+    padding: 16px;
+}
+
+.skeleton-line {
+    border-radius: 4px;
+}
+
+.skeleton-colors {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.skeleton-color-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+}
+
+.skeleton-btn {
+    border-radius: 10px !important;
+}
+
+/* Flash sale skeleton */
+.skeleton-flash-card {
+    background: #fff !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+}
+
+.skeleton-flash-img {
+    width: 100%;
+    aspect-ratio: 1;
+}
+
+.skeleton-flash-body {
+    padding: 14px;
+}
+
+/* Brand skeleton */
+.skeleton-brand-card {
+    min-height: 72px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   UI POLISH — ADDITIONAL ENHANCEMENTS
+   ═══════════════════════════════════════════════════════ */
+
+/* Category card icon (gradient bg mode) */
+.category-card-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 64px;
+    z-index: 1;
+    opacity: 0.3;
+    filter: grayscale(1);
+    transition: all 400ms ease;
+}
+
+.category-card:hover .category-card-icon {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Category card as link (remove anchor styles) */
+a.category-card {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+/* Flash sale eyebrow pulse */
+.flash-sale-eyebrow {
+    animation: flashPulse 2s ease-in-out infinite;
+}
+
+@keyframes flashPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Flash card as link */
+a.flash-card {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Flash card image placeholder (no image) */
+.flash-card-img-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    background: #f3f4f6;
+}
+
+/* Brand logo image */
+.brand-logo-img {
+    max-width: 100%;
+    max-height: 40px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+    transition: opacity 300ms ease;
+}
+
+.brand-logo-card:hover .brand-logo-img {
+    opacity: 1;
+}
+
+.brand-logo-text {
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.05em;
+}
+
+/* Trust bar hover */
+.trust-item {
+    transition: transform 200ms ease;
+}
+
+.trust-item:hover {
+    transform: translateY(-2px);
+}
+
+/* Better tab indicator */
+.brand-tab {
+    position: relative;
+    overflow: hidden;
+}
+
+.brand-tab::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--hp-primary);
+    transition: all 200ms ease;
+    transform: translateX(-50%);
+}
+
+.brand-tab.active::after {
+    width: 60%;
+}
+
+/* Will-change optimizations */
+.category-card,
+.flash-card,
+.brand-logo-card,
+.hero-shoe-img,
+.hero-float-badge {
+    will-change: transform;
+}
+
+/* Smooth scroll for the homepage */
+.homepage {
+    scroll-behavior: smooth;
+}
+
+/* Lazy image fade-in */
+.homepage img[loading="lazy"] {
+    opacity: 0;
+    transition: opacity 400ms ease;
+}
+
+.homepage img[loading="lazy"].loaded,
+.homepage img[loading="lazy"][complete] {
+    opacity: 1;
+}
+
+/* Ensure lazy images show after load (native lazy loading) */
+.homepage img {
+    opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE SKELETON ADJUSTMENTS
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+    .skeleton-product-card:nth-child(n+3) {
+        display: none;
+    }
+}
+
+@media (max-width: 639px) {
+    .skeleton-product-card:nth-child(n+3) {
+        display: block;
+    }
+    .skeleton-product-card:nth-child(n+3) {
+        display: none;
+    }
+}

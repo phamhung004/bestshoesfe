@@ -224,6 +224,15 @@ const CheckoutPage = () => {
                 const defaultAddr = list.find((a) => a.isDefault);
                 if (defaultAddr) {
                     dispatch({ type: 'SET_SELECTED_ADDRESS', payload: defaultAddr.addressId });
+                    // Pre-fill recipient info from saved address
+                    if (defaultAddr.phone) {
+                        dispatch({ type: 'SET_FORM_FIELD', field: 'customerPhone', value: defaultAddr.phone });
+                        dispatch({ type: 'SET_ERROR', field: 'customerPhone', value: '' });
+                    }
+                    if (defaultAddr.recipientName) {
+                        dispatch({ type: 'SET_FORM_FIELD', field: 'customerName', value: defaultAddr.recipientName });
+                        dispatch({ type: 'SET_ERROR', field: 'customerName', value: '' });
+                    }
                 }
             })
             .catch(() => { /* ignore — user can enter manually */ });
@@ -557,7 +566,20 @@ const CheckoutPage = () => {
                             <SavedAddressSelector
                                 addresses={savedAddresses}
                                 selectedAddressId={state.selectedAddressId}
-                                onSelectAddress={(id) => dispatch({ type: 'SET_SELECTED_ADDRESS', payload: id })}
+                                onSelectAddress={(id) => {
+                                dispatch({ type: 'SET_SELECTED_ADDRESS', payload: id });
+                                const addr = savedAddresses.find((a) => a.addressId === id);
+                                if (addr) {
+                                    if (addr.phone) {
+                                        dispatch({ type: 'SET_FORM_FIELD', field: 'customerPhone', value: addr.phone });
+                                        dispatch({ type: 'SET_ERROR', field: 'customerPhone', value: '' });
+                                    }
+                                    if (addr.recipientName) {
+                                        dispatch({ type: 'SET_FORM_FIELD', field: 'customerName', value: addr.recipientName });
+                                        dispatch({ type: 'SET_ERROR', field: 'customerName', value: '' });
+                                    }
+                                }
+                            }}
                                 onUseOther={() => dispatch({ type: 'SET_SHOW_MANUAL_FORM', payload: true })}
                                 showManualForm={state.showManualForm}
                             />
