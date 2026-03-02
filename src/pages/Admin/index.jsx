@@ -4,8 +4,7 @@ import AdminSidebar from './components/AdminSidebar';
 import AdminHeader from './components/AdminHeader';
 import DashboardOverview from './components/DashboardOverview';
 import AnalyticsDashboard from './components/Analytics/AnalyticsDashboard';
-import CouponList from './components/CouponList';
-import CouponForm from './components/CouponForm';
+import CouponManagement from './components/Coupon/CouponManagement';
 import PromotionManagement from './components/Promotion/PromotionManagement';
 // import ErrorBoundary from './components/ErrorBoundary';
 // import BrandList from './components/Brand/BrandList';
@@ -184,11 +183,7 @@ const AdminDashboard = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [refreshProductList, setRefreshProductList] = useState(false);
 
-  // Coupon handlers
-  const [showCouponForm, setShowCouponForm] = useState(false);
-  const [editingCoupon, setEditingCoupon] = useState(null);
-  const [refreshCouponList, setRefreshCouponList] = useState(false);
-
+  // Coupon management is now self-contained in CouponManagement component
   // Promotion management is now self-contained in PromotionManagement component
 
   const handleAddProduct = () => {
@@ -212,27 +207,7 @@ const AdminDashboard = () => {
     setEditingProduct(null);
   };
 
-  // Coupon handlers
-  const handleAddCoupon = () => {
-    setEditingCoupon(null);
-    setShowCouponForm(true);
-  };
 
-  const handleEditCoupon = (coupon) => {
-    setEditingCoupon(coupon);
-    setShowCouponForm(true);
-  };
-
-  const handleSaveCoupon = () => {
-    setShowCouponForm(false);
-    setEditingCoupon(null);
-    setRefreshCouponList(prev => !prev);
-  };
-
-  const handleCancelCouponForm = () => {
-    setShowCouponForm(false);
-    setEditingCoupon(null);
-  };
 
 
 
@@ -407,13 +382,7 @@ const AdminDashboard = () => {
         return <PromotionManagement />;
 
       case 'promotions/coupons':
-        return (
-          <CouponList
-            onEdit={handleEditCoupon}
-            onAdd={handleAddCoupon}
-            refreshTrigger={refreshCouponList}
-          />
-        );
+        return <CouponManagement />;
 
       default:
         return (
@@ -581,14 +550,7 @@ const AdminDashboard = () => {
           />
         </ErrorBoundary>
       )}
-      {showCouponForm && (
-        <CouponForm
-          coupon={editingCoupon}
-          onSave={handleSaveCoupon}
-          onCancel={handleCancelCouponForm}
-          isEditing={!!editingCoupon}
-        />
-      )}
+      {/* Coupon form is now self-contained within CouponManagement */}
 
 
       {showCustomerForm && (
