@@ -53,8 +53,12 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
     setExpandedProduct(productId);
     setLoadingVariants(true);
     try {
-      const data = await productVariantAPI.getByProduct(productId);
-      setVariants(Array.isArray(data) ? data : []);
+      const response = await productVariantAPI.getByProduct(productId);
+      // Handle both direct array and wrapped { status, message, data: [...] } responses
+      const list = Array.isArray(response)
+        ? response
+        : response?.data?.content || response?.data || response?.content || [];
+      setVariants(Array.isArray(list) ? list : []);
     } catch (err) {
       console.error('Error loading variants:', err);
       setVariants([]);
@@ -66,10 +70,11 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
   const toggleSelect = (variant) => {
     setSelected((prev) => {
       const copy = { ...prev };
-      if (copy[variant.variantId]) {
-        delete copy[variant.variantId];
+      const vid = variant.id || variant.variantId;
+      if (copy[vid]) {
+        delete copy[vid];
       } else {
-        copy[variant.variantId] = { variantId: variant.variantId, fixedPrice: null };
+        copy[vid] = { variantId: vid, fixedPrice: null };
       }
       return copy;
     });
@@ -87,13 +92,17 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
 
   const handleSelectAllVariants = () => {
     const unselected = variants.filter(
-      (v) => !selected[v.variantId] && !existingVariantIds.has(v.variantId)
+      (v) => {
+        const vid = v.id || v.variantId;
+        return !selected[vid] && !existingVariantIds.has(vid);
+      }
     );
     if (unselected.length === 0) return;
     setSelected((prev) => {
       const copy = { ...prev };
       unselected.forEach((v) => {
-        copy[v.variantId] = { variantId: v.variantId, fixedPrice: null };
+        const vid = v.id || v.variantId;
+        copy[vid] = { variantId: vid, fixedPrice: null };
       });
       return copy;
     });
@@ -222,11 +231,12 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
                             </thead>
                             <tbody>
                               {variants.map((v) => {
-                                const isExisting = existingVariantIds.has(v.variantId);
-                                const isSelected = !!selected[v.variantId];
+                                const vid = v.id || v.variantId;
+                                const isExisting = existingVariantIds.has(vid);
+                                const isSelected = !!selected[vid];
                                 return (
                                   <tr
-                                    key={v.variantId}
+                                    key={vid}
                                     className={`${isSelected ? 'selected-row' : ''} ${
                                       isExisting ? 'existing-row' : ''
                                     }`}
@@ -242,13 +252,13 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
                                         />
                                       )}
                                     </td>
-                                    <td>{v.size?.name || v.sizeName || '-'}</td>
+                                    <td>{v.size || v.size?.name || v.sizeName || '-'}</td>
                                     <td>
                                       <span className="pvp-color-cell">
-                                        {(v.color?.colorCode || v.colorCode) && (
+                                        {(v.color?.code || v.color?.colorCode || v.colorCode) && (
                                           <span
                                             className="pvp-color-dot"
-                                            style={{ backgroundColor: v.color?.colorCode || v.colorCode }}
+                                            style={{ backgroundColor: v.color?.code || v.color?.colorCode || v.colorCode }}
                                           ></span>
                                         )}
                                         {v.color?.name || v.colorName || '-'}
@@ -262,9 +272,9 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
                                           type="number"
                                           className="pvp-fixed-price-input"
                                           placeholder="Bỏ trống = dùng % chung"
-                                          value={selected[v.variantId]?.fixedPrice ?? ''}
+                                          value={selected[vid]?.fixedPrice ?? ''}
                                           onChange={(e) =>
-                                            updateFixedPrice(v.variantId, e.target.value)
+                                            updateFixedPrice(vid, e.target.value)
                                           }
                                           onClick={(e) => e.stopPropagation()}
                                           min="0"

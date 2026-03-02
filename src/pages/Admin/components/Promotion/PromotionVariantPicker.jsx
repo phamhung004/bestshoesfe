@@ -9,6 +9,8 @@ const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 
+const getProductId = (product) => product.id || product.productId;
+
 const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
     const [products, setProducts] = useState([]);
     const [expandedProduct, setExpandedProduct] = useState(null);
@@ -23,8 +25,9 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
     const loadProducts = useCallback(async () => {
         try {
             setLoadingProducts(true);
-            const data = await productAPI.getAll({ pageNum: 0, pageSize: 200 });
-            const list = data?.content || data || [];
+            const response = await productAPI.getAll({ pageNum: 0, pageSize: 200 });
+            // Backend returns: { status, message, data: { content: [...] } }
+            const list = response?.data?.content || response?.content || response || [];
             setProducts(Array.isArray(list) ? list : []);
         } catch (err) {
             console.error('Error loading products:', err);
@@ -57,8 +60,12 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
         setExpandedProduct(productId);
         setLoadingVariants(true);
         try {
-            const data = await productVariantAPI.getByProduct(productId);
-            setVariants(Array.isArray(data) ? data : []);
+            const response = await productVariantAPI.getByProduct(productId);
+            // Handle both direct array and wrapped { status, message, data: [...] } responses
+            const list = Array.isArray(response)
+                ? response
+                : response?.data?.content || response?.data || response?.content || [];
+            setVariants(Array.isArray(list) ? list : []);
         } catch (err) {
             console.error('Error loading variants:', err);
             setVariants([]);
@@ -70,8 +77,9 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
     const toggleSelect = (variant) => {
         setSelected((prev) => {
             const copy = { ...prev };
-            if (copy[variant.variantId]) delete copy[variant.variantId];
-            else copy[variant.variantId] = { variantId: variant.variantId, fixedPrice: null };
+            const vid = variant.id || variant.variantId;
+            if (copy[vid]) delete copy[vid];
+            else copy[vid] = { variantId: vid, fixedPrice: null };
             return copy;
         });
     };
@@ -84,12 +92,16 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
     };
 
     const handleSelectAllVariants = () => {
-        const unselected = variants.filter((v) => !selected[v.variantId] && !existingVariantIds.has(v.variantId));
+        const unselected = variants.filter((v) => {
+            const vid = v.id || v.variantId;
+            return !selected[vid] && !existingVariantIds.has(vid);
+        });
         if (unselected.length === 0) return;
         setSelected((prev) => {
             const copy = { ...prev };
             unselected.forEach((v) => {
-                copy[v.variantId] = { variantId: v.variantId, fixedPrice: null };
+                const vid = v.id || v.variantId;
+                copy[vid] = { variantId: vid, fixedPrice: null };
             });
             return copy;
         });
@@ -116,7 +128,7 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
     const filteredProducts = products.filter((p) => {
         if (!searchTerm.trim()) return true;
         const q = searchTerm.toLowerCase();
-        return p.name?.toLowerCase().includes(q) || p.productId?.toString().includes(q);
+        return p.name?.toLowerCase().includes(q) || getProductId(p)?.toString().includes(q);
     });
 
     return (
@@ -155,14 +167,14 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
                         </div>
                     ) : (
                         filteredProducts.map((product) => (
-                            <div key={product.productId}>
+                            <div key={getProductId(product)}>
                                 {/* product row */}
                                 <div
-                                    className={`pm-picker-product-row ${expandedProduct === product.productId ? 'expanded' : ''}`}
-                                    onClick={() => handleExpandProduct(product.productId)}
+                                    className={`pm-picker-product-row ${expandedProduct === getProductId(product) ? 'expanded' : ''}`}
+                                    onClick={() => handleExpandProduct(getProductId(product))}
                                 >
                                     <span className="pm-picker-expand-icon">
-                                        {expandedProduct === product.productId
+                                        {expandedProduct === getProductId(product)
                                             ? <ChevronDown size={14} />
                                             : <ChevronRight size={14} />}
                                     </span>
@@ -178,12 +190,12 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
                                     )}
                                     <div className="pm-picker-product-info">
                                         <span className="pm-picker-product-name">{product.name}</span>
-                                        <span className="pm-picker-product-sku">#{product.productId}</span>
+                                        <span className="pm-picker-product-sku">#{getProductId(product)}</span>
                                     </div>
                                 </div>
 
                                 {/* expanded variants */}
-                                {expandedProduct === product.productId && (
+                                {expandedProduct === getProductId(product) && (
                                     <div className="pm-picker-variants-panel">
                                         {loadingVariants ? (
                                             <div style={{ padding: 16, textAlign: 'center', fontSize: 13, color: 'var(--gray-400)' }}>
@@ -203,12 +215,13 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
                                                         Chọn tất cả
                                                     </button>
                                                 </div>
-                                                {variants.map((v) => {
-                                                    const isExisting = existingVariantIds.has(v.variantId);
-                                                    const isSelected = !!selected[v.variantId];
+                                {variants.map((v) => {
+                                                    const vid = v.id || v.variantId;
+                                                    const isExisting = existingVariantIds.has(vid);
+                                                    const isSelected = !!selected[vid];
                                                     return (
                                                         <div
-                                                            key={v.variantId}
+                                                            key={vid}
                                                             className={`pm-picker-variant-row ${isSelected ? 'selected' : ''} ${isExisting ? 'existing' : ''}`}
                                                             onClick={() => !isExisting && toggleSelect(v)}
                                                         >
@@ -225,10 +238,10 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
                                                                     onClick={(e) => e.stopPropagation()}
                                                                 />
                                                             )}
-                                                            {(v.imageUrl || v.productImageUrl) ? (
+                                                            {(v.imageUrl || v.productImageUrl || v.images?.[0]?.imageUrl) ? (
                                                                 <img
                                                                     className="pm-picker-variant-thumb"
-                                                                    src={v.imageUrl || v.productImageUrl}
+                                                                    src={v.imageUrl || v.productImageUrl || v.images?.[0]?.imageUrl}
                                                                     alt=""
                                                                 />
                                                             ) : (
@@ -243,13 +256,13 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
                                                                 {v.productName || product.name}
                                                             </span>
                                                             <span className="pm-picker-variant-size">
-                                                                {v.size?.name || v.sizeName || '-'}
+                                                                {v.size || v.size?.name || v.sizeName || '-'}
                                                             </span>
                                                             <span className="pm-picker-variant-color">
-                                                                {(v.color?.colorCode || v.colorCode) && (
+                                                                {(v.color?.code || v.color?.colorCode || v.colorCode) && (
                                                                     <span
                                                                         className="pm-color-dot"
-                                                                        style={{ backgroundColor: v.color?.colorCode || v.colorCode }}
+                                                                        style={{ backgroundColor: v.color?.code || v.color?.colorCode || v.colorCode }}
                                                                     />
                                                                 )}
                                                                 {v.color?.name || v.colorName || '-'}
@@ -266,8 +279,8 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
                                                                     className="pm-form-input"
                                                                     style={{ width: 100, padding: '3px 6px', fontSize: 12 }}
                                                                     placeholder="Giá cố định"
-                                                                    value={selected[v.variantId]?.fixedPrice ?? ''}
-                                                                    onChange={(e) => updateFixedPrice(v.variantId, e.target.value)}
+                                                                    value={selected[vid]?.fixedPrice ?? ''}
+                                                                    onChange={(e) => updateFixedPrice(vid, e.target.value)}
                                                                     onClick={(e) => e.stopPropagation()}
                                                                     min="0"
                                                                 />
