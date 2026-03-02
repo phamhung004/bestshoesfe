@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Grid2X2, List, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 /**
  * ProductFilterBar
@@ -193,26 +193,6 @@ const ProductFilterBar = ({
 
         {/* Right: view toggle + sort */}
         <div className="pm-view-sort">
-          {/* View toggle */}
-          <div className="pm-view-toggle">
-            <button
-              className={`pm-btn-icon ${viewMode === 'list' ? 'active' : ''}`}
-              onClick={() => onViewModeChange('list')}
-              title="Dạng bảng"
-              type="button"
-            >
-              <List size={16} />
-            </button>
-            <button
-              className={`pm-btn-icon ${viewMode === 'grid' ? 'active' : ''}`}
-              onClick={() => onViewModeChange('grid')}
-              title="Dạng lưới"
-              type="button"
-            >
-              <Grid2X2 size={16} />
-            </button>
-          </div>
-
           {/* Sort */}
           <select
             className="pm-filter-select"

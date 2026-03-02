@@ -7,7 +7,6 @@ import ProductPageHeader from './components/ProductPageHeader';
 import ProductKpiCards from './components/ProductKpiCards';
 import ProductFilterBar from './components/ProductFilterBar';
 import ProductTable from './components/ProductTable';
-import ProductGrid from './components/ProductGrid';
 import ProductPagination from './components/ProductPagination';
 import ProductSlideOver from './components/ProductSlideOver';
 import ProductModal from './components/ProductModal/ProductModal';
@@ -55,6 +54,7 @@ const initialState = {
   currentPage: 1,
   rowsPerPage: 10,
   selectedIds: new Set(),
+  viewMode: 'list',     // 'list' | 'grid'
   slideOverProduct: null,
   modalMode: null,      // 'add' | 'edit' | null
   modalProduct: null,
@@ -753,34 +753,21 @@ const ProductManagementPage = () => {
         </div>
       )}
 
-      {/* Product list or grid */}
-      {state.viewMode === 'list' ? (
-        <ProductTable
-          products={paginatedProducts}
-          selectedIds={state.selectedIds}
-          onToggleSelect={handleToggleSelect}
-          onToggleSelectAll={handleToggleSelectAll}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onToggleStatus={handleToggleStatus}
-          onAdd={handleOpenAdd}
-          sortConfig={state.sortConfig}
-          onSort={handleSort}
-          loading={state.loading}
-        />
-      ) : (
-        <ProductGrid
-          products={paginatedProducts}
-          selectedIds={state.selectedIds}
-          onToggleSelect={handleToggleSelect}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onToggleStatus={handleToggleStatus}
-          onAdd={handleOpenAdd}
-        />
-      )}
+      {/* Product list */}
+      <ProductTable
+        products={paginatedProducts}
+        selectedIds={state.selectedIds}
+        onToggleSelect={handleToggleSelect}
+        onToggleSelectAll={handleToggleSelectAll}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onToggleStatus={handleToggleStatus}
+        onAdd={handleOpenAdd}
+        sortConfig={state.sortConfig}
+        onSort={handleSort}
+        loading={state.loading}
+      />
 
       {/* Pagination */}
       <ProductPagination
