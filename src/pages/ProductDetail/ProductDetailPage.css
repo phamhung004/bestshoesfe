@@ -29,6 +29,16 @@
     gap: 48px;
     align-items: start;
 }
+@media (max-width: 1536px) {
+    .pdp-page { padding: 20px 14px 48px; }
+    .pdp-layout { gap: 36px; }
+}
+@media (max-width: 1366px) {
+    .pdp-page { padding: 16px 12px 40px; }
+    .pdp-layout { gap: 28px; }
+    .pdp-name { font-size: 22px; }
+    .pdp-price-regular, .pdp-price-promo { font-size: 22px; }
+}
 @media (max-width: 768px) {
     .pdp-layout { grid-template-columns: 1fr; gap: 24px; }
 }

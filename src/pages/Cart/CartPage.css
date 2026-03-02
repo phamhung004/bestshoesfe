@@ -1568,6 +1568,21 @@
     }
 }
 
+/* ─── Responsive — 14-inch laptop screens ──────────── */
+@media (max-width: 1536px) {
+    .cart-container { padding: 0 20px; }
+    .cart-right-panel { width: 360px; }
+    .cart-layout { gap: 20px; }
+}
+
+@media (max-width: 1366px) {
+    .cart-container { padding: 0 16px; }
+    .cart-right-panel { width: 340px; }
+    .cart-layout { gap: 16px; }
+    .cart-page-header { padding: 20px 0 6px; }
+    .cart-page-title { font-size: 26px; }
+}
+
 /* ─── Responsive ───────────────────────────────────── */
 @media (max-width: 1023px) {
     .cart-layout {

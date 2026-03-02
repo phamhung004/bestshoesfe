@@ -922,6 +922,25 @@
   background: #6366F1;
 }
 
+/* ── Responsive — 14-inch laptop screens ─────────────────── */
+@media (max-width: 1536px) {
+  .bs-header { height: 62px; }
+  .bs-header__inner { padding: 0 20px; gap: 24px; }
+  .bs-logo__best, .bs-logo__shoes { font-size: 22px; }
+  .bs-nav__link { padding: 8px 12px; font-size: 13px; }
+  .bs-megamenu { width: 440px; }
+}
+
+@media (max-width: 1366px) {
+  .bs-header { height: 58px; }
+  .bs-header__inner { padding: 0 16px; gap: 16px; }
+  .bs-logo__best, .bs-logo__shoes { font-size: 20px; }
+  .bs-nav__link { padding: 6px 10px; font-size: 12px; }
+  .bs-megamenu { width: 400px; }
+  .bs-search__input { width: 180px; font-size: 13px; padding: 8px 12px; }
+  .bs-minicart { width: 340px; }
+}
+
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 1023px) {
   .bs-header {

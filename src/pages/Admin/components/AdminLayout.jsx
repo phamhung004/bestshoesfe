@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
+import './AdminLayout.css';
 
 /**
  * AdminLayout — shared wrapper for standalone admin route pages.
@@ -79,6 +80,7 @@ const AdminLayout = ({ activeSection, title, subtitle, children }) => {
         />
 
         <main
+          className="admin-main-content"
           style={{
             flex: 1,
             overflowY: 'auto',

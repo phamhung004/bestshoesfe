@@ -1457,3 +1457,277 @@
 .pm-price { font-weight: 700; color: #0f172a; }
 .pm-price-sale { color: #dc2626; }
 .pm-price-original { text-decoration: line-through; color: #94a3b8; font-weight: 400; font-size: 12px; }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — 14-inch laptop screens
+   Covers: 1920×1080 @125% (1536px), 1440px, 1366×768 (1366px)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── 1536px: Gentle tightening ──────────────────────────────── */
+@media (max-width: 1536px) {
+  /* Page header */
+  .pm-page-header {
+    padding: 16px 20px;
+    margin-bottom: 16px;
+  }
+  .pm-page-title { font-size: 22px; }
+
+  /* KPI cards */
+  .pm-kpi-grid { gap: 12px; margin-bottom: 16px; }
+  .pm-kpi-card { padding: 16px; gap: 10px; }
+  .pm-kpi-value { font-size: 24px; }
+  .pm-kpi-icon { width: 36px; height: 36px; border-radius: 8px; }
+  .pm-kpi-label { font-size: 12px; }
+
+  /* Filter bar */
+  .pm-filter-bar { padding: 14px 16px; margin-bottom: 12px; }
+  .pm-filter-select.w-180 { width: 160px; min-width: 120px; }
+  .pm-filter-select.w-160 { width: 140px; min-width: 110px; }
+
+  /* Table */
+  .pm-table-card { overflow-x: auto; }
+  .pm-table { font-size: 13px; min-width: 900px; }
+  .pm-table th { padding: 8px 10px; font-size: 11px; }
+  .pm-table td { padding: 10px; }
+  .pm-img-thumb, .pm-img-fallback { width: 40px; height: 40px; }
+  .pm-product-name { font-size: 13px; }
+  .pm-product-sku { font-size: 10px; }
+
+  /* Pagination */
+  .pm-pagination { padding: 10px 16px; }
+
+  /* Slide-over */
+  .pm-slide-over { width: 520px; }
+
+  /* Modal */
+  .pm-modal { max-width: 880px; }
+  .pm-modal-body { padding: 20px; }
+}
+
+/* ── 1440px: More compact layout ────────────────────────────── */
+@media (max-width: 1440px) {
+  /* Page header */
+  .pm-page-header {
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    gap: 12px;
+  }
+  .pm-page-title { font-size: 20px; }
+  .pm-page-subtitle { font-size: 12px; }
+  .pm-breadcrumb { font-size: 12px; }
+
+  /* Buttons */
+  .pm-btn { padding: 7px 14px; font-size: 13px; gap: 5px; }
+  .pm-btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  /* KPI cards */
+  .pm-kpi-grid { gap: 10px; margin-bottom: 14px; }
+  .pm-kpi-card { padding: 14px; gap: 8px; }
+  .pm-kpi-value { font-size: 22px; }
+  .pm-kpi-icon { width: 34px; height: 34px; }
+  .pm-kpi-bottom { font-size: 11px; }
+
+  /* Filter bar */
+  .pm-filter-bar { padding: 12px 14px; gap: 10px; }
+  .pm-filter-row { gap: 8px; }
+  .pm-search-input, .pm-filter-select { padding: 7px 10px; font-size: 13px; }
+  .pm-search-input { padding-left: 32px; }
+  .pm-search-wrap { min-width: 180px; }
+  .pm-filter-select.w-180 { width: 150px; min-width: 110px; }
+  .pm-filter-select.w-160 { width: 130px; min-width: 100px; }
+  .pm-result-count { font-size: 12px; }
+  .pm-chip { font-size: 11px; padding: 2px 8px; }
+
+  /* Table — make scrollable */
+  .pm-table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .pm-table { font-size: 13px; min-width: 880px; }
+  .pm-table th { padding: 8px 8px; font-size: 11px; letter-spacing: 0.03em; }
+  .pm-table td { padding: 8px; }
+  .pm-img-thumb, .pm-img-fallback { width: 38px; height: 38px; border-radius: 8px; }
+  .pm-product-sku { font-size: 10px; }
+  .pm-color-dot { width: 12px; height: 12px; }
+  .pm-badge { padding: 2px 8px; font-size: 11px; }
+  .pm-btn-icon { width: 28px; height: 28px; }
+
+  /* Bulk bar */
+  .pm-bulk-bar { padding: 8px 14px; border-radius: 10px; }
+  .pm-bulk-label { font-size: 13px; }
+  .pm-bulk-btn { padding: 5px 10px; font-size: 12px; }
+
+  /* Grid view */
+  .pm-product-grid { gap: 12px; }
+  .pm-grid-body { padding: 12px 12px 0; }
+  .pm-grid-name { font-size: 12px; min-height: 32px; }
+  .pm-grid-price { font-size: 12px; }
+  .pm-grid-footer { padding: 8px 12px; }
+
+  /* Pagination */
+  .pm-pagination { padding: 8px 14px; gap: 10px; }
+  .pm-page-info { font-size: 12px; }
+  .pm-page-btn { width: 28px; height: 28px; font-size: 12px; }
+
+  /* Slide-over */
+  .pm-slide-over { width: 480px; }
+  .pm-so-header { padding: 16px 20px; }
+  .pm-so-body { padding: 16px 20px; }
+  .pm-so-title { font-size: 16px; }
+
+  /* Modal */
+  .pm-modal { max-width: 840px; }
+  .pm-modal-header { padding: 16px 20px 14px; }
+  .pm-modal-title { font-size: 16px; }
+  .pm-modal-body { padding: 18px; }
+  .pm-modal-footer { padding: 14px 20px; }
+  .pm-form-section { padding: 14px; margin-bottom: 12px; }
+  .pm-form-section-title { font-size: 12px; margin-bottom: 12px; }
+  .pm-field { margin-bottom: 12px; }
+  .pm-label { font-size: 12px; margin-bottom: 5px; }
+  .pm-input, .pm-textarea, .pm-select { padding: 7px 10px; font-size: 13px; }
+  .pm-tab-pill { padding: 5px 12px; font-size: 12px; }
+}
+
+/* ── 1366px: Tight layout for HD 14" screens ────────────────── */
+@media (max-width: 1366px) {
+  /* Page header */
+  .pm-page-header {
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    gap: 10px;
+  }
+  .pm-page-title { font-size: 18px; }
+  .pm-page-subtitle { font-size: 11px; margin-top: 2px; }
+  .pm-breadcrumb { font-size: 11px; gap: 4px; margin-bottom: 4px; }
+  .pm-header-actions { gap: 8px; }
+
+  /* Buttons */
+  .pm-btn { padding: 6px 12px; font-size: 12px; border-radius: 8px; gap: 4px; }
+  .pm-btn-sm { padding: 4px 8px; font-size: 11px; }
+
+  /* KPI cards — switch to 2 columns */
+  .pm-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .pm-kpi-card { padding: 12px; gap: 6px; }
+  .pm-kpi-value { font-size: 20px; }
+  .pm-kpi-icon { width: 32px; height: 32px; border-radius: 8px; }
+  .pm-kpi-label { font-size: 11px; }
+  .pm-kpi-bottom { font-size: 10px; }
+
+  /* Filter bar */
+  .pm-filter-bar { padding: 10px 12px; gap: 8px; margin-bottom: 10px; }
+  .pm-filter-row { gap: 6px; }
+  .pm-search-input, .pm-filter-select { padding: 6px 8px; font-size: 12px; border-radius: 8px; }
+  .pm-search-input { padding-left: 30px; }
+  .pm-search-icon { left: 9px; }
+  .pm-search-wrap { min-width: 160px; }
+  .pm-filter-select.w-180 { width: 135px; min-width: 100px; }
+  .pm-filter-select.w-160 { width: 120px; min-width: 90px; }
+  .pm-result-count { font-size: 11px; }
+  .pm-chip { font-size: 10px; padding: 2px 6px; }
+  .pm-view-sort select { width: 150px !important; font-size: 12px; }
+
+  /* Table — fully scrollable */
+  .pm-table-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 12px;
+    border-radius: 12px;
+  }
+  .pm-table { font-size: 12px; min-width: 850px; }
+  .pm-table th { padding: 7px 6px; font-size: 10px; }
+  .pm-table td { padding: 7px 6px; }
+  .pm-img-thumb, .pm-img-fallback { width: 36px; height: 36px; border-radius: 8px; }
+  .pm-product-cell { gap: 8px; }
+  .pm-product-name { font-size: 12px; }
+  .pm-product-sku { font-size: 9px; }
+  .pm-color-dot { width: 10px; height: 10px; }
+  .pm-color-dots { gap: 3px; margin-top: 2px; }
+  .pm-badge { padding: 2px 7px; font-size: 10px; gap: 4px; border-radius: 16px; }
+  .pm-badge-dot { width: 5px; height: 5px; }
+  .pm-stock-bar-wrap { width: 32px; height: 3px; }
+  .pm-btn-icon { width: 26px; height: 26px; border-radius: 6px; }
+  .pm-actions { gap: 2px; }
+
+  /* Bulk bar */
+  .pm-bulk-bar { padding: 7px 12px; border-radius: 8px; margin-bottom: 6px; }
+  .pm-bulk-label { font-size: 12px; }
+  .pm-bulk-btn { padding: 4px 8px; font-size: 11px; gap: 4px; border-radius: 6px; }
+
+  /* Grid view */
+  .pm-product-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .pm-grid-card { border-radius: 12px; }
+  .pm-grid-body { padding: 10px 10px 0; }
+  .pm-grid-brand { font-size: 10px; }
+  .pm-grid-name { font-size: 12px; min-height: 30px; }
+  .pm-grid-price { font-size: 12px; }
+  .pm-grid-variants { font-size: 10px; }
+  .pm-grid-footer { padding: 8px 10px; margin-top: 10px; }
+
+  /* Pagination */
+  .pm-pagination { padding: 8px 12px; gap: 8px; }
+  .pm-page-info { font-size: 11px; }
+  .pm-page-btn { width: 26px; height: 26px; font-size: 11px; border-radius: 6px; }
+  .pm-page-ellipsis { font-size: 11px; }
+  .pm-rows-select { padding: 4px 24px 4px 8px; font-size: 12px; }
+
+  /* Error banner */
+  .pm-error-banner { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
+
+  /* Slide-over */
+  .pm-slide-over { width: 440px; }
+  .pm-so-header { padding: 14px 16px; gap: 10px; }
+  .pm-so-title { font-size: 15px; }
+  .pm-so-body { padding: 14px 16px; }
+  .pm-so-section-title { font-size: 10px; margin-bottom: 8px; }
+  .pm-so-field-label { font-size: 10px; }
+  .pm-so-field-value { font-size: 13px; }
+  .pm-so-img { border-radius: 10px; margin-bottom: 12px; }
+  .pm-so-footer { padding: 12px 16px; }
+
+  /* Modal */
+  .pm-modal { max-width: 780px; max-height: 88vh; }
+  .pm-modal-header { padding: 14px 18px 12px; }
+  .pm-modal-title { font-size: 15px; }
+  .pm-modal-tabs { gap: 4px; margin-top: 10px; }
+  .pm-modal-body { padding: 16px; }
+  .pm-modal-footer { padding: 12px 18px; }
+  .pm-form-grid { gap: 16px; }
+  .pm-form-section { padding: 12px; margin-bottom: 10px; border-radius: 12px; }
+  .pm-form-section-title { font-size: 12px; margin-bottom: 10px; }
+  .pm-field { margin-bottom: 10px; }
+  .pm-label { font-size: 11px; margin-bottom: 4px; }
+  .pm-input, .pm-textarea, .pm-select {
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+  .pm-textarea { min-height: 70px; }
+  .pm-tab-pill { padding: 4px 10px; font-size: 11px; }
+  .pm-char-count, .pm-field-hint { font-size: 10px; }
+
+  /* Variant table in modal */
+  .pm-variant-tbl { font-size: 12px; min-width: 550px; }
+  .pm-variant-tbl th { padding: 6px 8px; font-size: 10px; }
+  .pm-variant-tbl td { padding: 6px 8px; }
+  .pm-inline-input { padding: 4px 6px; font-size: 12px; }
+  .pm-variant-stats { padding: 10px 12px; gap: 14px; font-size: 12px; }
+
+  /* Image tab */
+  .pm-dropzone { padding: 24px 16px; border-radius: 12px; }
+  .pm-dropzone-text { font-size: 13px; }
+  .pm-dropzone-sub { font-size: 11px; }
+  .pm-image-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+  .pm-variant-pill { padding: 5px 12px; font-size: 11px; }
+
+  /* Confirm dialog */
+  .pm-confirm { padding: 20px; border-radius: 14px; max-width: 360px; }
+  .pm-confirm-icon { font-size: 28px; margin-bottom: 10px; }
+  .pm-confirm-title { font-size: 15px; margin-bottom: 6px; }
+  .pm-confirm-body { font-size: 13px; margin-bottom: 16px; }
+
+  /* Toast */
+  .pm-toast { padding: 10px 14px; font-size: 13px; border-radius: 10px; min-width: 220px; }
+  .pm-toast-wrap { bottom: 16px; right: 16px; }
+}

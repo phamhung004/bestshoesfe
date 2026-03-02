@@ -2720,6 +2720,23 @@
 }
 
 /* ═══════════════════════════════════════════════════════
+   RESPONSIVE — 14-inch laptop screens
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 1536px) {
+    .acc-container { padding: 0 20px; }
+    .acc-sidebar { width: 260px; }
+    .acc-page-layout { gap: 20px; padding: 24px 0 40px; }
+}
+
+@media (max-width: 1366px) {
+    .acc-container { padding: 0 16px; }
+    .acc-sidebar { width: 240px; }
+    .acc-page-layout { gap: 16px; padding: 20px 0 36px; }
+    .acc-page-title { font-size: 26px; }
+    .acc-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ═══════════════════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════════════════ */
 

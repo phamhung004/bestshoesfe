@@ -1275,6 +1275,40 @@
 }
 
 /* ═══════════════════════════════════════════════════════
+   RESPONSIVE — 14-inch laptop screens
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 1536px) {
+    .hero-container { gap: 36px; }
+    .hero-heading { font-size: 52px; }
+    .section-title { font-size: 32px; }
+    .flash-sale-layout { gap: 36px; }
+    .flash-sale-title { font-size: 38px; }
+    .brand-banner-layout { gap: 48px; }
+    .brand-banner-title { font-size: 42px; }
+    .best-sellers-grid { gap: 20px; }
+    .featured-categories, .flash-sale-section, .brand-banner, .best-sellers { padding: 64px 0; }
+    .section-header { margin-bottom: 36px; }
+}
+
+@media (max-width: 1366px) {
+    .hero-container { gap: 28px; padding: 0 12px; }
+    .hero-heading { font-size: 44px; }
+    .hero-subheading { font-size: 15px; }
+    .section-container { padding: 0 12px; }
+    .section-title { font-size: 28px; }
+    .section-subtitle { font-size: 14px; }
+    .category-grid { gap: 16px; }
+    .flash-sale-layout { gap: 28px; }
+    .flash-sale-title { font-size: 34px; }
+    .best-sellers-grid { gap: 16px; }
+    .brand-banner-layout { gap: 36px; }
+    .brand-banner-title { font-size: 36px; }
+    .brand-banner-desc { font-size: 15px; }
+    .featured-categories, .flash-sale-section, .brand-banner, .best-sellers { padding: 56px 0; }
+    .section-header { margin-bottom: 28px; }
+}
+
+/* ═══════════════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
    ═══════════════════════════════════════════════════════ */
 

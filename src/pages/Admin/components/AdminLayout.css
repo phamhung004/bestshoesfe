@@ -1,0 +1,22 @@
+/* AdminLayout — Responsive adjustments */
+
+/* 14-inch laptop: 1920×1080 @125% = ~1536px viewport */
+@media (max-width: 1536px) {
+  .admin-main-content {
+    padding: 20px !important;
+  }
+}
+
+/* 14-inch laptop: common threshold */
+@media (max-width: 1440px) {
+  .admin-main-content {
+    padding: 16px !important;
+  }
+}
+
+/* 14-inch laptop: 1366×768 */
+@media (max-width: 1366px) {
+  .admin-main-content {
+    padding: 14px !important;
+  }
+}

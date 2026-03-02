@@ -530,6 +530,26 @@
   background: rgba(239, 68, 68, 0.1) !important;
 }
 
+/* Responsive — 14-inch laptop screens */
+@media (max-width: 1536px) {
+  .admin-header { padding: 16px 20px; }
+  .header-title { font-size: 24px; }
+  .header-subtitle { font-size: 13px; }
+}
+
+@media (max-width: 1440px) {
+  .admin-header { padding: 14px 16px; }
+  .header-title { font-size: 22px; }
+  .header-right { gap: 12px; }
+}
+
+@media (max-width: 1366px) {
+  .admin-header { padding: 12px 14px; }
+  .header-title { font-size: 20px; letter-spacing: -0.3px; }
+  .header-subtitle { font-size: 12px; }
+  .header-right { gap: 10px; }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .admin-header {

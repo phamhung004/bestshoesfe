@@ -342,6 +342,21 @@
   font-size: 12px;
 }
 
+/* ── Responsive — 14-inch laptop screens ─────────────────── */
+@media (max-width: 1536px) {
+  .bs-footer__inner { padding: 48px 20px 36px; }
+  .bs-footer__grid { gap: 36px; }
+  .bs-footer__bottom-inner { padding: 18px 20px; }
+}
+
+@media (max-width: 1366px) {
+  .bs-footer__inner { padding: 40px 16px 32px; }
+  .bs-footer__grid { gap: 28px; }
+  .bs-footer__group-title { font-size: 13px; }
+  .bs-footer__link { font-size: 13px; }
+  .bs-footer__bottom-inner { padding: 16px 16px; }
+}
+
 /* ── Responsive ─────────────────────────────────────────── */
 
 /* Tablet: 2x2 grid */

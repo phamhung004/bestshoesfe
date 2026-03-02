@@ -2030,6 +2030,19 @@
     }
 }
 
+/* ─── Responsive — 14-inch laptop screens ───────────── */
+@media (max-width: 1536px) {
+    .catalog-layout { padding: 20px; gap: 20px; }
+    .catalog-filter-sidebar { width: 260px; }
+    .catalog-product-grid { gap: 16px; }
+}
+
+@media (max-width: 1366px) {
+    .catalog-layout { padding: 16px; gap: 16px; }
+    .catalog-filter-sidebar { width: 240px; }
+    .catalog-product-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+}
+
 /* ─── Responsive ────────────────────────────────────── */
 @media (max-width: 1200px) {
     .catalog-product-grid {

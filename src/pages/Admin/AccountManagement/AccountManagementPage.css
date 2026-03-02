@@ -1455,6 +1455,28 @@
   justify-content: flex-end;
 }
 
+/* ─── Responsive — 14-inch laptop screens ──────────────────────── */
+@media (max-width: 1536px) {
+  .am-page-header { padding: 18px 20px; }
+  .am-kpi-grid { gap: 14px; }
+  .am-kpi-card { padding: 18px; }
+  .am-table th, .am-table td { padding: 10px 14px; font-size: 13px; }
+  .am-slideover { max-width: 580px; }
+}
+
+@media (max-width: 1366px) {
+  .am-page-header { padding: 16px 16px; }
+  .am-page-title { font-size: 20px; }
+  .am-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .am-kpi-card { padding: 16px; gap: 10px; }
+  .am-kpi-value { font-size: 22px; }
+  .am-table-wrap { overflow-x: auto; }
+  .am-table { min-width: 800px; }
+  .am-table th, .am-table td { padding: 8px 12px; font-size: 12.5px; }
+  .am-slideover { max-width: 520px; }
+  .am-confirm-dialog { max-width: 420px; }
+}
+
 /* ─── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 1279px) {
   .am-table .am-col-phone,
