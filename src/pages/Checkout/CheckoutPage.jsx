@@ -65,7 +65,7 @@ const createInitialState = (user) => ({
 
     // Coupon
     couponCode: '',
-    couponState: null, // { code, name, type, value, discountAmount }
+    couponState: null, // { code, name, type, value, discountAmount, endDate, description, minimumAmount, maximumDiscount }
     couponLoading: false,
     couponError: '',
 
@@ -289,10 +289,14 @@ const CheckoutPage = () => {
                         type: data.type,
                         value: data.value,
                         discountAmount: data.discountAmount || 0,
+                        endDate: data.coupon?.endDate || data.endDate || null,
+                        description: data.coupon?.description || data.description || '',
+                        minimumAmount: data.coupon?.minimumAmount || data.minimumAmount || 0,
+                        maximumDiscount: data.coupon?.maximumDiscount || data.maximumDiscount || null,
                     },
                 });
             } else {
-                dispatch({ type: 'SET_COUPON_ERROR', payload: 'Mã giảm giá không hợp lệ hoặc đã hết hạn' });
+                dispatch({ type: 'SET_COUPON_ERROR', payload: data.message || 'Mã giảm giá không hợp lệ hoặc đã hết hạn' });
             }
         } catch (err) {
             dispatch({ type: 'SET_COUPON_ERROR', payload: err.message || 'Không thể áp dụng mã giảm giá' });
@@ -304,6 +308,52 @@ const CheckoutPage = () => {
     const handleRemoveCoupon = useCallback(() => {
         dispatch({ type: 'CLEAR_COUPON' });
     }, []);
+
+    // ── Re-validate coupon when subtotal changes ────────
+    const prevSubtotalRef = useRef(subtotal);
+    useEffect(() => {
+        if (!state.couponState) return;
+        if (prevSubtotalRef.current === subtotal) return;
+        prevSubtotalRef.current = subtotal;
+
+        // If cart is empty, auto-remove
+        if (cartItems.length === 0 || subtotal === 0) {
+            dispatch({ type: 'CLEAR_COUPON' });
+            return;
+        }
+
+        // If subtotal < minimumAmount, auto-remove
+        if (state.couponState.minimumAmount && subtotal < state.couponState.minimumAmount) {
+            dispatch({ type: 'CLEAR_COUPON' });
+            dispatch({ type: 'SET_TOAST', payload: 'Mã giảm giá đã bị gỡ do đơn hàng không đủ giá trị tối thiểu' });
+            setTimeout(() => dispatch({ type: 'SET_TOAST', payload: null }), 4000);
+            return;
+        }
+
+        // Re-validate to recalculate discount for new subtotal
+        const revalidate = async () => {
+            try {
+                const res = await couponApi.validate(state.couponState.code, subtotal);
+                const data = res.data;
+                if (data.valid) {
+                    dispatch({
+                        type: 'SET_COUPON_STATE',
+                        payload: {
+                            ...state.couponState,
+                            discountAmount: data.discountAmount || 0,
+                        },
+                    });
+                } else {
+                    dispatch({ type: 'CLEAR_COUPON' });
+                }
+            } catch {
+                // Keep current coupon on network error
+            }
+        };
+
+        const timer = setTimeout(revalidate, 300);
+        return () => clearTimeout(timer);
+    }, [subtotal, state.couponState, cartItems.length]);
 
     // ── Get selected address ────────────────────────────
     const selectedAddress = savedAddresses.find(
@@ -433,7 +483,20 @@ const CheckoutPage = () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
         } catch (err) {
-            dispatch({ type: 'SET_TOAST', payload: err.message || 'Đặt hàng thất bại. Vui lòng thử lại.' });
+            const msg = err.message || 'Đặt hàng thất bại. Vui lòng thử lại.';
+            const msgLower = msg.toLowerCase();
+
+            // Auto-remove coupon on coupon-specific errors
+            if (state.couponState && (
+                msgLower.includes('coupon') || msgLower.includes('phiếu giảm giá') ||
+                msgLower.includes('mã giảm giá') || msgLower.includes('hết lượt') ||
+                msgLower.includes('hết hạn') || msgLower.includes('expired')
+            )) {
+                dispatch({ type: 'CLEAR_COUPON' });
+                dispatch({ type: 'SET_TOAST', payload: `⚠ Mã giảm giá không còn hợp lệ: ${msg}` });
+            } else {
+                dispatch({ type: 'SET_TOAST', payload: msg });
+            }
             setTimeout(() => dispatch({ type: 'SET_TOAST', payload: null }), 4000);
         } finally {
             dispatch({ type: 'SET_SUBMITTING', payload: false });

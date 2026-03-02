@@ -10,4 +10,14 @@ export const couponApi = {
     axiosClient.get(`/coupons/validate/${encodeURIComponent(code)}`, {
       params: { orderAmount },
     }),
+
+  /**
+   * Get available coupons for a given order amount
+   * Returns eligible + "almost there" coupons with calculated discounts
+   * @param {number} orderAmount - Current cart subtotal
+   */
+  getAvailable: (orderAmount = 0) =>
+    axiosClient.get('/coupons/available', {
+      params: { orderAmount },
+    }),
 };

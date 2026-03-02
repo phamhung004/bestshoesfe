@@ -41,6 +41,7 @@ const OrderReviewPanel = ({
                 onCouponCodeChange={onCouponCodeChange}
                 onApplyCoupon={onApplyCoupon}
                 onRemoveCoupon={onRemoveCoupon}
+                subtotal={subtotal}
             />
 
             {/* Price breakdown */}
@@ -49,6 +50,7 @@ const OrderReviewPanel = ({
                 shippingCost={shippingCost}
                 discountAmount={discountAmount}
                 total={total}
+                couponState={coupon}
             />
 
             {/* Submit button */}

@@ -1,7 +1,17 @@
 import React from 'react';
 import { formatVND } from '../checkoutConstants';
 
-const PriceBreakdown = ({ subtotal, shippingCost, discountAmount, total }) => {
+const PriceBreakdown = ({ subtotal, shippingCost, discountAmount, total, couponState }) => {
+    // Build discount label with coupon details
+    const getDiscountLabel = () => {
+        if (!couponState) return 'Giảm giá';
+        const code = couponState.code || '';
+        const typeStr = couponState.type === 'Percentage'
+            ? `${couponState.value}%`
+            : formatVND(couponState.value);
+        return `Giảm giá (${code} − ${typeStr})`;
+    };
+
     return (
         <div className="co-price-rows">
             <div className="co-price-row">
@@ -16,7 +26,7 @@ const PriceBreakdown = ({ subtotal, shippingCost, discountAmount, total }) => {
             </div>
             {discountAmount > 0 && (
                 <div className="co-price-row">
-                    <span className="co-price-label">Giảm giá</span>
+                    <span className="co-price-label co-price-discount-label">{getDiscountLabel()}</span>
                     <span className="co-price-value discount">−{formatVND(discountAmount)}</span>
                 </div>
             )}

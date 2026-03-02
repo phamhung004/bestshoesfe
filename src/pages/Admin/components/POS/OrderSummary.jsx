@@ -3,9 +3,20 @@ import { formatVND } from './posUtils';
 
 /**
  * OrderSummary — pricing breakdown: subtotal, shipping, discount, total.
+ * Now shows coupon code & type info in the discount line.
  */
 const OrderSummary = ({ subtotal, discountAmount, appliedCoupon }) => {
     const total = subtotal - discountAmount;
+
+    // Build discount label with coupon details
+    const getDiscountLabel = () => {
+        if (!appliedCoupon) return 'Giảm giá:';
+        const code = appliedCoupon.code || '';
+        const typeStr = appliedCoupon.type === 'Percentage'
+            ? `${appliedCoupon.value}%`
+            : formatVND(appliedCoupon.value);
+        return `Giảm giá (${code} − ${typeStr}):`;
+    };
 
     return (
         <div className="pos-order-summary">
@@ -19,7 +30,7 @@ const OrderSummary = ({ subtotal, discountAmount, appliedCoupon }) => {
             </div>
             {discountAmount > 0 && (
                 <div className="pos-summary-row discount">
-                    <span>Giảm giá:</span>
+                    <span className="pos-summary-discount-label">{getDiscountLabel()}</span>
                     <span>− {formatVND(discountAmount)}</span>
                 </div>
             )}

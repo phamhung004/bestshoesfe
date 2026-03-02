@@ -342,6 +342,9 @@ export const couponAPI = {
   // Get active coupons only
   getActive: () => apiCall('/coupons/active'),
 
+  // Get available coupons for a specific order amount (with eligibility + calculated discount)
+  getAvailable: (orderAmount = 0) => apiCall(`/coupons/available?orderAmount=${orderAmount}`),
+
   // Get coupon by ID
   getById: (id) => apiCall(`/coupons/${id}`),
 

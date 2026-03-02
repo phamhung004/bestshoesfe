@@ -1215,29 +1215,183 @@
     background: var(--primary-600);
 }
 
-.pos-coupon-success {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-    padding: 8px 12px;
-    background: var(--success-50);
-    border: 1px solid var(--success-200);
-    border-radius: 8px;
-    font-size: 12px;
-    color: var(--success-700);
-    font-weight: 500;
-    animation: pos-greenFlash 0.5s ease;
+.pos-coupon-apply-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
-@keyframes pos-greenFlash {
-    0% {
-        background: var(--success-200);
-    }
+/* Browse available coupons button */
+.pos-coupon-browse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    min-width: 40px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--primary-500);
+    transition: all 0.15s;
+}
 
-    100% {
-        background: var(--success-50);
-    }
+.pos-coupon-browse-btn:hover {
+    background: var(--primary-50);
+    border-color: var(--primary-300);
+    color: var(--primary-600);
+}
+
+.pos-coupon-browse-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Loading spinner */
+.pos-coupon-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: pos-spin 0.6s linear infinite;
+}
+
+@keyframes pos-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Applied coupon ticket card ─── */
+.pos-coupon-ticket {
+    display: flex;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--gray-150, #E8E8E8);
+    animation: pos-fadeIn 0.3s ease;
+}
+
+@keyframes pos-fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.pos-coupon-ticket-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    padding: 12px 8px;
+    position: relative;
+    color: #fff;
+}
+
+.pos-coupon-ticket-left.pct {
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+}
+
+.pos-coupon-ticket-left.fixed {
+    background: linear-gradient(135deg, var(--success-500, #22C55E), var(--success-600, #16A34A));
+}
+
+/* Decorative punch holes */
+.pos-coupon-ticket-left::before,
+.pos-coupon-ticket-left::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    width: 12px;
+    height: 12px;
+    background: var(--gray-50, #F9FAFB);
+    border-radius: 50%;
+}
+
+.pos-coupon-ticket-left::before { top: -6px; }
+.pos-coupon-ticket-left::after { bottom: -6px; }
+
+.pos-coupon-ticket-value {
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.pos-coupon-ticket-type {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    opacity: 0.85;
+    margin-top: 2px;
+}
+
+.pos-coupon-ticket-right {
+    flex: 1;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.pos-coupon-ticket-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.pos-coupon-ticket-code {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-800);
+    letter-spacing: 0.3px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.pos-coupon-ticket-name {
+    font-size: 12px;
+    color: var(--gray-500);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pos-coupon-ticket-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 2px;
+}
+
+.pos-coupon-saving {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--success-600, #16A34A);
+}
+
+.pos-coupon-expiry {
+    font-size: 11px;
+    color: var(--gray-400);
+}
+
+.pos-coupon-countdown {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #DC2626;
+    padding: 2px 8px;
+    background: #FEF2F2;
+    border-radius: 20px;
+    width: fit-content;
+    margin-top: 2px;
+    animation: pos-pulse 2s ease-in-out infinite;
+}
+
+@keyframes pos-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
 }
 
 .pos-coupon-remove {
@@ -1246,7 +1400,10 @@
     border: none;
     cursor: pointer;
     color: var(--gray-400);
-    font-size: 14px;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 2px;
+    transition: color 0.15s;
 }
 
 .pos-coupon-remove:hover {
@@ -1257,6 +1414,26 @@
     font-size: 12px;
     color: var(--danger-500);
     margin-top: 6px;
+}
+
+.pos-coupon-error.shake {
+    animation: pos-shake 0.4s ease-in-out;
+}
+
+@keyframes pos-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+}
+
+/* ── Discount label in OrderSummary ─── */
+.pos-summary-discount-label {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* ── Right Panel: Order summary ──────────────────────────── */

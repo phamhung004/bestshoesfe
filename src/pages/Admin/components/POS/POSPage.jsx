@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import ProductBrowser from './ProductBrowser';
 import VariantPickerModal from './VariantPickerModal';
 import OrderCart from './OrderCart';
@@ -43,6 +43,48 @@ const POSPage = () => {
         [cartItems]
     );
     const totalAmount = Math.max(0, subtotal - discountAmount);
+
+    // ── Re-validate coupon when subtotal changes ────────────────
+    const prevSubtotalRef = useRef(subtotal);
+    useEffect(() => {
+        if (!appliedCoupon) return;
+        if (prevSubtotalRef.current === subtotal) return;
+        prevSubtotalRef.current = subtotal;
+
+        // If cart is now empty, auto-remove coupon
+        if (cartItems.length === 0 || subtotal === 0) {
+            setAppliedCoupon(null);
+            setDiscountAmount(0);
+            return;
+        }
+
+        // If subtotal < minimumAmount, auto-remove coupon
+        if (appliedCoupon.minimumAmount && subtotal < appliedCoupon.minimumAmount) {
+            setAppliedCoupon(null);
+            setDiscountAmount(0);
+            return;
+        }
+
+        // Re-validate to recalculate discount for new subtotal
+        const revalidate = async () => {
+            try {
+                const res = await posAPI.validateCoupon(appliedCoupon.code, subtotal);
+                const data = res.data;
+                if (data.valid) {
+                    setAppliedCoupon(data);
+                    setDiscountAmount(data.discountAmount || 0);
+                } else {
+                    setAppliedCoupon(null);
+                    setDiscountAmount(0);
+                }
+            } catch {
+                // Keep current coupon on network error
+            }
+        };
+
+        const timer = setTimeout(revalidate, 300);
+        return () => clearTimeout(timer);
+    }, [subtotal, appliedCoupon, cartItems.length, setAppliedCoupon, setDiscountAmount]);
 
     // ── Cart actions ────────────────────────────────────────────
     const addToCart = useCallback((product, variant, qty = 1) => {
@@ -132,7 +174,20 @@ const POSPage = () => {
         } catch (err) {
             console.error('Checkout failed:', err);
             const msg = err.response?.data?.message || 'Thanh toán thất bại. Vui lòng thử lại.';
-            alert(msg);
+            const msgLower = msg.toLowerCase();
+
+            // Auto-remove coupon on coupon-specific errors
+            if (appliedCoupon && (
+                msgLower.includes('coupon') || msgLower.includes('phiếu giảm giá') ||
+                msgLower.includes('mã giảm giá') || msgLower.includes('hết lượt') ||
+                msgLower.includes('hết hạn') || msgLower.includes('expired')
+            )) {
+                setAppliedCoupon(null);
+                setDiscountAmount(0);
+                alert(`⚠ Mã giảm giá không còn hợp lệ: ${msg}\n\nMã đã được gỡ. Vui lòng thử lại.`);
+            } else {
+                alert(msg);
+            }
         } finally {
             setIsCheckingOut(false);
         }
