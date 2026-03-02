@@ -1,0 +1,1772 @@
+/* ===================================================================
+   Promotion Management -- Styles
+   Reuses CSS variables from AdminDashboard.css (:root)
+   =================================================================== */
+
+/* -- 1. Page Layout & Animation ------------------------------------ */
+.pm-management {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation: pm-fadeIn 0.4s ease;
+}
+
+@keyframes pm-fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* -- 2. Page Header ------------------------------------------------ */
+.pm-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.pm-page-header .header-left h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gray-900);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pm-page-header .header-left p {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-top: 4px;
+}
+
+.pm-header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* -- 3. Buttons ---------------------------------------------------- */
+.pm-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+    font-family: inherit;
+}
+
+.pm-btn:active {
+    transform: scale(0.97);
+}
+
+.pm-btn-primary {
+    background: var(--primary-500);
+    color: #fff;
+    border-color: var(--primary-500);
+}
+
+.pm-btn-primary:hover {
+    background: var(--primary-600);
+}
+
+.pm-btn-outline {
+    background: #fff;
+    color: var(--gray-700);
+    border-color: var(--gray-300);
+}
+
+.pm-btn-outline:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-400);
+}
+
+.pm-btn-danger-outline {
+    background: #fff;
+    color: var(--danger-600);
+    border-color: var(--danger-300);
+}
+
+.pm-btn-danger-outline:hover {
+    background: var(--danger-50);
+}
+
+.pm-btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 8px;
+}
+
+.pm-btn-success {
+    background: var(--success-500);
+    color: #fff;
+    border-color: var(--success-500);
+}
+
+.pm-btn-success:hover {
+    background: var(--success-600);
+}
+
+/* -- 4. KPI Cards -------------------------------------------------- */
+.pm-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.pm-kpi-card {
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 14px;
+    padding: 18px 20px;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.pm-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.pm-kpi-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 14px 14px 0 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.pm-kpi-card:hover::after {
+    opacity: 1;
+}
+
+.pm-kpi-card.kpi-total::after {
+    background: var(--primary-500);
+}
+
+.pm-kpi-card.kpi-running::after {
+    background: var(--success-500);
+}
+
+.pm-kpi-card.kpi-expiring::after {
+    background: var(--warning-500);
+}
+
+.pm-kpi-card.kpi-expired::after {
+    background: var(--danger-500);
+}
+
+.pm-kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.pm-kpi-icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 20px;
+}
+
+.pm-kpi-card.kpi-total .pm-kpi-icon {
+    background: var(--primary-100);
+}
+
+.pm-kpi-card.kpi-running .pm-kpi-icon {
+    background: var(--success-100);
+}
+
+.pm-kpi-card.kpi-expiring .pm-kpi-icon {
+    background: var(--warning-100);
+}
+
+.pm-kpi-card.kpi-expired .pm-kpi-icon {
+    background: var(--danger-100);
+}
+
+.pm-kpi-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.pm-kpi-delta.up {
+    background: var(--success-100);
+    color: var(--success-600);
+}
+
+.pm-kpi-delta.down {
+    background: var(--danger-100);
+    color: var(--danger-600);
+}
+
+.pm-kpi-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 2px;
+}
+
+.pm-kpi-label {
+    font-size: 13px;
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+/* -- 5. Filter Bar ------------------------------------------------- */
+.pm-filters {
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 14px;
+    padding: 16px 20px;
+}
+
+.pm-filters-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.pm-search-box {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+}
+
+.pm-search-box input {
+    width: 100%;
+    padding: 9px 14px 9px 36px;
+    font-size: 13px;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+    background: var(--gray-50);
+}
+
+.pm-search-box input:focus {
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 3px var(--primary-100);
+    background: #fff;
+}
+
+.pm-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.pm-filter-select {
+    padding: 9px 12px;
+    font-size: 13px;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    background: var(--gray-50);
+    color: var(--gray-700);
+    cursor: pointer;
+    outline: none;
+    font-family: inherit;
+    min-width: 140px;
+    transition: border-color 0.2s;
+}
+
+.pm-filter-select:focus {
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 3px var(--primary-100);
+}
+
+.pm-date-range {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pm-date-range input[type="date"] {
+    padding: 8px 10px;
+    font-size: 13px;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    background: var(--gray-50);
+    outline: none;
+    font-family: inherit;
+    color: var(--gray-700);
+}
+
+.pm-date-range input[type="date"]:focus {
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 3px var(--primary-100);
+}
+
+.pm-clear-link {
+    font-size: 12px;
+    color: var(--primary-500);
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.pm-clear-link:hover {
+    color: var(--primary-600);
+    text-decoration: underline;
+}
+
+.pm-result-count {
+    font-size: 12px;
+    color: var(--gray-500);
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+/* -- 6. Status Tabs ------------------------------------------------ */
+.pm-status-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.pm-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--gray-200);
+    background: #fff;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.pm-tab:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-300);
+}
+
+.pm-tab.active {
+    background: var(--primary-500);
+    color: #fff;
+    border-color: var(--primary-500);
+}
+
+.pm-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+.pm-tab.active .pm-tab-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+/* -- 7. Table ------------------------------------------------------ */
+.pm-table-wrap {
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.pm-table-scroll {
+    overflow-x: auto;
+}
+
+.pm-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+.pm-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.pm-table th {
+    padding: 11px 14px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-500);
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+}
+
+.pm-table th:hover {
+    background: var(--gray-100);
+}
+
+.pm-table th .sort-arrow {
+    margin-left: 4px;
+    font-size: 10px;
+    opacity: 0.4;
+}
+
+.pm-table th .sort-arrow.active {
+    opacity: 1;
+    color: var(--primary-500);
+}
+
+.pm-table td {
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--gray-700);
+    border-bottom: 1px solid var(--gray-100);
+    vertical-align: middle;
+}
+
+.pm-table tbody tr {
+    transition: all 0.15s ease;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+}
+
+.pm-table tbody tr:hover {
+    background: var(--gray-50);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border-left-color: var(--primary-500);
+}
+
+.pm-table tbody tr.selected {
+    background: var(--primary-50);
+    border-left-color: var(--primary-500);
+}
+
+/* Promotion name cell */
+.pm-promo-name {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pm-promo-name .name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.pm-promo-name .description {
+    font-size: 11px;
+    color: var(--gray-400);
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Type badge */
+.pm-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.pm-type-badge.flash-sale {
+    background: var(--warning-100);
+    color: var(--warning-700);
+}
+
+.pm-type-badge.seasonal {
+    background: var(--primary-100);
+    color: var(--primary-700);
+}
+
+.pm-type-badge.clearance {
+    background: var(--danger-100);
+    color: var(--danger-700);
+}
+
+.pm-type-badge.special {
+    background: var(--success-100);
+    color: var(--success-700);
+}
+
+/* Status badge */
+.pm-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.pm-status-badge.active {
+    background: var(--success-100);
+    color: var(--success-700);
+}
+
+.pm-status-badge.inactive {
+    background: var(--danger-100);
+    color: var(--danger-700);
+}
+
+.pm-status-badge.expired {
+    background: var(--warning-100);
+    color: var(--warning-700);
+}
+
+.pm-status-badge.upcoming {
+    background: var(--primary-100);
+    color: var(--primary-700);
+}
+
+/* Discount cell */
+.pm-discount {
+    font-weight: 600;
+    color: var(--success-600);
+}
+
+/* Date cell */
+.pm-date-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+    color: var(--gray-700);
+    white-space: nowrap;
+}
+
+.pm-date-cell small {
+    font-size: 11px;
+    color: var(--gray-400);
+}
+
+/* Variant count pill */
+.pm-variant-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--gray-100);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-600);
+}
+
+/* Action buttons */
+.pm-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pm-action-btn {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    color: var(--gray-500);
+    transition: all 0.15s;
+}
+
+.pm-action-btn:hover {
+    background: var(--gray-100);
+    color: var(--gray-900);
+}
+
+.pm-action-btn[aria-label="View"]:hover {
+    color: var(--primary-500);
+}
+
+.pm-action-btn[aria-label="Edit"]:hover {
+    color: var(--warning-500);
+}
+
+.pm-action-btn[aria-label="Delete"]:hover {
+    color: var(--danger-500);
+}
+
+/* -- 8. Slide-Over Panel ------------------------------------------- */
+.pm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 200;
+    animation: pm-overlayIn 0.2s ease;
+}
+
+@keyframes pm-overlayIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.pm-slideover {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 520px;
+    max-width: 100vw;
+    height: 100vh;
+    background: #fff;
+    z-index: 210;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -8px 0 30px rgba(0, 0, 0, 0.12);
+    animation: pm-slideIn 0.3s ease;
+}
+
+@keyframes pm-slideIn {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+.pm-so-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--gray-200);
+    flex-shrink: 0;
+}
+
+.pm-so-title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pm-so-title h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-900);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pm-so-title .pm-status-badge,
+.pm-so-title .pm-type-badge {
+    display: inline-flex;
+}
+
+.pm-so-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: var(--gray-100);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--gray-600);
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.pm-so-close:hover {
+    background: var(--gray-200);
+}
+
+.pm-so-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Slide-over section card */
+.pm-so-card {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.pm-so-card h3 {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+}
+
+/* Info rows */
+.pm-so-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.pm-so-info-row:last-child {
+    border-bottom: none;
+}
+
+.pm-so-info-label {
+    font-size: 13px;
+    color: var(--gray-500);
+}
+
+.pm-so-info-value {
+    font-size: 13px;
+    color: var(--gray-900);
+    font-weight: 500;
+}
+
+/* Variant items in slide-over */
+.pm-so-variant-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.pm-so-variant-item:last-child {
+    border-bottom: none;
+}
+
+.pm-so-variant-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: var(--gray-100);
+    flex-shrink: 0;
+}
+
+.pm-so-variant-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.pm-so-variant-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-900);
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pm-so-variant-detail {
+    font-size: 12px;
+    color: var(--gray-400);
+}
+
+.pm-so-variant-prices {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.pm-so-variant-prices .original-price {
+    font-size: 12px;
+    color: var(--gray-400);
+    text-decoration: line-through;
+}
+
+.pm-so-variant-prices .promo-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--danger-500);
+}
+
+/* Countdown */
+.pm-so-countdown {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: var(--primary-50);
+    border: 1px solid var(--primary-200);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--primary-700);
+}
+
+.pm-so-countdown .countdown-icon {
+    font-size: 18px;
+}
+
+/* Slide-over footer */
+.pm-so-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--gray-200);
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.pm-so-footer .pm-btn {
+    flex: 1;
+    justify-content: center;
+}
+
+/* -- 9. Pagination ------------------------------------------------- */
+.pm-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-top: 1px solid var(--gray-100);
+    background: #fff;
+    border-radius: 0 0 14px 14px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.pm-pagination-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--gray-600);
+}
+
+.pm-pagination-left select {
+    padding: 5px 8px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 13px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.pm-pagination-center {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pm-page-btn {
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--gray-200);
+    background: #fff;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--gray-700);
+    transition: all 0.12s;
+    font-family: inherit;
+}
+
+.pm-page-btn:hover:not(:disabled) {
+    background: var(--gray-50);
+    border-color: var(--primary-300);
+}
+
+.pm-page-btn.active {
+    background: var(--primary-500);
+    color: #fff;
+    border-color: var(--primary-500);
+}
+
+.pm-page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pm-pagination-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--gray-600);
+}
+
+.pm-pagination-right input {
+    width: 52px;
+    padding: 5px 8px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 13px;
+    text-align: center;
+    outline: none;
+}
+
+.pm-pagination-right input:focus {
+    border-color: var(--primary-400);
+}
+
+/* -- 10. Form Modal ------------------------------------------------ */
+.pm-form-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pm-overlayIn 0.2s ease;
+}
+
+.pm-form-container {
+    background: #fff;
+    border-radius: 16px;
+    width: 700px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    animation: pm-modalIn 0.3s ease;
+}
+
+@keyframes pm-modalIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.pm-form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px;
+    border-bottom: 1px solid var(--gray-200);
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 5;
+    border-radius: 16px 16px 0 0;
+}
+
+.pm-form-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.pm-form-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: var(--gray-100);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--gray-600);
+    transition: all 0.15s;
+}
+
+.pm-form-close:hover {
+    background: var(--gray-200);
+}
+
+.pm-form-body {
+    padding: 24px;
+}
+
+.pm-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.pm-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pm-form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.pm-form-label {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-700);
+}
+
+.pm-form-label .required {
+    color: var(--danger-500);
+    margin-left: 2px;
+}
+
+.pm-form-input,
+.pm-form-textarea,
+.pm-form-select {
+    padding: 10px 14px;
+    border: 2px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--gray-50);
+    color: var(--gray-900);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.pm-form-input:focus,
+.pm-form-textarea:focus,
+.pm-form-select:focus {
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 3px var(--primary-100);
+    background: #fff;
+}
+
+.pm-form-input.error,
+.pm-form-textarea.error,
+.pm-form-select.error {
+    border-color: var(--danger-500);
+    background: var(--danger-50);
+}
+
+.pm-form-input.error:focus,
+.pm-form-textarea.error:focus,
+.pm-form-select.error:focus {
+    box-shadow: 0 0 0 3px var(--danger-100);
+}
+
+.pm-form-textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.pm-form-select {
+    cursor: pointer;
+}
+
+.pm-form-hint {
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+.pm-form-error {
+    font-size: 12px;
+    color: var(--danger-500);
+    font-weight: 500;
+}
+
+.pm-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid var(--gray-200);
+    margin-top: 24px;
+}
+
+/* Custom checkbox */
+.pm-form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--gray-700);
+}
+
+.pm-form-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-500);
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.pm-form-checkbox:hover {
+    color: var(--gray-900);
+}
+
+/* -- 11. Variant Picker Modal -------------------------------------- */
+.pm-picker-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pm-overlayIn 0.2s ease;
+}
+
+.pm-picker-modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 900px;
+    max-width: 95vw;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    animation: pm-modalIn 0.3s ease;
+    overflow: hidden;
+}
+
+.pm-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--gray-200);
+    flex-shrink: 0;
+}
+
+.pm-picker-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.pm-picker-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: var(--gray-100);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--gray-600);
+    transition: all 0.15s;
+}
+
+.pm-picker-close:hover {
+    background: var(--gray-200);
+}
+
+.pm-picker-search {
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--gray-100);
+    flex-shrink: 0;
+}
+
+.pm-picker-search input {
+    width: 100%;
+    padding: 9px 14px 9px 36px;
+    font-size: 13px;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    outline: none;
+    font-family: inherit;
+    background: var(--gray-50);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pm-picker-search input:focus {
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 3px var(--primary-100);
+    background: #fff;
+}
+
+.pm-picker-search-wrapper {
+    position: relative;
+}
+
+.pm-picker-search-wrapper .pm-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.pm-picker-body {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Product row */
+.pm-picker-product-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.pm-picker-product-row:hover {
+    background: var(--gray-50);
+}
+
+.pm-picker-product-row.expanded {
+    background: var(--primary-50);
+}
+
+.pm-picker-product-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: var(--gray-100);
+    flex-shrink: 0;
+}
+
+.pm-picker-product-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.pm-picker-product-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-900);
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pm-picker-product-sku {
+    font-size: 11px;
+    color: var(--gray-400);
+}
+
+.pm-picker-expand-icon {
+    font-size: 14px;
+    color: var(--gray-400);
+    transition: transform 0.2s;
+}
+
+.pm-picker-product-row.expanded .pm-picker-expand-icon {
+    transform: rotate(180deg);
+}
+
+/* Variants panel */
+.pm-picker-variants-panel {
+    padding-left: 52px;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.pm-picker-variant-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 24px 10px 0;
+    border-bottom: 1px solid var(--gray-100);
+    font-size: 13px;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: background 0.12s;
+}
+
+.pm-picker-variant-row:last-child {
+    border-bottom: none;
+}
+
+.pm-picker-variant-row:hover {
+    background: var(--primary-50);
+}
+
+.pm-picker-variant-row.selected {
+    background: var(--primary-50);
+}
+
+.pm-picker-variant-row.existing {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.pm-picker-variant-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-500);
+    cursor: pointer;
+}
+
+.pm-picker-variant-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: var(--gray-200);
+    flex-shrink: 0;
+}
+
+.pm-picker-variant-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-900);
+    flex: 1;
+}
+
+.pm-picker-variant-size {
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+.pm-picker-variant-color {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+.pm-picker-variant-price {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-900);
+    white-space: nowrap;
+}
+
+.pm-picker-variant-stock {
+    font-size: 11px;
+    color: var(--gray-400);
+}
+
+/* Picker footer */
+.pm-picker-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-top: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    flex-shrink: 0;
+}
+
+.pm-picker-footer-info {
+    font-size: 13px;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.pm-picker-footer-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* -- 12. Toast ----------------------------------------------------- */
+.pm-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--gray-900);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: pm-toastIn 0.3s ease, pm-toastOut 0.3s ease 2s forwards;
+}
+
+.pm-toast.success {
+    background: var(--success-600);
+}
+
+.pm-toast.error {
+    background: var(--danger-600);
+}
+
+@keyframes pm-toastIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pm-toastOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+}
+
+/* -- 13. Skeleton Loading ------------------------------------------ */
+.pm-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.pm-skeleton-row {
+    display: flex;
+    gap: 16px;
+}
+
+.pm-skeleton-block {
+    border-radius: 12px;
+    background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+    background-size: 200% 100%;
+    animation: pm-shimmer 1.5s infinite;
+}
+
+@keyframes pm-shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.pm-skeleton-kpi {
+    height: 100px;
+    flex: 1;
+}
+
+.pm-skeleton-filter {
+    height: 52px;
+    width: 100%;
+}
+
+.pm-skeleton-table {
+    height: 400px;
+    width: 100%;
+}
+
+/* -- 14. Empty State ----------------------------------------------- */
+.pm-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.pm-empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.6;
+}
+
+.pm-empty h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 8px;
+}
+
+.pm-empty p {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-bottom: 16px;
+}
+
+/* -- 15. Confirm Dialog -------------------------------------------- */
+.pm-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 250;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pm-overlayIn 0.15s ease;
+}
+
+.pm-confirm-dialog {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px;
+    width: 400px;
+    max-width: 90vw;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+    animation: pm-modalIn 0.2s ease;
+}
+
+.pm-confirm-dialog .pm-confirm-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.pm-confirm-dialog h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 8px;
+}
+
+.pm-confirm-dialog p {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.pm-confirm-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.pm-confirm-actions .pm-btn {
+    min-width: 100px;
+    justify-content: center;
+}
+
+/* -- 16. Responsive ------------------------------------------------ */
+@media (max-width: 1200px) {
+    .pm-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .pm-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pm-form-group.full-width {
+        grid-column: 1;
+    }
+
+    .pm-picker-modal {
+        width: 95vw;
+    }
+}
+
+@media (max-width: 768px) {
+    .pm-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pm-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .pm-header-actions {
+        width: 100%;
+    }
+
+    .pm-header-actions .pm-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .pm-filters-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pm-search-box {
+        min-width: unset;
+    }
+
+    .pm-filter-select {
+        min-width: unset;
+        width: 100%;
+    }
+
+    .pm-date-range {
+        flex-direction: column;
+    }
+
+    .pm-result-count {
+        margin-left: 0;
+    }
+
+    .pm-slideover {
+        width: 100vw;
+    }
+
+    .pm-pagination {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .pm-pagination-left,
+    .pm-pagination-center,
+    .pm-pagination-right {
+        justify-content: center;
+    }
+
+    .pm-form-container {
+        max-width: 100vw;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .pm-form-header {
+        border-radius: 0;
+    }
+
+    .pm-picker-modal {
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .pm-picker-variants-panel {
+        padding-left: 24px;
+    }
+}
+
+/* -- 17. Utility Classes ------------------------------------------- */
+.pm-color-dot {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid var(--gray-200);
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.pm-product-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: var(--gray-100);
+    flex-shrink: 0;
+}
+
+/* Badge-dot helper  */
+.pm-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+/* Visually hidden for accessibility */
+.pm-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* -- Print --------------------------------------------------------- */
+@media print {
+
+    .pm-page-header,
+    .pm-filters,
+    .pm-status-tabs,
+    .pm-pagination,
+    .pm-actions,
+    .pm-so-footer,
+    .pm-overlay,
+    .pm-form-overlay,
+    .pm-picker-overlay,
+    .pm-confirm-overlay,
+    .pm-toast {
+        display: none !important;
+    }
+
+    .pm-slideover {
+        position: static;
+        width: 100%;
+        height: auto;
+        box-shadow: none;
+        animation: none;
+    }
+
+    .pm-table tbody tr {
+        page-break-inside: avoid;
+    }
+}

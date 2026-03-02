@@ -6,9 +6,7 @@ import DashboardOverview from './components/DashboardOverview';
 import AnalyticsDashboard from './components/Analytics/AnalyticsDashboard';
 import CouponList from './components/CouponList';
 import CouponForm from './components/CouponForm';
-import PromotionList from './components/PromotionList';
-import PromotionForm from './components/PromotionForm';
-import PromotionDetailPage from './components/PromotionDetailPage';
+import PromotionManagement from './components/Promotion/PromotionManagement';
 // import ErrorBoundary from './components/ErrorBoundary';
 // import BrandList from './components/Brand/BrandList';
 // import BrandForm from './components/Brand/BrandForm';
@@ -191,11 +189,7 @@ const AdminDashboard = () => {
   const [editingCoupon, setEditingCoupon] = useState(null);
   const [refreshCouponList, setRefreshCouponList] = useState(false);
 
-  // Promotion handlers
-  const [showPromotionForm, setShowPromotionForm] = useState(false);
-  const [editingPromotion, setEditingPromotion] = useState(null);
-  const [refreshPromotionList, setRefreshPromotionList] = useState(false);
-  const [managingPromotion, setManagingPromotion] = useState(null); // promotion detail page
+  // Promotion management is now self-contained in PromotionManagement component
 
   const handleAddProduct = () => {
     setEditingProduct(null);
@@ -240,36 +234,7 @@ const AdminDashboard = () => {
     setEditingCoupon(null);
   };
 
-  // Promotion handlers
-  const handleAddPromotion = () => {
-    setEditingPromotion(null);
-    setShowPromotionForm(true);
-  };
 
-  const handleEditPromotion = (promotion) => {
-    setEditingPromotion(promotion);
-    setShowPromotionForm(true);
-  };
-
-  const handleSavePromotion = () => {
-    setShowPromotionForm(false);
-    setEditingPromotion(null);
-    setRefreshPromotionList(prev => !prev);
-  };
-
-  const handleCancelPromotionForm = () => {
-    setShowPromotionForm(false);
-    setEditingPromotion(null);
-  };
-
-  const handleManagePromotionVariants = (promotion) => {
-    setManagingPromotion(promotion);
-  };
-
-  const handleBackFromPromotionDetail = () => {
-    setManagingPromotion(null);
-    setRefreshPromotionList((prev) => !prev);
-  };
 
   const handleSidebarSectionChange = (sectionId) => {
     if (sectionId === 'account-management') {
@@ -439,23 +404,7 @@ const AdminDashboard = () => {
         return <ReturnManagement />;
 
       case 'promotions/promotions-list':
-        if (managingPromotion) {
-          return (
-            <PromotionDetailPage
-              promotion={managingPromotion}
-              onBack={handleBackFromPromotionDetail}
-              onSaved={() => setRefreshPromotionList((prev) => !prev)}
-            />
-          );
-        }
-        return (
-          <PromotionList
-            onEdit={handleEditPromotion}
-            onAdd={handleAddPromotion}
-            onManageVariants={handleManagePromotionVariants}
-            refreshTrigger={refreshPromotionList}
-          />
-        );
+        return <PromotionManagement />;
 
       case 'promotions/coupons':
         return (
@@ -640,14 +589,7 @@ const AdminDashboard = () => {
           isEditing={!!editingCoupon}
         />
       )}
-      {showPromotionForm && (
-        <PromotionForm
-          promotion={editingPromotion}
-          onSave={handleSavePromotion}
-          onCancel={handleCancelPromotionForm}
-          isEditing={!!editingPromotion}
-        />
-      )}
+
 
       {showCustomerForm && (
         <CustomerForm
