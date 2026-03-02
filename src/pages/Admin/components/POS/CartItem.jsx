@@ -31,7 +31,20 @@ const CartItem = ({ item, onUpdateQty, onRemove }) => {
                 <div className="pos-cart-item-variant">
                     Size: {getSizeName(item.sizeId)} / Màu: {color.colorName}
                 </div>
-                <div className="pos-cart-item-price">{formatVND(item.unitPrice)}</div>
+                <div className="pos-cart-item-price">
+                    {formatVND(item.unitPrice)}
+                    {item.originalPrice && item.unitPrice < item.originalPrice && (
+                        <span className="pos-cart-item-original-price">
+                            {formatVND(item.originalPrice)}
+                        </span>
+                    )}
+                </div>
+                {item.promotionName && (
+                    <div className="pos-cart-item-promo-tag">
+                        🏷️ {item.promotionName}
+                        {item.discountPercentage ? ` (-${item.discountPercentage}%)` : ''}
+                    </div>
+                )}
             </div>
 
             <div className="pos-cart-item-qty">

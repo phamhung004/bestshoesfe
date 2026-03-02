@@ -1692,3 +1692,71 @@
         font-size: 11px;
     }
 }
+
+/* ── Promotion styles ─────────────────────────────────────── */
+
+/* Product card promo badge */
+.pos-product-card {
+    position: relative;
+}
+
+.pos-card-promo-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    z-index: 2;
+    letter-spacing: 0.5px;
+}
+
+.pos-card-price.has-promo {
+    color: #dc2626;
+}
+
+/* Modal variant promo display */
+.pos-modal-variant-price.promo {
+    color: #dc2626;
+}
+
+.pos-modal-variant-original-price {
+    font-size: 14px;
+    color: var(--gray-400);
+    text-decoration: line-through;
+    margin-left: 8px;
+}
+
+.pos-modal-discount-badge {
+    font-size: 12px;
+    font-weight: 600;
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+}
+
+.pos-modal-promo-name {
+    display: block;
+    font-size: 11px;
+    color: #16a34a;
+    margin-top: 4px;
+}
+
+/* Cart item promo styles */
+.pos-cart-item-original-price {
+    font-size: 10px;
+    color: var(--gray-400);
+    text-decoration: line-through;
+    margin-left: 6px;
+}
+
+.pos-cart-item-promo-tag {
+    font-size: 10px;
+    color: #16a34a;
+    margin-top: 2px;
+}

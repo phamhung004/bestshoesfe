@@ -21,8 +21,14 @@ const AdminLayout = ({ activeSection, title, subtitle, children }) => {
   // Map sidebar section IDs → routes
   const handleSectionChange = (sectionId) => {
     switch (sectionId) {
+      case 'products':
+        navigate('/admin/san-pham');
+        break;
       case 'product-management/products':
-        navigate('/admin/products');
+        navigate('/admin/san-pham');
+        break;
+      case 'account-management':
+        navigate('/admin/tai-khoan');
         break;
       case 'user-management':
         navigate('/admin/tai-khoan');

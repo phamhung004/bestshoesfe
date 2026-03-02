@@ -18,6 +18,7 @@ const AdminRouter = () => {
       <Route path="/category/:id" element={<CategoryDetail />} />
       <Route path="/material/:id" element={<MaterialDetail />} />
       <Route path="/product/:id" element={<ProductDetail />} />
+      <Route path="/san-pham" element={<ProductManagementPage />} />
       <Route path="/products" element={<ProductManagementPage />} />
       <Route path="/tai-khoan" element={<AccountManagementPage />} />
     </Routes>

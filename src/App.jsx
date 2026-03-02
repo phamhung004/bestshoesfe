@@ -28,6 +28,7 @@ import AccountManagementPage from "./pages/Admin/AccountManagement/AccountManage
 import POSPage from "./pages/Admin/components/POS/POSPage";
 import CheckoutPage from "./pages/Checkout";
 import OrderManagement from "./pages/Admin/components/Order/OrderManagement";
+import PromotionList from "./pages/Admin/components/PromotionList";
 
 function AppContent() {
   const location = useLocation();
@@ -54,6 +55,7 @@ function AppContent() {
           <Route path="/admin/tai-khoan" element={<ProtectedRoute requireAdmin><AccountManagementPage /></ProtectedRoute>} />
           <Route path="/admin/tai-quay" element={<ProtectedRoute requireAdmin><POSPage /></ProtectedRoute>} />
           <Route path="/admin/don-hang" element={<ProtectedRoute requireAdmin><OrderManagement /></ProtectedRoute>} />
+          <Route path="/admin/dot-giam-gia" element={<ProtectedRoute requireAdmin><PromotionList /></ProtectedRoute>} />
 
         </Routes>
       </div>

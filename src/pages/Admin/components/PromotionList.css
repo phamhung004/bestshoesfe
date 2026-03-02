@@ -263,7 +263,7 @@
   gap: 8px;
 }
 
-.btn-edit, .btn-delete, .btn-toggle {
+.btn-edit, .btn-delete, .btn-toggle, .btn-manage-variants {
   padding: 6px 10px;
   border: none;
   border-radius: 4px;
@@ -297,6 +297,15 @@
 
 .btn-toggle:hover {
   background-color: #e5e7eb;
+}
+
+.btn-manage-variants {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.btn-manage-variants:hover {
+  background-color: #bfdbfe;
 }
 
 .no-data {

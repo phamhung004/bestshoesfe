@@ -77,6 +77,9 @@ export const getItemSubtotal = (item) => {
  */
 export const getItemPrice = (item) => {
     const basePrice = item.variant?.price || 0;
+    if (item.promotion && item.promotion.promotion_price != null) {
+        return item.promotion.promotion_price;
+    }
     if (item.promotion && item.promotion.discount_percentage) {
         return Math.round(basePrice * (1 - item.promotion.discount_percentage / 100));
     }

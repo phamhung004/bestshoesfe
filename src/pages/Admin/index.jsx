@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeader from './components/AdminHeader';
 import DashboardOverview from './components/DashboardOverview';
@@ -7,6 +8,7 @@ import CouponList from './components/CouponList';
 import CouponForm from './components/CouponForm';
 import PromotionList from './components/PromotionList';
 import PromotionForm from './components/PromotionForm';
+import PromotionDetailPage from './components/PromotionDetailPage';
 // import ErrorBoundary from './components/ErrorBoundary';
 // import BrandList from './components/Brand/BrandList';
 // import BrandForm from './components/Brand/BrandForm';
@@ -44,7 +46,8 @@ import ReturnManagement from "./components/Return/ReturnManagement";
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
-  const [activeSection, setActiveSection] = useState("statistics");
+  const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState("dashboard");
   const [darkMode, setDarkMode] = useState(false);
   // User management state
   const [showCustomerForm, setShowCustomerForm] = useState(false);
@@ -192,6 +195,7 @@ const AdminDashboard = () => {
   const [showPromotionForm, setShowPromotionForm] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState(null);
   const [refreshPromotionList, setRefreshPromotionList] = useState(false);
+  const [managingPromotion, setManagingPromotion] = useState(null); // promotion detail page
 
   const handleAddProduct = () => {
     setEditingProduct(null);
@@ -258,6 +262,29 @@ const AdminDashboard = () => {
     setEditingPromotion(null);
   };
 
+  const handleManagePromotionVariants = (promotion) => {
+    setManagingPromotion(promotion);
+  };
+
+  const handleBackFromPromotionDetail = () => {
+    setManagingPromotion(null);
+    setRefreshPromotionList((prev) => !prev);
+  };
+
+  const handleSidebarSectionChange = (sectionId) => {
+    if (sectionId === 'account-management') {
+      navigate('/admin/tai-khoan');
+      return;
+    }
+
+    if (sectionId === 'products') {
+      navigate('/admin/san-pham');
+      return;
+    }
+
+    setActiveSection(sectionId);
+  };
+
   const handleSaveBrand = () => {
     setShowBrandForm(false);
     setEditingBrand(null);
@@ -282,7 +309,8 @@ const AdminDashboard = () => {
       'product-management/sizes': 'Quản lý kích cỡ',
       'product-management/materials': 'Quản lý chất liệu',
       'order-management': 'Quản lý đơn hàng',
-      'user-management': 'Quản lý khách hàng',
+      'user-management/customers': 'Quản lý khách hàng',
+      'user-management/employees': 'Quản lý nhân viên',
       'returns': 'Quản lý trả hàng',
       'in-store-sales': 'Bán hàng tại quầy',
       'promotions/promotions-list': 'Đợt giảm giá',
@@ -303,7 +331,8 @@ const AdminDashboard = () => {
       'product-management/sizes': 'Quản lý các kích cỡ giày.',
       'product-management/materials': 'Quản lý chất liệu sản phẩm.',
       'order-management': 'Theo dõi và xử lý đơn hàng.',
-      'user-management': 'Quản lý thông tin khách hàng.',
+      'user-management/customers': 'Quản lý thông tin khách hàng.',
+      'user-management/employees': 'Quản lý thông tin nhân viên.',
       'returns': 'Xử lý yêu cầu trả hàng.',
       'in-store-sales': 'Bán hàng trực tiếp tại cửa hàng.',
       'promotions/promotions-list': 'Tạo và quản lý đợt giảm giá.',
@@ -409,38 +438,21 @@ const AdminDashboard = () => {
       case 'returns':
         return <ReturnManagement />;
 
-      // case 'promotions/promotions-list':
-      case "product-management/brands":
-        return (
-          <BrandList
-            onEdit={handleEditBrand}
-            onAdd={handleAddBrand}
-            refreshTrigger={refreshBrandList}
-          />
-        );
-      case "product-management/categories":
-        return (
-          <CategoryList
-            onEdit={handleEditCategory}
-            onAdd={handleAddCategory}
-            refreshTrigger={refreshCategoryList}
-          />
-        );
-
-      case 'sales-management/coupons':
-        return (
-          <CouponList
-            onEdit={handleEditCoupon}
-            onAdd={handleAddCoupon}
-            refreshTrigger={refreshCouponList}
-          />
-        );
-
-      case 'sales-management/promotions':
+      case 'promotions/promotions-list':
+        if (managingPromotion) {
+          return (
+            <PromotionDetailPage
+              promotion={managingPromotion}
+              onBack={handleBackFromPromotionDetail}
+              onSaved={() => setRefreshPromotionList((prev) => !prev)}
+            />
+          );
+        }
         return (
           <PromotionList
             onEdit={handleEditPromotion}
             onAdd={handleAddPromotion}
+            onManageVariants={handleManagePromotionVariants}
             refreshTrigger={refreshPromotionList}
           />
         );
@@ -563,7 +575,7 @@ const AdminDashboard = () => {
     <div className="admin-dashboard">
       <AdminSidebar
         activeSection={activeSection}
-        onSectionChange={setActiveSection}
+        onSectionChange={handleSidebarSectionChange}
       />
       <div className="admin-main">
         <AdminHeader />

@@ -23,13 +23,21 @@ export const getInitials = (name) => {
     : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
-/** Compute the price range string for a list of variants */
+/** Compute the price range string for a list of variants (promotion-aware) */
 export const getPriceRange = (variants) => {
   const prices = variants
     .filter((v) => v.status === 'ACTIVE')
-    .map((v) => v.price);
+    .map((v) => v.promotionPrice != null ? v.promotionPrice : v.price);
   if (!prices.length) return '—';
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   return min === max ? formatVND(min) : `${formatVND(min)} – ${formatVND(max)}`;
 };
+
+/** Check if any variant in a list has a promotion */
+export const hasPromotion = (variants) =>
+  variants.some((v) => v.status === 'ACTIVE' && v.promotionPrice != null);
+
+/** Get the effective price for a variant (promotion-aware) */
+export const getEffectivePrice = (variant) =>
+  variant.promotionPrice != null ? variant.promotionPrice : variant.price;

@@ -117,6 +117,11 @@ const menuStructure = [
     label: 'Phân tích',
     icon: Icons.Analytics,
     type: 'single',
+  },{
+    id: 'products',
+    label: 'Sản phẩm',
+    icon: Icons.Analytics,
+    type: 'single',
   },
   {
     id: 'product-management',
@@ -142,6 +147,16 @@ const menuStructure = [
     id: 'user-management',
     label: 'Tài khoản',
     icon: Icons.Users,
+    type: 'parent',
+    children: [
+      { id: 'customers', label: 'Khách hàng', icon: Icons.Users },
+      { id: 'employees', label: 'Nhân viên', icon: Icons.Users },
+    ],
+  },
+  {
+    id: 'account-management',
+    label: 'Quản lý tài khoản',
+    icon: Icons.Returns,
     type: 'single',
   },
   {
@@ -171,6 +186,7 @@ const menuStructure = [
 const AdminSidebar = ({ activeSection, onSectionChange, isCollapsed, onToggleCollapse }) => {
   const [expandedItems, setExpandedItems] = useState({
     'product-management': activeSection.startsWith('product-management/'),
+    'user-management': activeSection.startsWith('user-management/'),
     'promotions': activeSection.startsWith('promotions/'),
   });
 

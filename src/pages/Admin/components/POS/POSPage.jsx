@@ -63,7 +63,10 @@ const POSPage = () => {
                 imageUrl: product.imageUrl,
                 sizeId: variant.sizeId,
                 colorId: variant.colorId,
-                unitPrice: variant.price,
+                unitPrice: variant.promotionPrice != null ? variant.promotionPrice : variant.price,
+                originalPrice: variant.price,
+                promotionName: variant.promotionName || null,
+                discountPercentage: variant.discountPercentage || null,
                 quantity: qty,
             }];
         });

@@ -267,6 +267,9 @@ export const getSizeName = (sizeId) => {
 };
 
 export const getItemPrice = (item) => {
+    if (item.promotion && item.promotion.promotion_price != null) {
+        return item.promotion.promotion_price;
+    }
     if (item.promotion && item.promotion.discount_percentage) {
         return item.variant.price * (1 - item.promotion.discount_percentage / 100);
     }

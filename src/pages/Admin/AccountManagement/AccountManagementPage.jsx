@@ -585,7 +585,7 @@ const AccountManagementPage = () => {
 
   return (
     <AdminLayout
-      activeSection="user-management"
+      activeSection="account-management"
       title="Quản lý Tài khoản"
       subtitle="Quản lý khách hàng và nhân viên hệ thống"
     >

@@ -1,0 +1,106 @@
+/* PromotionDetailPage.css */
+
+.promo-detail-page {
+  background: #fff;
+  border-radius: 8px;
+  min-height: 400px;
+}
+
+.promo-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.btn-back {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #475569;
+  transition: all 0.2s;
+}
+
+.btn-back:hover {
+  background: #f1f5f9;
+  border-color: #9ca3af;
+}
+
+.promo-detail-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.promo-detail-title h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #1a1a2e;
+}
+
+.promo-detail-id {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.promo-detail-tabs {
+  display: flex;
+  padding: 0 24px;
+  border-bottom: 2px solid #e2e8f0;
+  background: #fafbfc;
+}
+
+.promo-tab {
+  padding: 14px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+
+.promo-tab:hover {
+  color: #1a1a2e;
+  background: #f1f5f9;
+}
+
+.promo-tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+
+.promo-detail-content {
+  padding: 20px 24px;
+}
+
+.promo-info-tab {
+  /* When rendering PromotionForm inline, we need to override the modal overlay */
+}
+
+/* Override: PromotionForm renders as a modal overlay by default — 
+   strip the overlay when embedded in the detail page */
+.promo-info-tab .promotion-form-overlay {
+  position: static;
+  background: transparent;
+  padding: 0;
+}
+
+.promo-info-tab .promotion-form-overlay .promotion-form-container {
+  box-shadow: none;
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+}
+
+.promo-variants-tab {
+  /* wrapper for PromotionVariantList */
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatVND, getPriceRange } from './posUtils';
+import { formatVND, getPriceRange, hasPromotion, getEffectivePrice } from './posUtils';
 import { usePOS } from './POSContext';
 
 /**
@@ -11,18 +11,20 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
     const activeVariants = product.variants.filter(v => v.status === 'ACTIVE');
     const brandName = getBrandName(product.brandId);
     const priceRange = getPriceRange(activeVariants);
+    const hasPromo = hasPromotion(activeVariants);
 
     // Show first 3 variants as chips, rest as "+N more"
     const displayVariants = activeVariants.slice(0, 3);
     const moreCount = activeVariants.length - 3;
 
-    // Quick add — cheapest available variant
+    // Quick add — cheapest available variant (promotion-aware)
     const handleQuickAdd = (e) => {
         e.stopPropagation();
         const inStock = activeVariants.filter(v => v.stock > 0);
         if (inStock.length === 0) return;
-        // If only one variant, skip modal
-        const cheapest = inStock.reduce((a, b) => a.price < b.price ? a : b);
+        const cheapest = inStock.reduce((a, b) =>
+            getEffectivePrice(a) < getEffectivePrice(b) ? a : b
+        );
         onQuickAdd(product, cheapest);
     };
 
@@ -37,6 +39,7 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
             aria-label={`Xem chi tiết ${product.name}`}
             onKeyDown={(e) => e.key === 'Enter' && onCardClick(product)}
         >
+            {hasPromo && <span className="pos-card-promo-badge">KM</span>}
             <img
                 className="pos-card-img"
                 src={product.imageUrl}
@@ -46,7 +49,7 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
             <div className="pos-card-body">
                 <div className="pos-card-name">{product.name}</div>
                 <div className="pos-card-brand">{brandName}</div>
-                <div className="pos-card-price">{priceRange}</div>
+                <div className={`pos-card-price${hasPromo ? ' has-promo' : ''}`}>{priceRange}</div>
 
                 <div className="pos-card-variants">
                     {displayVariants.map((v) => {

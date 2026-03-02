@@ -19,7 +19,7 @@ const CartItemCard = ({
     const brandName = item.product?.brand_name || '';
     const unitPrice = getItemPrice(item);
     const subtotal = getItemSubtotal(item);
-    const hasPromo = item.promotion && item.promotion.discount_percentage;
+    const hasPromo = item.promotion && (item.promotion.discount_percentage || item.promotion.promotion_price != null);
     const isLowStock = item.variant.stock <= 5;
     const isConfirming = confirmDeleteId === item.cart_item_id;
 
@@ -43,7 +43,9 @@ const CartItemCard = ({
                     <img src={item.image_url} alt={item.product.name} />
                     {hasPromo && (
                         <span className="cart-item-image-promo-badge">
-                            −{item.promotion.discount_percentage}%
+                            {item.promotion.discount_percentage
+                                ? `−${item.promotion.discount_percentage}%`
+                                : 'KM'}
                         </span>
                     )}
                 </div>
@@ -77,7 +79,12 @@ const CartItemCard = ({
                         <>
                             <div className="cart-item-subtotal-price sale">{formatVND(subtotal)}</div>
                             <div className="cart-item-original-price">{formatVND(item.variant.price * item.quantity)}</div>
-                            <span className="cart-item-discount-badge">−{item.promotion.discount_percentage}%</span>
+                            {item.promotion.discount_percentage && (
+                                <span className="cart-item-discount-badge">−{item.promotion.discount_percentage}%</span>
+                            )}
+                            {item.promotion.name && (
+                                <div className="cart-item-promo-name">🏷️ {item.promotion.name}</div>
+                            )}
                         </>
                     ) : (
                         <div className="cart-item-subtotal-price">{formatVND(subtotal)}</div>

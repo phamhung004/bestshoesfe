@@ -560,6 +560,12 @@
     margin-top: 2px;
 }
 
+.cart-item-promo-name {
+    font-size: 11px;
+    color: #16a34a;
+    margin-top: 4px;
+}
+
 /* Bottom row */
 .cart-item-bottom {
     display: flex;

@@ -451,6 +451,39 @@ export const promotionAPI = {
   deactivate: (id) => apiCall(`/promotions/${id}/deactivate`, {
     method: 'PATCH',
   }),
+
+  // ── Promotion Variants (products assigned to a promotion) ──
+
+  // Get all variants assigned to a promotion
+  getVariants: (promotionId) => apiCall(`/promotions/${promotionId}/variants`),
+
+  // Add variants to a promotion (batch)
+  addVariants: (promotionId, variants) => apiCall(`/promotions/${promotionId}/variants`, {
+    method: 'POST',
+    body: JSON.stringify(variants),
+  }),
+
+  // Replace all variants for a promotion
+  replaceVariants: (promotionId, variants) => apiCall(`/promotions/${promotionId}/variants`, {
+    method: 'PUT',
+    body: JSON.stringify(variants),
+  }),
+
+  // Update a single promotion-variant entry (e.g. change fixedPrice)
+  updateVariant: (promotionDetailId, data) => apiCall(`/promotions/variants/${promotionDetailId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  // Remove a variant from a promotion
+  removeVariant: (promotionId, variantId) => apiCall(`/promotions/${promotionId}/variants/${variantId}`, {
+    method: 'DELETE',
+  }),
+
+  // Remove all variants from a promotion
+  removeAllVariants: (promotionId) => apiCall(`/promotions/${promotionId}/variants`, {
+    method: 'DELETE',
+  }),
 };
 
 // Customer API functions

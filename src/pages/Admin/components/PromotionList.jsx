@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { promotionAPI } from '../../../services/api';
 import './PromotionList.css';
 
-const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
+const PromotionList = ({ onEdit, onAdd, onManageVariants, refreshTrigger }) => {
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -284,6 +284,15 @@ const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
                       >
                         ✏️
                       </button>
+                      {onManageVariants && (
+                        <button
+                          onClick={() => onManageVariants(promotion)}
+                          className="btn-manage-variants"
+                          title="Quản lý sản phẩm áp dụng"
+                        >
+                          📦
+                        </button>
+                      )}
                       <button
                         onClick={() => handleToggleStatus(promotion.promotionId, promotion.isActive)}
                         className="btn-toggle"

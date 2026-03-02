@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { formatVND } from './posUtils';
+import { formatVND, getEffectivePrice } from './posUtils';
 import { usePOS } from './POSContext';
 
 /**
@@ -101,7 +101,28 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
                     {/* Selected variant info */}
                     {selectedVariant && (
                         <div className="pos-modal-variant-info">
-                            <span className="pos-modal-variant-price">{formatVND(selectedVariant.price)}</span>
+                            {selectedVariant.promotionPrice != null ? (
+                                <>
+                                    <span className="pos-modal-variant-price promo">
+                                        {formatVND(selectedVariant.promotionPrice)}
+                                    </span>
+                                    <span className="pos-modal-variant-original-price">
+                                        {formatVND(selectedVariant.price)}
+                                    </span>
+                                    {selectedVariant.discountPercentage && (
+                                        <span className="pos-modal-discount-badge">
+                                            -{selectedVariant.discountPercentage}%
+                                        </span>
+                                    )}
+                                    {selectedVariant.promotionName && (
+                                        <span className="pos-modal-promo-name">
+                                            {selectedVariant.promotionName}
+                                        </span>
+                                    )}
+                                </>
+                            ) : (
+                                <span className="pos-modal-variant-price">{formatVND(selectedVariant.price)}</span>
+                            )}
                             <span className={`pos-modal-variant-stock${selectedVariant.stock <= 0 ? ' out' : ''}`}>
                                 {selectedVariant.stock > 0 ? `Còn ${selectedVariant.stock} sản phẩm` : 'Hết hàng'}
                             </span>
@@ -129,7 +150,7 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
                         onClick={handleAdd}
                         disabled={!selectedVariant || selectedVariant.stock <= 0}
                     >
-                        Thêm vào giỏ {selectedVariant ? `— ${formatVND(selectedVariant.price * quantity)}` : ''}
+                        Thêm vào giỏ {selectedVariant ? `— ${formatVND(getEffectivePrice(selectedVariant) * quantity)}` : ''}
                     </button>
                 </div>
             </div>

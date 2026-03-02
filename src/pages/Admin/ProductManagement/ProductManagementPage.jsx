@@ -684,7 +684,7 @@ const ProductManagementPage = () => {
   /* ── Render ────────────────────────────────────────────── */
   return (
     <AdminLayout
-      activeSection="product-management/products"
+      activeSection="products"
       title="Quản lý Sản phẩm"
       subtitle="Quản lý và cập nhật thông tin sản phẩm"
     >
