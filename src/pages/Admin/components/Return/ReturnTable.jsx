@@ -114,8 +114,8 @@ const ReturnTable = ({
                             const statusCfg = RETURN_STATUS_CONFIG[ret.return_status] || {};
                             const reasonCfg = REASON_CONFIG[ret.return_reason] || {};
                             const refundMethodObj = REFUND_METHODS.find(m => m.value === ret.refund_method);
-                            const firstItem = ret.items[0];
-                            const moreCount = ret.items.length - 1;
+                            const firstItem = (ret.items || [])[0];
+                            const moreCount = (ret.items || []).length - 1;
                             const isSelected = selectedIds.has(ret.return_id);
                             const isPartial = ret.total_amount !== ret.original_total;
 

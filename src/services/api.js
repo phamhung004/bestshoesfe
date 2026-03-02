@@ -716,6 +716,66 @@ export const posAPI = {
 };
 
 
+// ============================================================
+// Return API functions (Admin Return Management)
+// ============================================================
+export const returnAPI = {
+  // Search/filter/sort returns with pagination
+  search: (params) => apiCall('/admin/returns/list', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  }),
+
+  // Get return detail by ID
+  getById: (id) => apiCall(`/admin/returns/${id}`),
+
+  // Create a new return request
+  create: (data) => apiCall('/admin/returns/create', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  // Update return status
+  updateStatus: (id, data) => apiCall(`/admin/returns/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  // Reject a return request
+  reject: (id, data) => apiCall(`/admin/returns/${id}/reject`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  // Bulk approve returns
+  bulkApprove: (data) => apiCall('/admin/returns/bulk-approve', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  // Bulk reject returns
+  bulkReject: (data) => apiCall('/admin/returns/bulk-reject', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  // Get KPI dashboard data
+  getKpi: () => apiCall('/admin/returns/kpi'),
+
+  // Export returns as CSV
+  exportCsv: (params = {}) => apiCall('/admin/returns/export-csv', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  }),
+
+  // Get deliverable orders (eligible for return)
+  getDeliverableOrders: (search = '') => {
+    const qs = search ? `?search=${encodeURIComponent(search)}` : '';
+    return apiCall(`/admin/returns/deliverable-orders${qs}`);
+  },
+};
+
+
 export default {
   brandAPI,
   categoryAPI,
@@ -733,4 +793,5 @@ export default {
   analyticsAPI,
   orderAPI,
   posAPI,
+  returnAPI,
 };

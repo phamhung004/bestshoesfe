@@ -1,20 +1,25 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
-    mockDeliverableOrders, ALL_REASONS, REFUND_METHODS,
+    ALL_REASONS, REFUND_METHODS,
     formatVND, formatDate, getInitials,
 } from './mockReturns';
+import { returnAPI } from '../../../../services/api';
+import { normalizeDeliverableOrder } from './returnMappers';
 
 /**
  * CreateReturnModal — 3-step wizard to create a new return request.
- * Step 1: Search and select an eligible order
+ * Step 1: Search and select an eligible order (from API)
  * Step 2: Pick items and quantities to return
  * Step 3: Fill return info (reason, description, refund method)
  */
 const CreateReturnModal = ({ onClose, onCreate }) => {
     const [step, setStep] = useState(1);
+    const [submitting, setSubmitting] = useState(false);
 
     // Step 1 state
     const [searchQuery, setSearchQuery] = useState('');
+    const [deliverableOrders, setDeliverableOrders] = useState([]);
+    const [loadingOrders, setLoadingOrders] = useState(true);
 
     // Step 2 state
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -25,16 +30,31 @@ const CreateReturnModal = ({ onClose, onCreate }) => {
     const [description, setDescription] = useState('');
     const [refundMethod, setRefundMethod] = useState('Chuyển khoản');
 
-    // Filter orders by search
-    const filteredOrders = useMemo(() => {
-        if (!searchQuery) return mockDeliverableOrders;
-        const q = searchQuery.toLowerCase();
-        return mockDeliverableOrders.filter(o =>
-            o.order_number.toLowerCase().includes(q) ||
-            o.customer_name.toLowerCase().includes(q) ||
-            o.customer_phone.includes(q)
-        );
+    // Fetch deliverable orders from API
+    useEffect(() => {
+        let cancelled = false;
+        const fetchOrders = async () => {
+            setLoadingOrders(true);
+            try {
+                const res = await returnAPI.getDeliverableOrders(searchQuery);
+                if (!cancelled) {
+                    const orders = (res?.data || []).map(normalizeDeliverableOrder);
+                    setDeliverableOrders(orders);
+                }
+            } catch (err) {
+                console.error('Failed to fetch deliverable orders:', err);
+                if (!cancelled) setDeliverableOrders([]);
+            } finally {
+                if (!cancelled) setLoadingOrders(false);
+            }
+        };
+        // Debounce search
+        const timer = setTimeout(fetchOrders, 300);
+        return () => { cancelled = true; clearTimeout(timer); };
     }, [searchQuery]);
+
+    // Filter orders client-side (already filtered by API, but keep for instant feedback)
+    const filteredOrders = deliverableOrders;
 
     // Toggle item selection
     const handleToggleItem = (item) => {
@@ -76,50 +96,28 @@ const CreateReturnModal = ({ onClose, onCreate }) => {
         setStep(2);
     };
 
-    const handleSubmit = () => {
-        // Generate return code
-        const now = new Date();
-        const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-        const returnCode = `RTN-${dateStr}-${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`;
+    const handleSubmit = async () => {
+        setSubmitting(true);
+        try {
+            const createRequest = {
+                orderId: selectedOrder.order_id,
+                items: selectedItemsList.map(item => ({
+                    orderItemId: item.order_item_id,
+                    quantity: checkedItems[item.order_item_id],
+                })),
+                returnReason: reason,
+                description: description,
+                refundMethod: refundMethod,
+            };
 
-        const newReturn = {
-            return_id: Date.now(),
-            return_code: returnCode,
-            order_id: selectedOrder.order_id,
-            order_number: selectedOrder.order_number,
-            customer_id: selectedOrder.customer_id,
-            customer_name: selectedOrder.customer_name,
-            customer_phone: selectedOrder.customer_phone,
-            order_type: 'Online',
-            total_amount: refundPreview,
-            original_total: selectedOrder.total_amount,
-            return_status: 'Chờ duyệt',
-            return_reason: reason,
-            refund_method: refundMethod,
-            description: description,
-            shipping_cost_refund: 0,
-            deduction: 0,
-            reject_reason: null,
-            notes: '',
-            is_partial: Object.keys(checkedItems).length < selectedOrder.items.length,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            order_created_at: selectedOrder.created_at,
-            items: selectedItemsList.map(item => ({
-                ...item,
-                quantity: checkedItems[item.order_item_id],
-                total_price: item.unit_price * checkedItems[item.order_item_id],
-            })),
-            timeline: [
-                { label: 'Yêu cầu trả hàng', key: 'requested', completed: true, current: false, timestamp: new Date().toISOString() },
-                { label: 'Duyệt yêu cầu', key: 'approved', completed: false, current: true, timestamp: null },
-                { label: 'Nhận hàng về kho', key: 'received', completed: false, current: false, timestamp: null },
-                { label: 'Kiểm tra hàng hóa', key: 'inspected', completed: false, current: false, timestamp: null },
-                { label: 'Hoàn tiền', key: 'refunded', completed: false, current: false, timestamp: null },
-            ],
-        };
-
-        onCreate(newReturn);
+            await returnAPI.create(createRequest);
+            onCreate(); // callback to parent to re-fetch data
+        } catch (err) {
+            console.error('Failed to create return:', err);
+            alert('Lỗi khi tạo yêu cầu trả hàng: ' + (err?.response?.data?.message || err.message));
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     // Step indicator
@@ -159,7 +157,11 @@ const CreateReturnModal = ({ onClose, onCreate }) => {
                             />
                         </div>
                         <div className="rm-order-results">
-                            {filteredOrders.length === 0 ? (
+                            {loadingOrders ? (
+                                <div style={{ textAlign: 'center', padding: 20, color: 'var(--gray-400)' }}>
+                                    ⏳ Đang tải...
+                                </div>
+                            ) : filteredOrders.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: 20, color: 'var(--gray-400)' }}>
                                     Không tìm thấy đơn hàng phù hợp
                                 </div>
@@ -311,10 +313,10 @@ const CreateReturnModal = ({ onClose, onCreate }) => {
                         ) : (
                             <button
                                 className="rm-btn rm-btn-primary"
-                                disabled={!canSubmit}
+                                disabled={!canSubmit || submitting}
                                 onClick={handleSubmit}
                             >
-                                ✅ Tạo yêu cầu
+                                {submitting ? '⏳ Đang tạo...' : '✅ Tạo yêu cầu'}
                             </button>
                         )}
                     </div>

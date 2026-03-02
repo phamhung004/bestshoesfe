@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     RETURN_STATUS_CONFIG, REASON_CONFIG, REFUND_METHODS,
-    formatVND, formatDateTime, getInitials, getCustomerById,
+    formatVND, formatDateTime, getInitials,
 } from './mockReturns';
 
 /**
@@ -26,7 +26,6 @@ const ReturnDetailSlideOver = ({
 
     const statusCfg = RETURN_STATUS_CONFIG[returnItem.return_status] || {};
     const reasonCfg = REASON_CONFIG[returnItem.return_reason] || {};
-    const customer = getCustomerById(returnItem.customer_id) || {};
 
     // Calculate refund breakdown
     const itemsTotal = returnItem.items.reduce((sum, item) => sum + item.total_price, 0);
@@ -34,12 +33,8 @@ const ReturnDetailSlideOver = ({
     const deduction = returnItem.deduction || 0;
     const refundTotal = itemsTotal + shippingRefund - deduction;
 
-    // Mock evidence images
-    const evidenceImages = [
-        'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&h=200&fit=crop',
-        'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=200&h=200&fit=crop',
-        'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=200&h=200&fit=crop',
-    ];
+    // Evidence images from API
+    const evidenceImages = (returnItem.images || []).map(img => img.image_url || img.imageUrl).filter(Boolean);
 
     const handleNoteChange = (val) => {
         setNotes(val);
@@ -109,18 +104,6 @@ const ReturnDetailSlideOver = ({
                                 <div style={{ fontSize: 12, color: 'var(--gray-500)' }}>{returnItem.customer_phone}</div>
                             </div>
                         </div>
-                        {customer.email && (
-                            <div className="rm-so-row">
-                                <span className="label">Email:</span>
-                                <span className="value">{customer.email}</span>
-                            </div>
-                        )}
-                        {customer.gender && (
-                            <div className="rm-so-row">
-                                <span className="label">Giới tính:</span>
-                                <span className="value">{customer.gender}</span>
-                            </div>
-                        )}
                     </div>
 
                     {/* Returned Items */}
@@ -171,7 +154,7 @@ const ReturnDetailSlideOver = ({
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 6 }}>Ảnh minh chứng:</div>
                         <div className="rm-evidence-images">
-                            {evidenceImages.map((img, i) => (
+                            {evidenceImages.length > 0 ? evidenceImages.map((img, i) => (
                                 <img
                                     key={i}
                                     src={img}
@@ -179,7 +162,9 @@ const ReturnDetailSlideOver = ({
                                     className="rm-evidence-thumb"
                                     onClick={() => setLightboxImg(img)}
                                 />
-                            ))}
+                            )) : (
+                                <div style={{ fontSize: 12, color: 'var(--gray-400)', fontStyle: 'italic' }}>Chưa có ảnh minh chứng</div>
+                            )}
                         </div>
                     </div>
 
