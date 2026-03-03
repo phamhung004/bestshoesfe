@@ -1,8 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Copy, ChevronRight, ShoppingBag, Star, Truck, X, Package, Loader } from 'lucide-react';
+import { Search, Copy, ChevronRight, ShoppingBag, Star, Truck, X, Package, Loader, RotateCcw } from 'lucide-react';
 import { formatVND, formatDate } from '../mockAccountData';
 import { getMyOrders, cancelOrder } from '../../../api/accountApi';
+import { getMyReturns } from '../../../api/returnApi';
+import { RETURN_WINDOW_DAYS } from '../../../constants/returnConstants';
 import OrderDetailModal from '../components/OrderDetailModal';
+import ReturnRequestModal from '../components/ReturnRequestModal';
 
 const ALL_STATUSES = ['Tất cả', 'Chờ xác nhận', 'Đã xác nhận', 'Đang giao', 'Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'];
 
@@ -20,14 +23,27 @@ const statusBadgeClass = (status) => {
 
 const payBadgeClass = (status) => status === 'Đã thanh toán' ? 'acc-pay-badge acc-pay-paid' : 'acc-pay-badge acc-pay-unpaid';
 
-const OrdersTab = () => {
+const OrdersTab = ({ onOpenReturns }) => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeStatus, setActiveStatus] = useState('Tất cả');
     const [search, setSearch] = useState('');
     const [detailOrder, setDetailOrder] = useState(null);
+    const [returnOrder, setReturnOrder] = useState(null);
+    const [myReturns, setMyReturns] = useState([]);
     const [toast, setToast] = useState(null);
     const [cancellingId, setCancellingId] = useState(null);
+
+    const TERMINAL_RETURN_STATUSES = ['Hoàn tiền', 'Từ chối'];
+
+    const hasActiveReturn = (orderNumber) =>
+        myReturns.some(r => r.orderNumber === orderNumber && !TERMINAL_RETURN_STATUSES.includes(r.returnStatus));
+
+    const isWithinReturnWindow = (order) => {
+        if (!order.updatedAt) return false;
+        const days = Math.floor((Date.now() - new Date(order.updatedAt)) / 86400000);
+        return days <= RETURN_WINDOW_DAYS;
+    };
 
     const showToast = (msg, type = 'info') => {
         setToast({ msg, type });
@@ -46,7 +62,14 @@ const OrdersTab = () => {
                 setLoading(false);
             }
         };
+        const fetchReturns = async () => {
+            try {
+                const res = await getMyReturns();
+                setMyReturns(res.data || []);
+            } catch { /* silent */ }
+        };
         fetchOrders();
+        fetchReturns();
     }, []);
 
     const statusCounts = useMemo(() => {
@@ -188,6 +211,23 @@ const OrdersTab = () => {
                                         <>
                                             <button className="acc-btn-outline-sm"><Star size={14} /> Đánh giá</button>
                                             <button className="acc-btn-primary-sm"><ShoppingBag size={14} /> Mua lại</button>
+                                            {isWithinReturnWindow(order) && !hasActiveReturn(order.orderNumber) && (
+                                                <button
+                                                    className="acc-btn-outline-sm"
+                                                    style={{ borderColor: '#f59e0b', color: '#d97706' }}
+                                                    onClick={() => setReturnOrder(order)}
+                                                >
+                                                    <RotateCcw size={14} /> Trả hàng
+                                                </button>
+                                            )}
+                                            {hasActiveReturn(order.orderNumber) && (
+                                                <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600, padding: '4px 8px', background: '#fffbeb', borderRadius: 6, border: '1px solid #fde68a' }}>
+                                                    ⏳ Đang xử lý
+                                                </span>
+                                            )}
+                                            {!isWithinReturnWindow(order) && !hasActiveReturn(order.orderNumber) && (
+                                                <span style={{ fontSize: 12, color: '#9ca3af', padding: '4px 8px' }}>Hết hạn trả</span>
+                                            )}
                                         </>
                                     )}
                                     {order.status === 'Chờ xác nhận' && (
@@ -212,6 +252,21 @@ const OrdersTab = () => {
             {/* Detail Modal */}
             {detailOrder && (
                 <OrderDetailModal order={detailOrder} onClose={() => setDetailOrder(null)} />
+            )}
+
+            {/* Return Request Modal */}
+            {returnOrder && (
+                <ReturnRequestModal
+                    order={returnOrder}
+                    onClose={() => setReturnOrder(null)}
+                    onSuccess={() => {
+                        setReturnOrder(null);
+                        showToast('Gửi yêu cầu trả hàng thành công! Admin sẽ phản hồi trong 1-3 ngày.', 'success');
+                        // Refresh returns list so button state updates
+                        getMyReturns().then(res => setMyReturns(res.data || [])).catch(() => {});
+                        onOpenReturns?.();
+                    }}
+                />
             )}
 
             {/* Toast */}

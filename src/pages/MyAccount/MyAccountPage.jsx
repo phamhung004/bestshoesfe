@@ -7,12 +7,14 @@ import ProfileTab from './tabs/ProfileTab';
 import AddressTab from './tabs/AddressTab';
 import PasswordTab from './tabs/PasswordTab';
 import ReviewsTab from './tabs/ReviewsTab';
+import ReturnsTab from './tabs/ReturnsTab';
 import { getProfile } from '../../api/accountApi';
 import './MyAccountPage.css';
 
 const TAB_HASHES = {
     overview: 'overview',
     orders: 'orders',
+    returns: 'returns',
     profile: 'profile',
     addresses: 'addresses',
     password: 'password',
@@ -22,6 +24,7 @@ const TAB_HASHES = {
 const TAB_TITLES = {
     overview: 'Tổng quan',
     orders: 'Đơn hàng',
+    returns: 'Trả hàng',
     profile: 'Thông tin cá nhân',
     addresses: 'Địa chỉ',
     password: 'Đổi mật khẩu',
@@ -126,7 +129,8 @@ const MyAccountPage = () => {
                     {/* Main Content */}
                     <main className="acc-main-content">
                         {activeTab === 'overview' && <OverviewTab onTabChange={handleTabChange} customer={customer} stats={stats} />}
-                        {activeTab === 'orders' && <OrdersTab />}
+                        {activeTab === 'orders' && <OrdersTab onOpenReturns={() => handleTabChange('returns')} />}
+                        {activeTab === 'returns' && <ReturnsTab />}
                         {activeTab === 'profile' && <ProfileTab customer={customer} stats={stats} onNameChange={handleNameChange} onProfileUpdate={fetchProfile} />}
                         {activeTab === 'addresses' && <AddressTab />}
                         {activeTab === 'password' && <PasswordTab />}
