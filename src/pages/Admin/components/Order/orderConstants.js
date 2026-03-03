@@ -21,3 +21,34 @@ export const ALL_STATUSES = [
     'Trả hàng/Hoàn tiền',
     'Đã hủy',
 ];
+
+/**
+ * Valid forward status transitions map.
+ * Mirrors backend validateStatusTransition logic:
+ *  - Status flows forward: Chờ xác nhận → Đã xác nhận → Đang giao → Đã giao
+ *  - "Trả hàng/Hoàn tiền" and "Đã hủy" can be reached from any active state
+ *  - "Đã hủy" is a terminal state (no further transitions)
+ *  - "Trả hàng/Hoàn tiền" is also terminal
+ */
+export const VALID_NEXT_STATUSES = {
+    'Chờ xác nhận': ['Đã xác nhận', 'Đang giao', 'Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'],
+    'Đã xác nhận': ['Đang giao', 'Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'],
+    'Đang giao': ['Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'],
+    'Đã giao': ['Trả hàng/Hoàn tiền', 'Đã hủy'],
+    'Trả hàng/Hoàn tiền': [],
+    'Đã hủy': [],
+};
+
+/**
+ * Check if a status is a terminal state (no further transitions allowed)
+ */
+export const isTerminalStatus = (status) => {
+    return status === 'Đã hủy' || status === 'Trả hàng/Hoàn tiền';
+};
+
+/**
+ * Get the list of valid next statuses for a given current status
+ */
+export const getValidNextStatuses = (currentStatus) => {
+    return VALID_NEXT_STATUSES[currentStatus] || [];
+};

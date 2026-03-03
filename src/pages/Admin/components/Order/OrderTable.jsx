@@ -3,7 +3,7 @@ import { formatVND } from '../../../../utils/formatPrice';
 import {
     formatDate, relativeTime, getInitials,
 } from './orderHelpers';
-import { STATUS_CONFIG, PAYMENT_CONFIG } from './orderConstants';
+import { STATUS_CONFIG, PAYMENT_CONFIG, isTerminalStatus } from './orderConstants';
 
 /**
  * OrderTable: data table with sorting, bulk select, action buttons
@@ -298,9 +298,11 @@ const OrderTable = ({
                                                 </button>
                                                 {openMore === order.order_id && (
                                                     <div className="om-more-dropdown">
-                                                        <button onClick={() => { onCancelOrder(order); setOpenMore(null); }} className="destructive">
-                                                            ❌ Hủy đơn
-                                                        </button>
+                                                        {!isTerminalStatus(order.status) && (
+                                                            <button onClick={() => { onCancelOrder(order); setOpenMore(null); }} className="destructive">
+                                                                ❌ Hủy đơn
+                                                            </button>
+                                                        )}
                                                         <button onClick={() => setOpenMore(null)}>
                                                             📋 Nhân bản
                                                         </button>

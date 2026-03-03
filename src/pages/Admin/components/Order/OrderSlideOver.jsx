@@ -3,7 +3,7 @@ import { formatVND } from '../../../../utils/formatPrice';
 import {
     formatDate, getInitials,
 } from './orderHelpers';
-import { STATUS_CONFIG, PAYMENT_CONFIG, ALL_STATUSES } from './orderConstants';
+import { STATUS_CONFIG, PAYMENT_CONFIG, ALL_STATUSES, getValidNextStatuses, isTerminalStatus } from './orderConstants';
 
 /**
  * OrderSlideOver: right drawer showing full order details
@@ -41,6 +41,8 @@ const OrderSlideOver = ({
 
     const statusCfg = STATUS_CONFIG[order.status] || {};
     const paymentCfg = PAYMENT_CONFIG[order.payment_status] || {};
+    const validNextStatuses = getValidNextStatuses(order.status);
+    const isTerminal = isTerminalStatus(order.status);
 
     // Build full address
     const fullAddress = [
@@ -95,18 +97,23 @@ const OrderSlideOver = ({
                         <div className="om-status-dropdown-wrap">
                             <span
                                 className="om-badge"
-                                style={{ background: statusCfg.bg, color: statusCfg.color, cursor: 'pointer' }}
-                                onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                                title="Click để cập nhật trạng thái"
+                                style={{
+                                    background: statusCfg.bg,
+                                    color: statusCfg.color,
+                                    cursor: isTerminal ? 'default' : 'pointer',
+                                    opacity: isTerminal ? 0.8 : 1,
+                                }}
+                                onClick={() => !isTerminal && setStatusDropdownOpen(!statusDropdownOpen)}
+                                title={isTerminal ? 'Trạng thái cuối - không thể thay đổi' : 'Click để cập nhật trạng thái'}
                             >
                                 <span className="om-badge-dot" style={{ background: statusCfg.color }} />
                                 {order.status}
-                                <span style={{ marginLeft: 4, fontSize: 10 }}>▼</span>
+                                {!isTerminal && <span style={{ marginLeft: 4, fontSize: 10 }}>▼</span>}
                             </span>
 
-                            {statusDropdownOpen && (
+                            {statusDropdownOpen && validNextStatuses.length > 0 && (
                                 <div className="om-status-dropdown">
-                                    {ALL_STATUSES.filter((s) => s !== 'Tất cả').map((s) => {
+                                    {validNextStatuses.map((s) => {
                                         const cfg = STATUS_CONFIG[s] || {};
                                         return (
                                             <button
@@ -265,27 +272,28 @@ const OrderSlideOver = ({
 
                 {/* ── FOOTER ── */}
                 <div className="om-so-footer">
-                    <button
-                        className="om-btn om-btn-primary"
-                        onClick={() => {
-                            /* In a real app, this would call the API */
-                            onClose();
-                        }}
-                    >
-                        Cập nhật trạng thái
-                    </button>
+                    {!isTerminal && (
+                        <button
+                            className="om-btn om-btn-primary"
+                            onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                        >
+                            Cập nhật trạng thái
+                        </button>
+                    )}
                     <button
                         className="om-btn om-btn-outline"
                         onClick={() => onPrintOrder(order)}
                     >
                         🖨️ In hóa đơn
                     </button>
-                    <button
-                        className="om-btn om-btn-danger-outline"
-                        onClick={() => onCancelOrder(order)}
-                    >
-                        Hủy đơn
-                    </button>
+                    {!isTerminal && (
+                        <button
+                            className="om-btn om-btn-danger-outline"
+                            onClick={() => onCancelOrder(order)}
+                        >
+                            Hủy đơn
+                        </button>
+                    )}
                 </div>
             </div>
         </>

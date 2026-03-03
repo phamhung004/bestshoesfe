@@ -246,7 +246,8 @@ const OrderManagement = () => {
                     fetchOrders();
                     fetchStatusCounts();
                 } catch (err) {
-                    showToast('❌ Lỗi: ' + (err?.message || 'Không thể hủy đơn hàng'));
+                    const backendMsg = err?.response?.data?.message;
+                    showToast('❌ Lỗi: ' + (backendMsg || 'Không thể hủy đơn hàng'));
                     setConfirmDialog(null);
                 }
             },
@@ -266,7 +267,8 @@ const OrderManagement = () => {
             fetchOrders();
             fetchStatusCounts();
         } catch (err) {
-            showToast('❌ Lỗi: ' + (err?.message || 'Không thể cập nhật trạng thái'));
+            const backendMsg = err?.response?.data?.message;
+            showToast('❌ Lỗi: ' + (backendMsg || 'Không thể cập nhật trạng thái'));
         }
     }, [showToast, fetchOrders, fetchStatusCounts, selectedOrderDetail]);
 
@@ -279,7 +281,8 @@ const OrderManagement = () => {
             fetchOrders();
             fetchStatusCounts();
         } catch (err) {
-            showToast('❌ Lỗi: ' + (err?.message || 'Không thể xác nhận hàng loạt'));
+            const backendMsg = err?.response?.data?.message;
+            showToast('❌ Lỗi: ' + (backendMsg || 'Không thể xác nhận hàng loạt'));
         }
     }, [selectedIds, showToast, fetchOrders, fetchStatusCounts]);
 
@@ -297,7 +300,8 @@ const OrderManagement = () => {
                     fetchOrders();
                     fetchStatusCounts();
                 } catch (err) {
-                    showToast('❌ Lỗi: ' + (err?.message || 'Không thể hủy hàng loạt'));
+                    const backendMsg = err?.response?.data?.message;
+                    showToast('❌ Lỗi: ' + (backendMsg || 'Không thể hủy hàng loạt'));
                     setConfirmDialog(null);
                 }
             },
