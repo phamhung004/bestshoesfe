@@ -63,6 +63,17 @@ const AdminLayout = ({ activeSection, title, subtitle, children }) => {
         onToggleCollapse={() => setIsCollapsed((c) => !c)}
       />
 
+      {/* Spacer to offset content from the fixed sidebar */}
+      <div
+        style={{
+          flexShrink: 0,
+          width: isCollapsed
+            ? 'var(--sidebar-collapsed-width, 72px)'
+            : 'var(--sidebar-width, 280px)',
+          transition: 'width 250ms ease',
+        }}
+      />
+
       <div
         style={{
           flex: 1,
