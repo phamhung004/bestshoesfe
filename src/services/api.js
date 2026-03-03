@@ -749,6 +749,12 @@ export const posAPI = {
     method: 'POST',
     body: JSON.stringify({ code, orderAmount }),
   }),
+
+  // Quick-create a new customer from POS counter
+  quickCreateCustomer: (data) => apiCall('/admin/pos/customers/quick-create', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
 };
 
 

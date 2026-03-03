@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import './CouponPickerDrawer.css';
 
 /**
@@ -74,7 +75,7 @@ const CouponPickerDrawer = ({ open, onClose, onSelect, subtotal = 0, fetchCoupon
 
     if (!open) return null;
 
-    return (
+    return createPortal(
         <>
             <div className="cpd-overlay" onClick={onClose} />
             <div className="cpd-drawer">
@@ -168,7 +169,8 @@ const CouponPickerDrawer = ({ open, onClose, onSelect, subtotal = 0, fetchCoupon
                     )}
                 </div>
             </div>
-        </>
+        </>,
+        document.body
     );
 };
 

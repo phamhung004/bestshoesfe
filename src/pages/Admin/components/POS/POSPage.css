@@ -1039,8 +1039,262 @@
 .pos-walkin-hint {
     font-size: 11px;
     color: var(--gray-400);
-    margin-top: 6px;
     font-style: italic;
+}
+
+.pos-walkin-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+    gap: 8px;
+}
+
+.pos-save-walkin-btn {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary-600);
+    background: var(--primary-50);
+    border: 1px solid var(--primary-200);
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.pos-save-walkin-btn:hover {
+    background: var(--primary-100);
+    border-color: var(--primary-300);
+}
+
+.pos-save-walkin-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ── Customer search: empty result + create button ────── */
+.pos-customer-searching {
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--gray-400);
+    text-align: center;
+}
+
+.pos-customer-empty-result {
+    padding: 14px;
+    text-align: center;
+}
+
+.pos-customer-empty-result p {
+    font-size: 12px;
+    color: var(--gray-400);
+    margin-bottom: 8px;
+}
+
+.pos-create-customer-btn {
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--primary-500);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.pos-create-customer-btn:hover {
+    background: var(--primary-600);
+}
+
+.pos-create-customer-link {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary-500);
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s;
+}
+
+.pos-create-customer-link:hover {
+    color: var(--primary-700);
+    text-decoration: underline;
+}
+
+/* ── Quick-create customer modal ─────────────────────────── */
+.pos-quick-create-modal {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: var(--shadow-xl, 0 20px 60px rgba(0,0,0,0.2));
+    width: 420px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: pos-slideUp 0.3s ease;
+}
+
+.pos-qc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 22px 0;
+}
+
+.pos-qc-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.pos-qc-close {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    color: var(--gray-400);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.pos-qc-close:hover {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+.pos-qc-form {
+    padding: 16px 22px 22px;
+}
+
+.pos-qc-error {
+    background: var(--danger-50, #fef2f2);
+    color: var(--danger-600, #dc2626);
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border: 1px solid var(--danger-200, #fecaca);
+}
+
+.pos-qc-field {
+    margin-bottom: 14px;
+}
+
+.pos-qc-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-600);
+    margin-bottom: 5px;
+}
+
+.pos-qc-field label .required {
+    color: var(--danger-500, #ef4444);
+}
+
+.pos-qc-field input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.pos-qc-field input:focus {
+    border-color: var(--primary-400);
+}
+
+.pos-qc-gender-group {
+    display: flex;
+    gap: 6px;
+}
+
+.pos-qc-gender-btn {
+    flex: 1;
+    padding: 7px 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-600);
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.pos-qc-gender-btn:hover {
+    background: var(--gray-100);
+}
+
+.pos-qc-gender-btn.active {
+    background: var(--primary-50);
+    border-color: var(--primary-400);
+    color: var(--primary-700);
+    font-weight: 600;
+}
+
+.pos-qc-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.pos-qc-cancel {
+    flex: 1;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-600);
+    background: var(--gray-100);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.pos-qc-cancel:hover {
+    background: var(--gray-200);
+}
+
+.pos-qc-submit {
+    flex: 2;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--primary-500);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.pos-qc-submit:hover {
+    background: var(--primary-600);
+}
+
+.pos-qc-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 /* ── Right Panel: Cart items ─────────────────────────────── */
