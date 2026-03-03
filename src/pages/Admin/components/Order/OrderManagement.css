@@ -1004,6 +1004,61 @@
     line-height: 1.6;
 }
 
+/* Address inline edit form */
+.om-so-address-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.om-so-addr-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.om-so-addr-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.om-so-addr-field select,
+.om-so-addr-field input {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--gray-800);
+    background: #fff;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+}
+
+.om-so-addr-field select:focus,
+.om-so-addr-field input:focus {
+    outline: none;
+    border-color: var(--primary-500, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.om-so-addr-field select:disabled,
+.om-so-addr-field input:disabled {
+    background: var(--gray-100);
+    color: var(--gray-400);
+    cursor: not-allowed;
+}
+
+.om-so-fee-preview {
+    padding: 8px 10px;
+    background: var(--gray-50);
+    border-radius: 6px;
+    border: 1px solid var(--gray-200);
+}
+
 /* Order items list */
 .om-so-item {
     display: flex;
@@ -1058,6 +1113,115 @@
     font-weight: 600;
     color: var(--gray-900);
     white-space: nowrap;
+}
+
+/* Item edit mode */
+.om-so-item-edit {
+    align-items: flex-start;
+    padding: 10px 0;
+}
+
+.om-so-item-unit-price {
+    font-size: 12px;
+    color: var(--gray-500);
+    display: block;
+    margin-top: 2px;
+}
+
+.om-so-item-edit-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+/* Quantity stepper */
+.om-qty-ctrl {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.om-qty-btn {
+    width: 28px;
+    height: 28px;
+    background: var(--gray-100);
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.om-qty-btn:hover:not(:disabled) {
+    background: var(--gray-200);
+}
+
+.om-qty-btn:disabled {
+    color: var(--gray-300);
+    cursor: not-allowed;
+}
+
+.om-qty-input {
+    width: 36px;
+    height: 28px;
+    border: none;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-900);
+    outline: none;
+    -moz-appearance: textfield;
+}
+
+.om-qty-input::-webkit-inner-spin-button,
+.om-qty-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Delete item button */
+.om-item-delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    color: var(--gray-400);
+    transition: color 0.15s, background 0.15s;
+    line-height: 1;
+}
+
+.om-item-delete-btn:hover:not(:disabled) {
+    background: var(--danger-50, #fef2f2);
+    color: var(--danger-500, #ef4444);
+}
+
+.om-item-delete-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Edit mode subtotal preview */
+.om-so-edit-subtotal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0 2px;
+    border-top: 1px dashed var(--gray-200);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-top: 4px;
 }
 
 /* Pricing breakdown */

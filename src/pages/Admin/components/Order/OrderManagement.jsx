@@ -271,7 +271,40 @@ const OrderManagement = () => {
             showToast('❌ Lỗi: ' + (backendMsg || 'Không thể cập nhật trạng thái'));
         }
     }, [showToast, fetchOrders, fetchStatusCounts, selectedOrderDetail]);
-
+    // ── Update address (API) ───────────────────────────────────────────
+    const handleAddressUpdate = useCallback(async (orderId, addressData) => {
+        try {
+            const response = await orderAPI.updateAddress(orderId, addressData);
+            if (response?.data) {
+                const updated = normalizeOrder(response.data);
+                setSelectedOrderDetail(updated);
+                setSelectedOrder((prev) => prev ? { ...prev, ...updated } : prev);
+            }
+            showToast('✅ Đã cập nhật địa chỉ giao hàng');
+            fetchOrders();
+        } catch (err) {
+            const backendMsg = err?.response?.data?.message || err?.message;
+            showToast('❌ Lỗi: ' + (backendMsg || 'Không thể cập nhật địa chỉ'));
+            throw err; // re-throw so OrderSlideOver can exit loading state
+        }
+    }, [showToast, fetchOrders]);
+    // ── Update order items (API) ───────────────────────────────────────
+    const handleItemsUpdate = useCallback(async (orderId, itemsData) => {
+        try {
+            const response = await orderAPI.updateItems(orderId, itemsData);
+            if (response?.data) {
+                const updated = normalizeOrder(response.data);
+                setSelectedOrderDetail(updated);
+                setSelectedOrder((prev) => prev ? { ...prev, ...updated } : prev);
+            }
+            showToast('✅ Đã cập nhật sản phẩm');
+            fetchOrders();
+        } catch (err) {
+            const backendMsg = err?.response?.data?.message || err?.message;
+            showToast('❌ Lỗi: ' + (backendMsg || 'Không thể cập nhật sản phẩm'));
+            throw err;
+        }
+    }, [showToast, fetchOrders]);
     // ── Bulk confirm (API) ────────────────────────────────────────
     const handleBulkConfirm = useCallback(async () => {
         try {
@@ -431,6 +464,8 @@ const OrderManagement = () => {
                 onCopyOrderNum={handleCopyOrderNum}
                 onCancelOrder={handleCancelOrder}
                 onPrintOrder={handlePrintOrder}
+                onAddressUpdate={handleAddressUpdate}
+                onItemsUpdate={handleItemsUpdate}
             />
 
             {/* Toast notification */}

@@ -36,6 +36,8 @@ export const normalizeOrder = (o) => {
         shipping_district: o.shippingDistrict ?? o.shipping_district,
         shipping_ward: o.shippingWard ?? o.shipping_ward,
         shipping_address: o.shippingAddress ?? o.shipping_address,
+        ghn_district_id: o.ghnDistrictId ?? o.ghn_district_id,
+        ghn_ward_code: o.ghnWardCode ?? o.ghn_ward_code,
         order_type: o.orderType ?? o.order_type,
         subtotal: o.subtotal,
         shipping_cost: o.shippingCost ?? o.shipping_cost,

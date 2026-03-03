@@ -713,6 +713,18 @@ export const orderAPI = {
     method: 'POST',
     body: JSON.stringify(params),
   }),
+
+  // Update shipping address (only when status = 'Chờ xác nhận')
+  updateAddress: (id, data) => apiCall(`/admin/orders/${id}/address`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  // Update order item quantities / remove items (only when status = 'Chờ xác nhận')
+  updateItems: (id, data) => apiCall(`/admin/orders/${id}/items`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
 };
 
 
