@@ -19,6 +19,8 @@ const OrderReviewPanel = ({
     onCouponCodeChange,
     onApplyCoupon,
     onRemoveCoupon,
+    shippingFeeLoading,
+    shippingFeeError,
 }) => {
     return (
         <div className="co-review-card co-right-entrance">
@@ -51,6 +53,8 @@ const OrderReviewPanel = ({
                 discountAmount={discountAmount}
                 total={total}
                 couponState={coupon}
+                shippingFeeLoading={shippingFeeLoading}
+                shippingFeeError={shippingFeeError}
             />
 
             {/* Submit button */}

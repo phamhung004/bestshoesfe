@@ -1,10 +1,14 @@
 import { useState, useCallback, useRef } from 'react';
-
-const BASE_URL = 'https://provinces.open-api.vn/api';
+import { shippingApi } from '../api/shippingApi';
 
 /**
- * Custom hook for Vietnamese province → district → ward cascading data
- * using provinces.open-api.vn
+ * Custom hook for Vietnamese province → district → ward cascading data.
+ * Uses GHN (Giao Hàng Nhanh) master data via backend proxy.
+ *
+ * Each item has:
+ * - provinces: { code: GhnProvinceID (number), name: ProvinceName }
+ * - districts: { code: GhnDistrictID (number), name: DistrictName }
+ * - wards:     { code: GhnWardCode (string), name: WardName }
  */
 export const useProvinces = () => {
   const [provinces, setProvinces] = useState([]);
@@ -24,9 +28,11 @@ export const useProvinces = () => {
     }
     setLoadingProvinces(true);
     try {
-      const res = await fetch(`${BASE_URL}/p/`);
-      const data = await res.json();
-      const list = data.map((p) => ({ code: p.code, name: p.name }));
+      const res = await shippingApi.getProvinces();
+      const raw = res.data?.data || res.data || [];
+      const list = raw.map((p) => ({ code: p.provinceId, name: p.provinceName }));
+      // Sort alphabetically by name
+      list.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
       cache.current.provinces = list;
       setProvinces(list);
     } catch (err) {
@@ -50,9 +56,10 @@ export const useProvinces = () => {
     setLoadingDistricts(true);
     setWards([]);
     try {
-      const res = await fetch(`${BASE_URL}/p/${provinceCode}?depth=2`);
-      const data = await res.json();
-      const list = (data.districts || []).map((d) => ({ code: d.code, name: d.name }));
+      const res = await shippingApi.getDistricts(provinceCode);
+      const raw = res.data?.data || res.data || [];
+      const list = raw.map((d) => ({ code: d.districtId, name: d.districtName }));
+      list.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
       cache.current.districts[provinceCode] = list;
       setDistricts(list);
     } catch (err) {
@@ -73,9 +80,10 @@ export const useProvinces = () => {
     }
     setLoadingWards(true);
     try {
-      const res = await fetch(`${BASE_URL}/d/${districtCode}?depth=2`);
-      const data = await res.json();
-      const list = (data.wards || []).map((w) => ({ code: w.code, name: w.name }));
+      const res = await shippingApi.getWards(districtCode);
+      const raw = res.data?.data || res.data || [];
+      const list = raw.map((w) => ({ code: w.wardCode, name: w.wardName }));
+      list.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
       cache.current.wards[districtCode] = list;
       setWards(list);
     } catch (err) {

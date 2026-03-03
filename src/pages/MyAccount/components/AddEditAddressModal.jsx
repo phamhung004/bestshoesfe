@@ -1,23 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { PROVINCES, DISTRICTS, WARDS } from '../mockAccountData';
+import { useProvinces } from '../../../hooks/useProvinces';
 
 const phoneRegex = /^(0|\+84)(3|5|7|8|9)\d{8}$/;
 
 const AddEditAddressModal = ({ address, onClose, onSave }) => {
     const isEdit = !!address;
+
+    const {
+        provinces,
+        districts,
+        wards,
+        fetchProvinces,
+        fetchDistricts,
+        fetchWards,
+        loadingProvinces,
+        loadingDistricts,
+        loadingWards,
+    } = useProvinces();
+
     const [form, setForm] = useState({
         recipientName: address?.recipientName || '',
         phone: address?.phone || '',
+        // Display names (stored in DB as country/state/city)
         country: address?.country || '',
         state: address?.state || '',
         city: address?.city || '',
         line1: address?.line1 || '',
         line2: address?.line2 || '',
         isDefault: address?.isDefault || false,
+        // GHN IDs (for fee calculation)
+        ghnProvinceId: address?.ghnProvinceId || '',
+        ghnDistrictId: address?.ghnDistrictId || '',
+        ghnWardCode: address?.ghnWardCode || '',
     });
     const [errors, setErrors] = useState({});
     const [saving, setSaving] = useState(false);
+
+    // Fetch provinces on mount
+    useEffect(() => {
+        fetchProvinces();
+    }, []);
+
+    // If editing with existing GHN IDs, auto-fetch districts and wards
+    useEffect(() => {
+        if (form.ghnProvinceId) {
+            fetchDistricts(form.ghnProvinceId);
+        }
+    }, [form.ghnProvinceId]);
+
+    useEffect(() => {
+        if (form.ghnDistrictId) {
+            fetchWards(form.ghnDistrictId);
+        }
+    }, [form.ghnDistrictId]);
 
     useEffect(() => {
         const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -27,17 +63,65 @@ const AddEditAddressModal = ({ address, onClose, onSave }) => {
         };
     }, [onClose]);
 
-    const districts = form.country ? DISTRICTS[form.country] || [] : [];
-    const wards = form.state ? WARDS[form.state] || [] : [];
-
     const set = (field, value) => {
         setForm(prev => {
             const next = { ...prev, [field]: value };
-            if (field === 'country') { next.state = ''; next.city = ''; }
-            if (field === 'state') { next.city = ''; }
+            // Reset cascading fields
+            if (field === 'ghnProvinceId') {
+                next.ghnDistrictId = '';
+                next.ghnWardCode = '';
+                next.state = '';
+                next.city = '';
+            }
+            if (field === 'ghnDistrictId') {
+                next.ghnWardCode = '';
+                next.city = '';
+            }
             return next;
         });
         setErrors(prev => ({ ...prev, [field]: '' }));
+    };
+
+    const handleProvinceChange = (e) => {
+        const code = e.target.value;
+        const selected = provinces.find((p) => String(p.code) === code);
+        set('ghnProvinceId', code);
+        setForm(prev => ({
+            ...prev,
+            ghnProvinceId: code,
+            country: selected ? selected.name : '',
+            ghnDistrictId: '',
+            state: '',
+            ghnWardCode: '',
+            city: '',
+        }));
+        setErrors(prev => ({ ...prev, country: '' }));
+        if (code) fetchDistricts(code);
+    };
+
+    const handleDistrictChange = (e) => {
+        const code = e.target.value;
+        const selected = districts.find((d) => String(d.code) === code);
+        setForm(prev => ({
+            ...prev,
+            ghnDistrictId: code,
+            state: selected ? selected.name : '',
+            ghnWardCode: '',
+            city: '',
+        }));
+        setErrors(prev => ({ ...prev, state: '' }));
+        if (code) fetchWards(code);
+    };
+
+    const handleWardChange = (e) => {
+        const code = e.target.value;
+        const selected = wards.find((w) => String(w.code) === code);
+        setForm(prev => ({
+            ...prev,
+            ghnWardCode: code,
+            city: selected ? selected.name : '',
+        }));
+        setErrors(prev => ({ ...prev, city: '' }));
     };
 
     const validate = () => {
@@ -47,9 +131,9 @@ const AddEditAddressModal = ({ address, onClose, onSave }) => {
         const digits = form.phone.replace(/\s/g, '');
         if (!digits || !phoneRegex.test(digits))
             errs.phone = 'Số điện thoại không hợp lệ (VD: 0912345678)';
-        if (!form.country) errs.country = 'Vui lòng chọn Tỉnh/Thành phố';
-        if (!form.state) errs.state = 'Vui lòng chọn Quận/Huyện';
-        if (!form.city) errs.city = 'Vui lòng chọn Phường/Xã';
+        if (!form.ghnProvinceId || !form.country) errs.country = 'Vui lòng chọn Tỉnh/Thành phố';
+        if (!form.ghnDistrictId || !form.state) errs.state = 'Vui lòng chọn Quận/Huyện';
+        if (!form.ghnWardCode || !form.city) errs.city = 'Vui lòng chọn Phường/Xã';
         if (!form.line1.trim() || form.line1.trim().length < 5)
             errs.line1 = 'Vui lòng nhập địa chỉ cụ thể (ít nhất 5 ký tự)';
         return errs;
@@ -61,7 +145,17 @@ const AddEditAddressModal = ({ address, onClose, onSave }) => {
         setSaving(true);
         try {
             await onSave({
-                ...form,
+                recipientName: form.recipientName,
+                phone: form.phone,
+                country: form.country,
+                state: form.state,
+                city: form.city,
+                line1: form.line1,
+                line2: form.line2,
+                isDefault: form.isDefault,
+                ghnProvinceId: form.ghnProvinceId ? Number(form.ghnProvinceId) : null,
+                ghnDistrictId: form.ghnDistrictId ? Number(form.ghnDistrictId) : null,
+                ghnWardCode: form.ghnWardCode || null,
                 addressId: address?.addressId || null,
             });
         } catch (err) {
@@ -108,11 +202,14 @@ const AddEditAddressModal = ({ address, onClose, onSave }) => {
                             <label className="acc-form-label">Tỉnh/Thành phố <span className="acc-required">*</span></label>
                             <select
                                 className={`acc-form-select${errors.country ? ' error' : ''}`}
-                                value={form.country}
-                                onChange={e => set('country', e.target.value)}
+                                value={form.ghnProvinceId}
+                                onChange={handleProvinceChange}
+                                disabled={loadingProvinces}
                             >
-                                <option value="">Chọn tỉnh/thành</option>
-                                {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                                <option value="">
+                                    {loadingProvinces ? 'Đang tải...' : 'Chọn tỉnh/thành'}
+                                </option>
+                                {provinces.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}
                             </select>
                             {errors.country && <p className="acc-form-error">{errors.country}</p>}
                         </div>
@@ -120,12 +217,14 @@ const AddEditAddressModal = ({ address, onClose, onSave }) => {
                             <label className="acc-form-label">Quận/Huyện <span className="acc-required">*</span></label>
                             <select
                                 className={`acc-form-select${errors.state ? ' error' : ''}`}
-                                value={form.state}
-                                onChange={e => set('state', e.target.value)}
-                                disabled={!form.country}
+                                value={form.ghnDistrictId}
+                                onChange={handleDistrictChange}
+                                disabled={!form.ghnProvinceId || loadingDistricts}
                             >
-                                <option value="">Chọn quận/huyện</option>
-                                {districts.map(d => <option key={d} value={d}>{d}</option>)}
+                                <option value="">
+                                    {loadingDistricts ? 'Đang tải...' : 'Chọn quận/huyện'}
+                                </option>
+                                {districts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
                             </select>
                             {errors.state && <p className="acc-form-error">{errors.state}</p>}
                         </div>
@@ -133,12 +232,14 @@ const AddEditAddressModal = ({ address, onClose, onSave }) => {
                             <label className="acc-form-label">Phường/Xã <span className="acc-required">*</span></label>
                             <select
                                 className={`acc-form-select${errors.city ? ' error' : ''}`}
-                                value={form.city}
-                                onChange={e => set('city', e.target.value)}
-                                disabled={!form.state}
+                                value={form.ghnWardCode}
+                                onChange={handleWardChange}
+                                disabled={!form.ghnDistrictId || loadingWards}
                             >
-                                <option value="">Chọn phường/xã</option>
-                                {wards.map(w => <option key={w} value={w}>{w}</option>)}
+                                <option value="">
+                                    {loadingWards ? 'Đang tải...' : 'Chọn phường/xã'}
+                                </option>
+                                {wards.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}
                             </select>
                             {errors.city && <p className="acc-form-error">{errors.city}</p>}
                         </div>

@@ -5,18 +5,17 @@ import { useAuth } from '../../context/AuthContext';
 import { orderApi } from '../../api/orderApi';
 import { addressApi } from '../../api/addressApi';
 import { couponApi } from '../../api/couponApi';
+import { shippingApi } from '../../api/shippingApi';
 import CheckoutStepIndicator from '../Cart/components/CheckoutStepIndicator';
 import DeliveryMethodSelector from './components/DeliveryMethodSelector';
 import SavedAddressSelector from './components/SavedAddressSelector';
 import RecipientForm from './components/RecipientForm';
 import AddressForm from './components/AddressForm';
-import DeliveryTimeSelector from './components/DeliveryTimeSelector';
 import PaymentMethodSelector from './components/PaymentMethodSelector';
 import OrderNoteInput from './components/OrderNoteInput';
 import OrderReviewPanel from './components/OrderReviewPanel';
 import OrderSuccessState from './components/OrderSuccessState';
 import {
-    DELIVERY_OPTIONS,
     getItemSubtotal,
     formatAddress,
 } from './checkoutConstants';
@@ -41,9 +40,10 @@ const createInitialState = (user) => ({
         district: '',
         ward: '',
         street: '',
-        // Store province/district codes for cascading lookups
+        // Store GHN province/district/ward codes for cascading lookups & fee calc
         provinceCode: '',
         districtCode: '',
+        wardCode: '',
     },
     errors: {},
     touched: {},
@@ -71,6 +71,11 @@ const createInitialState = (user) => ({
 
     // Toast
     toast: null,
+
+    // Shipping fee (calculated via GHN API)
+    shippingFee: null,        // { total, serviceFee, insuranceFee }
+    shippingFeeLoading: false,
+    shippingFeeError: '',
 });
 
 // ─── REDUCER ───────────────────────────────────────────
@@ -132,6 +137,12 @@ function checkoutReducer(state, action) {
             return { ...state, couponCode: '', couponState: null, couponError: '' };
         case 'SET_SELECTED_ADDRESS_FROM_LIST':
             return { ...state, selectedAddressId: action.payload, showManualForm: false };
+        case 'SET_SHIPPING_FEE':
+            return { ...state, shippingFee: action.payload, shippingFeeError: '' };
+        case 'SET_SHIPPING_FEE_LOADING':
+            return { ...state, shippingFeeLoading: action.payload };
+        case 'SET_SHIPPING_FEE_ERROR':
+            return { ...state, shippingFeeError: action.payload, shippingFee: null };
         default:
             return state;
     }
@@ -242,8 +253,7 @@ const CheckoutPage = () => {
 
     // ── Calculations ────────────────────────────────────
     const subtotal = cartItems.reduce((sum, item) => sum + getItemSubtotal(item), 0);
-    const deliveryOption = DELIVERY_OPTIONS.find((o) => o.id === state.deliveryTime);
-    const shippingCost = state.deliveryMethod === 'In-store' ? 0 : (deliveryOption?.cost || 0);
+    const shippingCost = state.deliveryMethod === 'In-store' ? 0 : (state.shippingFee?.total || 0);
     const discountAmount = state.couponState?.discountAmount || 0;
     const total = subtotal + shippingCost - discountAmount;
 
@@ -368,7 +378,66 @@ const CheckoutPage = () => {
     const selectedAddress = savedAddresses.find(
         (a) => a.addressId === state.selectedAddressId
     );
+    // ── Real-time shipping fee calculation via GHN ──────
+    useEffect(() => {
+        // Don't calculate for in-store pickup
+        if (state.deliveryMethod !== 'Online') {
+            dispatch({ type: 'SET_SHIPPING_FEE', payload: null });
+            return;
+        }
 
+        // Determine GHN district/ward from either selected address or manual form
+        let districtId = null;
+        let wardCode = null;
+
+        if (selectedAddress) {
+            districtId = selectedAddress.ghnDistrictId;
+            wardCode = selectedAddress.ghnWardCode;
+        } else if (state.formData.districtCode && state.formData.wardCode) {
+            districtId = Number(state.formData.districtCode);
+            wardCode = String(state.formData.wardCode);
+        }
+
+        if (!districtId || !wardCode) {
+            dispatch({ type: 'SET_SHIPPING_FEE', payload: null });
+            return;
+        }
+
+        // Calculate total weight from cart items (grams)
+        const totalWeight = cartItems.reduce((sum, item) => {
+            const w = item.variant?.weight || 500; // default 500g per pair
+            return sum + w * item.quantity;
+        }, 0);
+
+        dispatch({ type: 'SET_SHIPPING_FEE_LOADING', payload: true });
+
+        const timer = setTimeout(async () => {
+            try {
+                const res = await shippingApi.calculateFee({
+                    toDistrictId: districtId,
+                    toWardCode: wardCode,
+                    weight: totalWeight > 0 ? totalWeight : 500,
+                });
+                const feeData = res.data?.data || res.data;
+                dispatch({ type: 'SET_SHIPPING_FEE', payload: feeData });
+            } catch (err) {
+                console.error('Failed to calculate shipping fee:', err);
+                dispatch({ type: 'SET_SHIPPING_FEE_ERROR', payload: 'Không thể tính phí vận chuyển' });
+            } finally {
+                dispatch({ type: 'SET_SHIPPING_FEE_LOADING', payload: false });
+            }
+        }, 400); // debounce
+
+        return () => clearTimeout(timer);
+    }, [
+        state.deliveryMethod,
+        state.selectedAddressId,
+        selectedAddress?.ghnDistrictId,
+        selectedAddress?.ghnWardCode,
+        state.formData.districtCode,
+        state.formData.wardCode,
+        cartItems,
+    ]);
     // ── Full validation ─────────────────────────────────
     const validateAll = () => {
         const newErrors = {};
@@ -446,6 +515,9 @@ const CheckoutPage = () => {
                 checkoutData.shippingDistrict = state.formData.district;
                 checkoutData.shippingWard = state.formData.ward;
                 checkoutData.shippingAddress = state.formData.street;
+                // Include GHN IDs for shipping fee calculation on backend
+                checkoutData.ghnDistrictId = state.formData.districtCode ? Number(state.formData.districtCode) : null;
+                checkoutData.ghnWardCode = state.formData.wardCode || null;
             }
 
             // Call real API
@@ -607,12 +679,14 @@ const CheckoutPage = () => {
                                 />
                             )}
 
-                        {/* E: Delivery time (delivery only) */}
-                        {state.deliveryMethod === 'Online' && (
-                            <DeliveryTimeSelector
-                                selectedTime={state.deliveryTime}
-                                onSelect={(t) => dispatch({ type: 'SET_DELIVERY_TIME', payload: t })}
-                            />
+                        {/* E: Shipping fee info (delivery only — calculated via GHN) */}
+                        {state.deliveryMethod === 'Online' && state.shippingFee && (
+                            <div className="co-card co-stagger-5">
+                                <h3 className="co-card-title">Phí vận chuyển (GHN)</h3>
+                                <div className="co-shipping-pill">
+                                    🚚 Phí vận chuyển: {new Intl.NumberFormat('vi-VN').format(state.shippingFee.total)} ₫
+                                </div>
+                            </div>
                         )}
 
                         {/* F: Payment method */}
@@ -677,6 +751,8 @@ const CheckoutPage = () => {
                             onCouponCodeChange={(code) => dispatch({ type: 'SET_COUPON_CODE', payload: code })}
                             onApplyCoupon={handleApplyCoupon}
                             onRemoveCoupon={handleRemoveCoupon}
+                            shippingFeeLoading={state.shippingFeeLoading}
+                            shippingFeeError={state.shippingFeeError}
                         />
                     </div>
                 </div>

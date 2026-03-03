@@ -67,6 +67,7 @@ const AddressForm = ({ formData, errors, touched, onChange, onBlur }) => {
                         // Reset district & ward
                         onChange('districtCode', '');
                         onChange('district', '');
+                        onChange('wardCode', '');
                         onChange('ward', '');
                     }}
                     onBlur={() => onBlur('province')}
@@ -98,6 +99,7 @@ const AddressForm = ({ formData, errors, touched, onChange, onBlur }) => {
                         onChange('districtCode', code);
                         onChange('district', selected ? selected.name : '');
                         // Reset ward
+                        onChange('wardCode', '');
                         onChange('ward', '');
                     }}
                     onBlur={() => onBlur('district')}
@@ -122,8 +124,13 @@ const AddressForm = ({ formData, errors, touched, onChange, onBlur }) => {
                 </label>
                 <select
                     className={getSelectClass('ward')}
-                    value={formData.ward}
-                    onChange={(e) => onChange('ward', e.target.value)}
+                    value={formData.wardCode || ''}
+                    onChange={(e) => {
+                        const code = e.target.value;
+                        const selected = wards.find((w) => String(w.code) === code);
+                        onChange('wardCode', code);
+                        onChange('ward', selected ? selected.name : '');
+                    }}
                     onBlur={() => onBlur('ward')}
                     disabled={!formData.districtCode || loadingWards}
                 >
@@ -131,7 +138,7 @@ const AddressForm = ({ formData, errors, touched, onChange, onBlur }) => {
                         {loadingWards ? 'Đang tải...' : '-- Chọn Phường/Xã --'}
                     </option>
                     {wards.map((w) => (
-                        <option key={w.code} value={w.name}>{w.name}</option>
+                        <option key={w.code} value={w.code}>{w.name}</option>
                     ))}
                 </select>
                 {errors.ward && touched.ward && (
@@ -157,12 +164,7 @@ const AddressForm = ({ formData, errors, touched, onChange, onBlur }) => {
                 )}
             </div>
 
-            {/* Estimated shipping pill */}
-            {allFilled && (
-                <div className="co-shipping-pill">
-                    🚚 Giao hàng dự kiến: 3–5 ngày làm việc
-                </div>
-            )}
+            {/* Estimated shipping pill — now handled by real-time fee calculation */}
         </div>
     );
 };
