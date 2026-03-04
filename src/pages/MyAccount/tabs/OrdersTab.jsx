@@ -179,9 +179,19 @@ const OrdersTab = ({ onOpenReturns }) => {
                                 {order.items.map((item, idx) => (
                                     idx < 3 && (
                                         <div key={item.orderItemId} className="acc-order-item-chip">
-                                            <div className="acc-order-item-thumb" style={{ background: item.thumbColor }}>
-                                                <span className="acc-item-emoji">{item.thumbEmoji}</span>
-                                            </div>
+                                            {item.imageUrl ? (
+                                                <img
+                                                    className="acc-order-item-thumb"
+                                                    src={item.imageUrl}
+                                                    alt={item.productName}
+                                                    loading="lazy"
+                                                    style={{ objectFit: 'cover', borderRadius: 6 }}
+                                                />
+                                            ) : (
+                                                <div className="acc-order-item-thumb" style={{ background: item.thumbColor }}>
+                                                    <span className="acc-item-emoji">{item.thumbEmoji}</span>
+                                                </div>
+                                            )}
                                             <div className="acc-order-item-detail">
                                                 <span className="acc-order-item-name">{item.productName}</span>
                                                 <span className="acc-order-item-variant">{item.variant}</span>

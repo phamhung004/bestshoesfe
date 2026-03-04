@@ -114,9 +114,19 @@ const OverviewTab = ({ onTabChange, customer, stats }) => {
                             <span className="acc-recent-order-date">{formatDate(order.createdAt)}</span>
                         </div>
                         <div className="acc-recent-order-center">
-                            <div className="acc-recent-thumb" style={{ background: order.items?.[0]?.thumbColor || '#eee' }}>
-                                <span>{order.items?.[0]?.thumbEmoji || '👟'}</span>
-                            </div>
+                            {order.items?.[0]?.imageUrl ? (
+                                <img
+                                    className="acc-recent-thumb"
+                                    src={order.items[0].imageUrl}
+                                    alt={order.items[0].productName}
+                                    loading="lazy"
+                                    style={{ objectFit: 'cover', borderRadius: 8 }}
+                                />
+                            ) : (
+                                <div className="acc-recent-thumb" style={{ background: order.items?.[0]?.thumbColor || '#eee' }}>
+                                    <span>{order.items?.[0]?.thumbEmoji || '👟'}</span>
+                                </div>
+                            )}
                             <div className="acc-recent-item-info">
                                 <span className="acc-recent-item-name">{order.items?.[0]?.productName}</span>
                                 {order.items?.length > 1 && (

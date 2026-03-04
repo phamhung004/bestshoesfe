@@ -117,15 +117,37 @@ const OrderDetailModal = ({ order, onClose }) => {
                         <div className="acc-items-table">
                             {order.items.map((item, idx) => (
                                 <div key={item.orderItemId} className={`acc-item-row${idx % 2 === 1 ? ' alt' : ''}`}>
-                                    <div className="acc-item-thumb" style={{ background: item.thumbColor }}>
-                                        <span className="acc-item-emoji">{item.thumbEmoji}</span>
-                                    </div>
+                                    {item.imageUrl ? (
+                                        <img
+                                            className="acc-item-thumb"
+                                            src={item.imageUrl}
+                                            alt={item.productName}
+                                            loading="lazy"
+                                            style={{ objectFit: 'cover', borderRadius: 8 }}
+                                        />
+                                    ) : (
+                                        <div className="acc-item-thumb" style={{ background: item.thumbColor }}>
+                                            <span className="acc-item-emoji">{item.thumbEmoji}</span>
+                                        </div>
+                                    )}
                                     <div className="acc-item-info">
                                         <div className="acc-item-name">{item.productName}</div>
                                         <div className="acc-item-variant">{item.variant}</div>
+                                        {item.promotionName && (
+                                            <div style={{ fontSize: 11, color: '#ef4444', marginTop: 2 }}>🏷️ {item.promotionName}</div>
+                                        )}
                                     </div>
                                     <div className="acc-item-qty">x{item.quantity}</div>
-                                    <div className="acc-item-price">{formatVND(item.totalPrice)}</div>
+                                    <div className="acc-item-price">
+                                        {item.originalPrice && (
+                                            <div style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: 12 }}>
+                                                {formatVND(item.originalPrice)}
+                                            </div>
+                                        )}
+                                        <div style={{ color: item.originalPrice ? '#ef4444' : 'inherit' }}>
+                                            {formatVND(item.totalPrice)}
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
                         </div>

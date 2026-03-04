@@ -588,8 +588,21 @@ const OrderSlideOver = ({
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
                                         <div className="om-so-item-qty">
-                                            {item.quantity} × {formatVND(item.unit_price)}
+                                            {item.quantity} ×{' '}
+                                            {item.original_price && (
+                                                <span style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: 12, marginRight: 4 }}>
+                                                    {formatVND(item.original_price)}
+                                                </span>
+                                            )}
+                                            <span style={{ color: item.original_price ? 'var(--danger-500, #ef4444)' : 'inherit' }}>
+                                                {formatVND(item.unit_price)}
+                                            </span>
                                         </div>
+                                        {item.promotion_name && (
+                                            <div style={{ fontSize: 11, background: '#fef2f2', color: '#ef4444', borderRadius: 4, padding: '1px 6px', marginTop: 2, display: 'inline-block' }}>
+                                                🏷️ {item.promotion_name}
+                                            </div>
+                                        )}
                                         <div className="om-so-item-total">{formatVND(item.total_price)}</div>
                                     </div>
                                 </div>
