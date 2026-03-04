@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { formatVND, COUPONS, FREESHIP_THRESHOLD } from '../mockCartData';
 
 const OrderSummary = ({ subtotal, itemCount, couponState, onApplyCoupon, onRemoveCoupon }) => {
@@ -164,9 +165,11 @@ const OrderSummary = ({ subtotal, itemCount, couponState, onApplyCoupon, onRemov
             </div>
 
             {/* Checkout Button */}
-            <button className="cart-checkout-btn">
-                Tiến hành thanh toán →
-            </button>
+            <Link to="/checkout" className="cart-checkout-link">
+                <button className="cart-checkout-btn">
+                    Tiến hành thanh toán →
+                </button>
+            </Link>
             <div className="cart-checkout-secure">🔒 Thanh toán an toàn & bảo mật</div>
 
             {/* Payment Icons */}
