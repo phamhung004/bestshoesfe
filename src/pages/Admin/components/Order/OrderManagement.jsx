@@ -291,20 +291,34 @@ const OrderManagement = () => {
     // ── Update order items (API) ───────────────────────────────────────
     const handleItemsUpdate = useCallback(async (orderId, itemsData) => {
         try {
+            // Remember old coupon state before update
+            const oldCouponId = selectedOrderDetail?.coupon_id || selectedOrder?.coupon_id;
+            const oldCouponDiscount = selectedOrderDetail?.coupon_discount_amount || selectedOrder?.coupon_discount_amount || 0;
+
             const response = await orderAPI.updateItems(orderId, itemsData);
             if (response?.data) {
                 const updated = normalizeOrder(response.data);
                 setSelectedOrderDetail(updated);
                 setSelectedOrder((prev) => prev ? { ...prev, ...updated } : prev);
+
+                // Detect coupon changes after recalculation
+                if (oldCouponId && !updated.coupon_id) {
+                    showToast('⚠️ Mã giảm giá đã bị gỡ do đơn hàng không còn đủ điều kiện');
+                } else if (oldCouponId && updated.coupon_discount_amount !== oldCouponDiscount) {
+                    showToast('✅ Đã cập nhật sản phẩm — giá trị mã giảm giá đã được tính lại');
+                } else {
+                    showToast('✅ Đã cập nhật sản phẩm');
+                }
+            } else {
+                showToast('✅ Đã cập nhật sản phẩm');
             }
-            showToast('✅ Đã cập nhật sản phẩm');
             fetchOrders();
         } catch (err) {
             const backendMsg = err?.response?.data?.message || err?.message;
             showToast('❌ Lỗi: ' + (backendMsg || 'Không thể cập nhật sản phẩm'));
             throw err;
         }
-    }, [showToast, fetchOrders]);
+    }, [showToast, fetchOrders, selectedOrderDetail, selectedOrder]);
     // ── Bulk confirm (API) ────────────────────────────────────────
     const handleBulkConfirm = useCallback(async () => {
         try {
