@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { categoryAPI } from "../../../../services/api";
 import { useToast } from "../../../../context/useToast";
+import { useDebounce } from "../../../../hooks/useDebounce";
+import Pagination from "../Pagination";
 import "../Brand/BrandList.css";
 
 const CategoryList = ({ onEdit, onAdd, refreshTrigger }) => {
@@ -10,17 +12,27 @@ const CategoryList = ({ onEdit, onAdd, refreshTrigger }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(5);
+  const [totalItems, setTotalItems] = useState(0);
+
+  // Debounce search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const loadItems = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await categoryAPI.getAll(currentPage, pageSize);
+      const response = await categoryAPI.getAll(
+        debouncedSearchTerm.trim() ? debouncedSearchTerm.trim() : undefined,
+        currentPage,
+        pageSize,
+      );
       // Backend returns: { status: 0, message: "...", data: { content: [...], ... } }
       const itemsList =
         response?.data?.content || response?.content || response || [];
       setItems(Array.isArray(itemsList) ? itemsList : []);
+      setTotalItems(response?.data?.totalElements || itemsList.length || 0);
       setError(null);
     } catch (err) {
       setError("Không thể tải danh mục");
@@ -28,7 +40,11 @@ const CategoryList = ({ onEdit, onAdd, refreshTrigger }) => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, debouncedSearchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(0); // Reset to first page when search changes
+  }, [debouncedSearchTerm]);
 
   useEffect(() => {
     loadItems();
@@ -77,9 +93,19 @@ const CategoryList = ({ onEdit, onAdd, refreshTrigger }) => {
       <div className="brand-list-header">
         <div className="header-left">
           <h2 className="section-title">Danh mục</h2>
-          <div className="brand-count">Tổng: {items.length}</div>
+          <div className="brand-count">Tổng cộng: {totalItems} danh mục</div>
         </div>
         <div className="header-right">
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="Tìm kiếm danh mục..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+            <span className="search-icon">🔍</span>
+          </div>
           <button onClick={onAdd} className="btn-primary">
             Thêm danh mục mới
           </button>
@@ -133,6 +159,12 @@ const CategoryList = ({ onEdit, onAdd, refreshTrigger }) => {
           </tbody>
         </table>
       </div>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

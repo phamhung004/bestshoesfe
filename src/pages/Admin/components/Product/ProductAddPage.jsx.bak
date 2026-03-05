@@ -1,0 +1,928 @@
+﻿import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  productAPI,
+  productVariantAPI,
+  brandAPI,
+  categoryAPI,
+  materialAPI,
+  colorAPI,
+  sizeAPI,
+} from "../../../../services/api";
+import { useToast } from "../../../../context/useToast";
+import "../Brand/BrandForm.css";
+
+const ProductAddPage = () => {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    brandId: "",
+    categoryId: "",
+    materialId: "",
+    basePrice: "",
+    status: true,
+  });
+
+  const [selectedColors, setSelectedColors] = useState([]);
+  const [selectedSizes, setSelectedSizes] = useState([]);
+
+  // Lists for dropdowns
+  const [brands, setBrands] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [materials, setMaterials] = useState([]);
+  const [colors, setColors] = useState([]);
+  const [sizes, setSizes] = useState([]);
+
+  // Generated variants
+  const [variants, setVariants] = useState([]);
+  const [variantImages, setVariantImages] = useState({});
+
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  // Load dropdown data
+  useEffect(() => {
+    loadDropdownData();
+  }, []);
+
+  const loadDropdownData = async () => {
+    try {
+      const [brandsRes, categoriesRes, materialsRes, colorsRes, sizesRes] =
+        await Promise.all([
+          brandAPI.getAll(undefined, 0, 100),
+          categoryAPI.getAll(undefined, 0, 100),
+          materialAPI.getAll(undefined, 0, 100),
+          colorAPI.getAll(undefined, 0, 100),
+          sizeAPI.getAll(undefined, 0, 100),
+        ]);
+
+      setBrands(brandsRes?.data?.content || []);
+      setCategories(categoriesRes?.data?.content || []);
+      setMaterials(materialsRes?.data?.content || []);
+      setColors(colorsRes?.data?.content || []);
+      setSizes(sizesRes?.data?.content || []);
+    } catch (err) {
+      console.error("Error loading dropdown data:", err);
+      showToast("Lá»—i táº£i dá»¯ liá»‡u", "error");
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    const newValue = type === "checkbox" ? checked : value;
+    setFormData((prev) => ({ ...prev, [name]: newValue }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
+  };
+
+  const handleColorToggle = (colorId) => {
+    setSelectedColors((prev) =>
+      prev.includes(colorId)
+        ? prev.filter((c) => c !== colorId)
+        : [...prev, colorId],
+    );
+  };
+
+  const handleSizeToggle = (sizeId) => {
+    setSelectedSizes((prev) =>
+      prev.includes(sizeId)
+        ? prev.filter((s) => s !== sizeId)
+        : [...prev, sizeId],
+    );
+  };
+
+  const syncVariants = () => {
+    if (selectedColors.length === 0 || selectedSizes.length === 0) {
+      setVariants([]);
+      return;
+    }
+
+    setVariants((prev) => {
+      const prevMap = new Map(prev.map((v) => [v.id, v]));
+      const generated = [];
+
+      selectedColors.forEach((colorId) => {
+        selectedSizes.forEach((sizeId) => {
+          const id = `${colorId}-${sizeId}`;
+          const existing = prevMap.get(id);
+          generated.push({
+            id,
+            colorId,
+            sizeId,
+            price:
+              existing?.price != null
+                ? existing.price
+                : parseFloat(formData.basePrice) || 0,
+            stock: existing?.stock ?? 0,
+            sku: existing?.sku || `SP-${colorId}-${sizeId}`.toUpperCase(),
+          });
+        });
+      });
+
+      return generated;
+    });
+  };
+
+
+  useEffect(() => {
+    syncVariants();
+  }, [selectedColors, selectedSizes, formData.basePrice]);
+
+  const updateVariantPrice = (variantId, price) => {
+    setVariants((prev) =>
+      prev.map((v) =>
+        v.id === variantId ? { ...v, price: parseFloat(price) || 0 } : v,
+      ),
+    );
+  };
+
+  const updateVariantStock = (variantId, stock) => {
+    setVariants((prev) =>
+      prev.map((v) =>
+        v.id === variantId ? { ...v, stock: parseInt(stock) || 0 } : v,
+      ),
+    );
+  };
+
+  const handleVariantImageChange = (variantId, files) => {
+    if (files && files.length > 0) {
+      setVariantImages((prev) => ({
+        ...prev,
+        [variantId]: Array.from(files),
+      }));
+    }
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = "TÃªn sáº£n pháº©m lÃ  báº¯t buá»™c";
+    if (!formData.brandId) newErrors.brandId = "ThÆ°Æ¡ng hiá»‡u lÃ  báº¯t buá»™c";
+    if (!formData.categoryId) newErrors.categoryId = "Danh má»¥c lÃ  báº¯t buá»™c";
+    if (!formData.materialId) newErrors.materialId = "Cháº¥t liá»‡u lÃ  báº¯t buá»™c";
+    if (!formData.basePrice || parseFloat(formData.basePrice) <= 0)
+      newErrors.basePrice = "GiÃ¡ pháº£i lá»›n hÆ¡n 0";
+    if (variants.length === 0)
+      newErrors.variants = "Vui lÃ²ng táº¡o Ã­t nháº¥t má»™t biáº¿n thá»ƒ sáº£n pháº©m";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    setLoading(true);
+    try {
+      const productPayload = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        brandId: parseInt(formData.brandId),
+        categoryId: parseInt(formData.categoryId),
+        materialId: parseInt(formData.materialId),
+        basePrice: parseFloat(formData.basePrice),
+        status: formData.status,
+      };
+
+      const productRes = await productAPI.create(productPayload);
+      const createdProductId = productRes?.data?.productId;
+
+      // Create variants for new product
+      if (variants.length > 0) {
+        for (const variant of variants) {
+          const variantPayload = {
+            productId: createdProductId,
+            colorId: variant.colorId,
+            sizeId: variant.sizeId,
+            price: variant.price,
+            stock: variant.stock,
+            sku: variant.sku,
+            status: true,
+          };
+
+          const variantRes = await productVariantAPI.create(variantPayload);
+          const variantId = variantRes?.data?.variantId;
+
+          // Upload images for variant
+          if (variantImages[variant.id] && variantId) {
+            const formDataImg = new FormData();
+            variantImages[variant.id].forEach((file) => {
+              formDataImg.append("files", file);
+            });
+
+            try {
+              await fetch(
+                `http://localhost:8080/api/product-images/variant/${variantId}`,
+                {
+                  method: "POST",
+                  body: formDataImg,
+                },
+              );
+            } catch (imgErr) {
+              console.error("Error uploading images:", imgErr);
+            }
+          }
+        }
+      }
+
+      showToast("ThÃªm sáº£n pháº©m thÃ nh cÃ´ng", "success");
+      navigate(-1);
+    } catch (err) {
+      console.error("Error saving product:", err);
+      showToast(err.message || "CÃ³ lá»—i xáº£y ra", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Group variants by color
+  const variantsByColor = selectedColors.map((colorId) => {
+    const color = colors.find((c) => c.colorId === colorId);
+    const colorVariants = variants.filter((v) => v.colorId === colorId);
+    return {
+      colorId,
+      colorName: color?.colorName || "Unknown",
+      colorCode: color?.colorCode || "#ccc",
+      variants: colorVariants,
+    };
+  });
+
+  return (
+    <div style={{ padding: "24px" }}>
+      <div style={{ marginBottom: "24px" }}>
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            marginBottom: "16px",
+            padding: "8px 12px",
+            backgroundColor: "transparent",
+            border: "none",
+            color: "#3b82f6",
+            cursor: "pointer",
+            fontSize: "14px",
+            textDecoration: "underline",
+          }}
+        >
+          ← Quay lại
+        </button>
+        <h1
+          style={{
+            margin: "0",
+            fontSize: "28px",
+            fontWeight: "700",
+            color: "#1f2937",
+          }}
+        >
+          Thêm sản phẩm mới
+        </h1>
+      </div>
+
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          backgroundColor: "#ffffff",
+          borderRadius: "8px",
+          padding: "24px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        }}
+      >
+        {/* Thông tin sản phẩm */}
+        <section style={{ marginBottom: "32px" }}>
+          <h3
+            style={{
+              marginBottom: "16px",
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "#1f2937",
+            }}
+          >
+            Thông tin sản phẩm
+          </h3>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "16px",
+            }}
+          >
+            <div>
+              <label
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "#4b5563",
+                  display: "block",
+                  marginBottom: "6px",
+                }}
+              >
+                *Tên sản phẩm
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className={errors.name ? "error" : ""}
+                placeholder="Nhập tên sản phẩm"
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  border: errors.name
+                    ? "1px solid #dc2626"
+                    : "1px solid #d1d5db",
+                  borderRadius: "6px",
+                  fontSize: "13px",
+                }}
+              />
+              {errors.name && (
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "#dc2626",
+                    marginTop: "4px",
+                    display: "block",
+                  }}
+                >
+                  {errors.name}
+                </span>
+              )}
+            </div>
+
+            <div>
+              <label
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "#4b5563",
+                  display: "block",
+                  marginBottom: "6px",
+                }}
+              >
+                *Thương hiệu
+              </label>
+              <select
+                name="brandId"
+                value={formData.brandId}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  border: errors.brandId
+                    ? "1px solid #dc2626"
+                    : "1px solid #d1d5db",
+                  borderRadius: "6px",
+                  fontSize: "13px",
+                }}
+              >
+                <option value="">Chọn thương hiệu</option>
+                {brands.map((brand) => (
+                  <option key={brand.brandId} value={brand.brandId}>
+                    {brand.name}
+                  </option>
+                ))}
+              </select>
+              {errors.brandId && (
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "#dc2626",
+                    marginTop: "4px",
+                    display: "block",
+                  }}
+                >
+                  {errors.brandId}
+                </span>
+              )}
+            </div>
+
+            <div>
+              <label
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "#4b5563",
+                  display: "block",
+                  marginBottom: "6px",
+                }}
+              >
+                *Chất liệu
+              </label>
+              <select
+                name="materialId"
+                value={formData.materialId}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  border: errors.materialId
+                    ? "1px solid #dc2626"
+                    : "1px solid #d1d5db",
+                  borderRadius: "6px",
+                  fontSize: "13px",
+                }}
+              >
+                <option value="">Chọn chất liệu</option>
+                {materials.map((material) => (
+                  <option key={material.materialId} value={material.materialId}>
+                    {material.name}
+                  </option>
+                ))}
+              </select>
+              {errors.materialId && (
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "#dc2626",
+                    marginTop: "4px",
+                    display: "block",
+                  }}
+                >
+                  {errors.materialId}
+                </span>
+              )}
+            </div>
+
+            <div>
+              <label
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "#4b5563",
+                  display: "block",
+                  marginBottom: "6px",
+                }}
+              >
+                *Độ cứng
+              </label>
+              <select
+                name="categoryId"
+                value={formData.categoryId}
+                onChange={handleChange}
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  border: errors.categoryId
+                    ? "1px solid #dc2626"
+                    : "1px solid #d1d5db",
+                  borderRadius: "6px",
+                  fontSize: "13px",
+                }}
+              >
+                <option value="">Chọn độ cứng</option>
+                {categories.map((category) => (
+                  <option key={category.categoryId} value={category.categoryId}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              {errors.categoryId && (
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "#dc2626",
+                    marginTop: "4px",
+                    display: "block",
+                  }}
+                >
+                  {errors.categoryId}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div style={{ marginTop: "16px" }}>
+            <label
+              style={{
+                fontSize: "13px",
+                fontWeight: "600",
+                color: "#4b5563",
+                display: "block",
+                marginBottom: "6px",
+              }}
+            >
+              *Mô tả
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Nhập mô tả sản phẩm"
+              rows="3"
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                border: "1px solid #d1d5db",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontFamily: "inherit",
+              }}
+            />
+          </div>
+
+          <div
+            style={{
+              marginTop: "16px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <input
+              type="checkbox"
+              name="status"
+              checked={formData.status}
+              onChange={handleChange}
+              id="status"
+              style={{ cursor: "pointer" }}
+            />
+            <label
+              htmlFor="status"
+              style={{ fontSize: "13px", color: "#4b5563", cursor: "pointer" }}
+            >
+              Kích hoạt sản phẩm
+            </label>
+          </div>
+        </section>
+
+        {/* Chọn Màu sắc & Trọng lượng */}
+        <section style={{ marginBottom: "32px" }}>
+          <h3
+            style={{
+              marginBottom: "16px",
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "#1f2937",
+            }}
+          >
+            Màu sắc & Trọng lượng
+          </h3>
+
+          {/* Chọn Trọng lượng */}
+          <div style={{ marginBottom: "24px" }}>
+            <label
+              style={{
+                fontSize: "13px",
+                fontWeight: "600",
+                color: "#4b5563",
+                marginBottom: "8px",
+                display: "block",
+              }}
+            >
+              *Trọng lượng:
+            </label>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+                gap: "8px",
+              }}
+            >
+              {sizes.map((size) => (
+                <label
+                  key={size.sizeId}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 12px",
+                    border: selectedSizes.includes(size.sizeId)
+                      ? "2px solid #3b82f6"
+                      : "1px solid #d1d5db",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    backgroundColor: selectedSizes.includes(size.sizeId)
+                      ? "#eff6ff"
+                      : "white",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedSizes.includes(size.sizeId)}
+                    onChange={() => handleSizeToggle(size.sizeId)}
+                    style={{ cursor: "pointer" }}
+                  />
+                  <span style={{ fontSize: "13px", fontWeight: "500" }}>
+                    {size.sizeName}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Chọn Màu sắc */}
+          <div style={{ marginBottom: "24px" }}>
+            <label
+              style={{
+                fontSize: "13px",
+                fontWeight: "600",
+                color: "#4b5563",
+                marginBottom: "8px",
+                display: "block",
+              }}
+            >
+              *Màu sắc:
+            </label>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+                gap: "8px",
+              }}
+            >
+              {colors.map((color) => (
+                <label
+                  key={color.colorId}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 12px",
+                    border: selectedColors.includes(color.colorId)
+                      ? "2px solid #3b82f6"
+                      : "1px solid #d1d5db",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    backgroundColor: selectedColors.includes(color.colorId)
+                      ? "#eff6ff"
+                      : "white",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedColors.includes(color.colorId)}
+                    onChange={() => handleColorToggle(color.colorId)}
+                    style={{ cursor: "pointer" }}
+                  />
+                  <div
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      backgroundColor: color.colorCode || "#ccc",
+                      borderRadius: "3px",
+                      border: "1px solid #999",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ fontSize: "13px" }}>{color.colorName}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ fontSize: "13px", color: "#6b7280" }}>
+            Biến thể sản phẩm sẽ tự động tạo khi bạn chọn đủ màu và kích cỡ.
+          </div>
+        </section>
+        {/* Danh sách biến thể theo màu */}
+        {variants.length > 0 && (
+          <section style={{ marginBottom: "32px" }}>
+            <h3
+              style={{
+                marginBottom: "16px",
+                fontSize: "16px",
+                fontWeight: "600",
+                color: "#1f2937",
+              }}
+            >
+              Quáº£n lÃ½ biáº¿n thá»ƒ sáº£n pháº©m
+            </h3>
+
+            {variantsByColor.map((group) => (
+              <div
+                key={group.colorId}
+                style={{
+                  marginBottom: "24px",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "8px",
+                  padding: "16px",
+                  backgroundColor: "#f9fafb",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    marginBottom: "16px",
+                    padding: "12px",
+                    backgroundColor: "#ffffff",
+                    borderRadius: "6px",
+                    border: "1px solid #e5e7eb",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      backgroundColor: group.colorCode,
+                      borderRadius: "4px",
+                      border: "2px solid #d1d5db",
+                    }}
+                  />
+                  <div>
+                    <h4
+                      style={{
+                        margin: "0",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        color: "#1f2937",
+                      }}
+                    >
+                      {group.colorName}
+                    </h4>
+                    <p
+                      style={{
+                        margin: "0",
+                        fontSize: "12px",
+                        color: "#6b7280",
+                      }}
+                    >
+                      {group.variants.length} biáº¿n thá»ƒ â€¢ 0 sáº£n pháº©m â€¢ GiÃ¡ TB: 0
+                      Ä‘
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(280px, 1fr))",
+                    gap: "12px",
+                  }}
+                >
+                  {group.variants.map((v) => {
+                    const size = sizes.find((s) => s.sizeId === v.sizeId);
+                    return (
+                      <div
+                        key={v.id}
+                        style={{
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "6px",
+                          padding: "12px",
+                        }}
+                      >
+                        <h5
+                          style={{
+                            margin: "0 0 12px 0",
+                            fontSize: "13px",
+                            fontWeight: "600",
+                            color: "#1f2937",
+                          }}
+                        >
+                          {group.colorName} - {size?.sizeName}
+                        </h5>
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color: "#6b7280",
+                            marginBottom: "12px",
+                          }}
+                        >
+                          Trá»ng lÆ°á»£ng: {size?.sizeName}
+                        </div>
+
+                        <div style={{ marginBottom: "12px" }}>
+                          <label
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "500",
+                              color: "#4b5563",
+                              display: "block",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            ?nh bi?n th?
+                          </label>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={(e) =>
+                              handleVariantImageChange(v.id, e.target.files)
+                            }
+                            style={{ fontSize: "12px" }}
+                          />
+                        </div>
+
+                        <div style={{ marginBottom: "12px" }}>
+                          <label
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "500",
+                              color: "#4b5563",
+                              display: "block",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            # Sá»‘ lÆ°á»£ng
+                          </label>
+                          <input
+                            type="number"
+                            value={v.stock}
+                            onChange={(e) =>
+                              updateVariantStock(v.id, e.target.value)
+                            }
+                            min="0"
+                            style={{
+                              padding: "6px 8px",
+                              border: "1px solid #d1d5db",
+                              borderRadius: "4px",
+                              fontSize: "13px",
+                              width: "100%",
+                            }}
+                          />
+                        </div>
+
+                        <div>
+                          <label
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "500",
+                              color: "#4b5563",
+                              display: "block",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            $ ÄÆ¡n giÃ¡ (VND)
+                          </label>
+                          <input
+                            type="number"
+                            value={v.price}
+                            onChange={(e) =>
+                              updateVariantPrice(v.id, e.target.value)
+                            }
+                            min="0"
+                            step="1000"
+                            style={{
+                              padding: "6px 8px",
+                              border: "1px solid #d1d5db",
+                              borderRadius: "4px",
+                              fontSize: "13px",
+                              width: "100%",
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
+
+        {errors.variants && (
+          <div
+            style={{ marginBottom: "16px", color: "#dc2626", fontSize: "13px" }}
+          >
+            {errors.variants}
+          </div>
+        )}
+
+        <div
+          style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}
+        >
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            style={{
+              padding: "10px 20px",
+              backgroundColor: "#f3f4f6",
+              color: "#1f2937",
+              border: "1px solid #d1d5db",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: "600",
+            }}
+          >
+            Há»§y
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: "10px 20px",
+              backgroundColor: "#3b82f6",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: loading ? "not-allowed" : "pointer",
+              fontSize: "14px",
+              fontWeight: "600",
+              opacity: loading ? 0.6 : 1,
+            }}
+          >
+            {loading ? "Äang lÆ°u..." : "LÆ°u"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default ProductAddPage;

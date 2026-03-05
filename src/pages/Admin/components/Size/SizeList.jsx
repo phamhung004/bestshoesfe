@@ -1,21 +1,28 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { sizeAPI } from "../../../services/api";
-import Pagination from "./Pagination";
-import "./Brand/BrandList.css";
+import { sizeAPI } from "../../../../services/api";
+import { useToast } from "../../../../context/useToast";
+import { useDebounce } from "../../../../hooks/useDebounce";
+import "../Brand/BrandList.css";
 
 const SizeList = ({ onEdit, onAdd, refreshTrigger }) => {
+  const { showToast } = useToast();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
-
+  // Debounce search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const loadItems = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await sizeAPI.getAll(currentPage, pageSize);
-      // Backend returns: { status: 0, message: "...", data: { content: [...], totalElements: 100, ... } }
+      const response = await sizeAPI.getAll(
+        debouncedSearchTerm.trim() ? debouncedSearchTerm.trim() : undefined,
+        currentPage,
+        pageSize,
+      );
       const itemsList =
         response?.data?.content || response?.content || response || [];
       setItems(Array.isArray(itemsList) ? itemsList : []);
@@ -31,7 +38,11 @@ const SizeList = ({ onEdit, onAdd, refreshTrigger }) => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, debouncedSearchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(0); // Reset to first page when search changes
+  }, [debouncedSearchTerm]);
 
   useEffect(() => {
     loadItems();
@@ -42,9 +53,9 @@ const SizeList = ({ onEdit, onAdd, refreshTrigger }) => {
       try {
         await sizeAPI.delete(id);
         await loadItems();
-        alert("Xóa thành công");
+        showToast("Xóa kích cỡ thành công", "success");
       } catch (err) {
-        alert("Không thể xóa kích cỡ.");
+        showToast("Không thể xóa kích cỡ.", "error");
       }
     }
   };
@@ -53,8 +64,9 @@ const SizeList = ({ onEdit, onAdd, refreshTrigger }) => {
     try {
       await sizeAPI.toggleStatus(id);
       await loadItems();
+      showToast("Cập nhật trạng thái thành công", "success");
     } catch (err) {
-      alert("Không thể thay đổi trạng thái.");
+      showToast("Không thể thay đổi trạng thái.", "error");
     }
   };
 
@@ -79,6 +91,13 @@ const SizeList = ({ onEdit, onAdd, refreshTrigger }) => {
           <div className="brand-count">Tổng: {totalItems}</div>
         </div>
         <div className="header-right">
+          <input
+            type="text"
+            placeholder="Tìm kiếm theo tên kích cỡ..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
           <button onClick={onAdd} className="btn-primary">
             Thêm kích cỡ mới
           </button>
@@ -125,13 +144,25 @@ const SizeList = ({ onEdit, onAdd, refreshTrigger }) => {
         </table>
       </div>
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={Math.ceil(totalItems / pageSize)}
-        pageSize={pageSize}
-        totalItems={totalItems}
-        onPageChange={setCurrentPage}
-      />
+      {totalItems > pageSize && (
+        <div className="pagination">
+          <button
+            disabled={currentPage === 0}
+            onClick={() => setCurrentPage(currentPage - 1)}
+          >
+            Trang trước
+          </button>
+          <span>
+            Trang {currentPage + 1} / {Math.ceil(totalItems / pageSize)}
+          </span>
+          <button
+            disabled={currentPage >= Math.ceil(totalItems / pageSize) - 1}
+            onClick={() => setCurrentPage(currentPage + 1)}
+          >
+            Trang sau
+          </button>
+        </div>
+      )}
     </div>
   );
 };

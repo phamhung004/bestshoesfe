@@ -1,0 +1,1584 @@
+import React, { useState, useEffect, useCallback } from "react";
+
+
+
+
+
+
+
+import { colorAPI } from "../../../../services/api";
+
+
+
+
+
+
+
+import { useToast } from "../../../../context/useToast";
+
+
+
+
+
+
+
+import { useDebounce } from "../../../../hooks/useDebounce";
+
+
+
+
+
+
+
+import "../Brand/BrandList.css";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const ColorList = ({ onEdit, onAdd, refreshTrigger }) => {
+
+
+
+
+
+
+
+  const { showToast } = useToast();
+
+
+
+
+
+
+
+  const [items, setItems] = useState([]);
+
+
+
+
+
+
+
+  const [loading, setLoading] = useState(true);
+
+
+
+
+
+
+
+  const [error, setError] = useState(null);
+
+
+
+
+
+
+
+  const [searchTerm, setSearchTerm] = useState("");
+
+
+
+
+
+
+
+  const [currentPage, setCurrentPage] = useState(0);
+
+
+
+
+
+
+
+  const [pageSize] = useState(5);
+
+
+
+
+
+
+
+  const [totalItems, setTotalItems] = useState(0);
+
+
+
+
+
+
+
+  // Debounce search term
+
+
+
+
+
+
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+
+
+
+
+
+
+  const loadItems = useCallback(async () => {
+
+
+
+
+
+
+
+    try {
+
+
+
+
+
+
+
+      setLoading(true);
+
+
+
+
+
+
+
+      const response = await colorAPI.getAll(
+
+
+
+
+
+
+
+        debouncedSearchTerm.trim() ? debouncedSearchTerm.trim() : undefined,
+
+
+
+
+
+
+
+        currentPage,
+
+
+
+
+
+
+
+        pageSize,
+
+
+
+
+
+
+
+      );
+
+
+
+
+
+
+
+      const itemsList =
+
+
+
+
+
+
+
+        response?.data?.content || response?.content || response || [];
+
+
+
+
+
+
+
+      setItems(Array.isArray(itemsList) ? itemsList : []);
+
+
+
+
+
+
+
+      setTotalItems(
+
+
+
+
+
+
+
+        response?.data?.totalElements ||
+
+
+
+
+
+
+
+          response?.totalElements ||
+
+
+
+
+
+
+
+          itemsList.length,
+
+
+
+
+
+
+
+      );
+
+
+
+
+
+
+
+      setError(null);
+
+
+
+
+
+
+
+    } catch (err) {
+
+
+
+
+
+
+
+      setError("Không thể tải màu sắc");
+
+
+
+
+
+
+
+      console.error("Error loading colors:", err);
+
+
+
+
+
+
+
+    } finally {
+
+
+
+
+
+
+
+      setLoading(false);
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+  }, [currentPage, pageSize, debouncedSearchTerm]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  useEffect(() => {
+
+
+
+
+
+
+
+    setCurrentPage(0); // Reset to first page when search changes
+
+
+
+
+
+
+
+  }, [debouncedSearchTerm]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  useEffect(() => {
+
+
+
+
+
+
+
+    loadItems();
+
+
+
+
+
+
+
+  }, [loadItems, refreshTrigger]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const handleDelete = async (id, name) => {
+
+
+
+
+
+
+
+    if (window.confirm(`Xóa màu "${name}"?`)) {
+
+
+
+
+
+
+
+      try {
+
+
+
+
+
+
+
+        await colorAPI.delete(id);
+
+
+
+
+
+
+
+        await loadItems();
+
+
+
+
+
+
+
+        showToast("Xóa màu thành công", "success");
+
+
+
+
+
+
+
+      } catch (err) {
+
+
+
+
+
+
+
+        showToast("Không thể xóa màu.", "error");
+
+
+
+
+
+
+
+      }
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const handleToggle = async (id) => {
+
+
+
+
+
+
+
+    try {
+
+
+
+
+
+
+
+      await colorAPI.toggleStatus(id);
+
+
+
+
+
+
+
+      await loadItems();
+
+
+
+
+
+
+
+      showToast("Cập nhật trạng thái thành công", "success");
+
+
+
+
+
+
+
+    } catch (err) {
+
+
+
+
+
+
+
+      showToast("Không thể thay đổi trạng thái.", "error");
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  if (loading)
+
+
+
+
+
+
+
+    return (
+
+
+
+
+
+
+
+      <div className="brand-list-loading">
+
+
+
+
+
+
+
+        <p>Đang tải...</p>
+
+
+
+
+
+
+
+      </div>
+
+
+
+
+
+
+
+    );
+
+
+
+
+
+
+
+  if (error)
+
+
+
+
+
+
+
+    return (
+
+
+
+
+
+
+
+      <div className="brand-list-error">
+
+
+
+
+
+
+
+        <p>{error}</p>
+
+
+
+
+
+
+
+      </div>
+
+
+
+
+
+
+
+    );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const normalizeColorCode = (code) => {
+
+
+
+
+
+
+
+    if (!code) return "";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    let normalized = String(code).trim().replace(/^0x/i, "").replace(/^#/, "");
+
+
+
+
+
+
+
+    normalized = normalized.replace(/[^0-9a-fA-F]/g, "");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    if (normalized.length === 3 || normalized.length === 6 || normalized.length === 8) {
+
+
+
+
+
+
+
+      return `#${normalized}`;
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    return "";
+
+
+
+
+
+
+
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  return (
+
+
+
+
+
+
+
+    <div className="brand-list">
+
+
+
+
+
+
+
+      <div className="brand-list-header">
+
+
+
+
+
+
+
+        <div className="header-left">
+
+
+
+
+
+
+
+          <h2 className="section-title">Màu sắc</h2>
+
+
+
+
+
+
+
+          <div className="brand-count">Tổng: {totalItems}</div>
+
+
+
+
+
+
+
+        </div>
+
+
+
+
+
+
+
+        <div className="header-right">
+
+
+
+
+
+
+
+          <input
+
+
+
+
+
+
+
+            type="text"
+
+
+
+
+
+
+
+            placeholder="Tìm kiếm theo tên màu..."
+
+
+
+
+
+
+
+            value={searchTerm}
+
+
+
+
+
+
+
+            onChange={(e) => setSearchTerm(e.target.value)}
+
+
+
+
+
+
+
+            className="search-input"
+
+
+
+
+
+
+
+          />
+
+
+
+
+
+
+
+          <button onClick={onAdd} className="btn-primary">
+
+
+
+
+
+
+
+            Thêm màu mới
+
+
+
+
+
+
+
+          </button>
+
+
+
+
+
+
+
+        </div>
+
+
+
+
+
+
+
+      </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <div className="brand-table-container">
+
+
+
+
+
+
+
+        <table className="brand-table">
+
+
+
+
+
+
+
+          <thead>
+
+
+
+
+
+
+
+            <tr>
+
+
+
+
+
+
+
+              <th>ID</th>
+
+
+
+
+
+
+
+              <th>Tên màu</th>
+
+
+
+
+
+
+
+              <th>Mã màu</th>
+
+
+
+
+
+
+
+              <th>Màu xem trước</th>
+
+
+
+
+
+
+
+              <th>Trạng thái</th>
+
+
+
+
+
+
+
+              <th>Thao tác</th>
+
+
+
+
+
+
+
+            </tr>
+
+
+
+
+
+
+
+          </thead>
+
+
+
+
+
+
+
+          <tbody>
+
+
+
+
+
+
+
+            {items.length === 0 ? (
+
+
+
+
+
+
+
+              <tr>
+
+
+
+
+
+
+
+                <td colSpan="6">Chưa có màu sắc</td>
+
+
+
+
+
+
+
+              </tr>
+
+
+
+
+
+
+
+            ) : (
+
+
+
+
+
+
+
+              items.map((it) => (
+
+
+
+
+
+
+
+                <tr key={it.colorId}>
+
+
+
+
+
+
+
+                  <td>{it.colorId}</td>
+
+
+
+
+
+
+
+                  <td>{it.colorName}</td>
+
+
+
+
+
+
+
+                  <td>{normalizeColorCode(it.colorCode) || it.colorCode || "N/A"}</td>
+
+
+
+
+
+
+
+                  <td>
+
+
+
+
+
+
+
+                    <div
+
+
+
+
+
+
+
+                      style={{
+
+
+
+
+
+
+
+                        width: "40px",
+
+
+
+
+
+
+
+                        height: "40px",
+
+
+
+
+
+
+
+                        backgroundColor: normalizeColorCode(it.colorCode) || "transparent",
+
+
+
+
+
+
+
+                        border: "1px solid #d1d5db",
+
+
+
+
+
+
+
+                        borderRadius: "4px",
+
+
+
+
+
+
+
+                      }}
+
+
+
+
+
+
+
+                      title={normalizeColorCode(it.colorCode) || "Mã màu không hợp lệ"}
+
+
+
+
+
+
+
+                    />
+
+
+
+
+
+
+
+                  </td>
+
+
+
+
+
+
+
+                  <td>
+
+
+
+
+
+
+
+                    <button
+
+
+
+
+
+
+
+                      onClick={() => handleToggle(it.colorId)}
+
+
+
+
+
+
+
+                      className={`status-toggle ${it.status ? "active" : "inactive"}`}
+
+
+
+
+
+
+
+                    >
+
+
+
+
+
+
+
+                      {it.status ? "Hoạt động" : "Ẩn"}
+
+
+
+
+
+
+
+                    </button>
+
+
+
+
+
+
+
+                  </td>
+
+
+
+
+
+
+
+                  <td>
+
+
+
+
+
+
+
+                    <button onClick={() => onEdit(it)} className="btn-edit">
+
+
+
+
+
+
+
+                      ✏️ Sửa
+
+
+
+
+
+
+
+                    </button>
+
+
+
+
+
+
+
+                  </td>
+
+
+
+
+
+
+
+                </tr>
+
+
+
+
+
+
+
+              ))
+
+
+
+
+
+
+
+            )}
+
+
+
+
+
+
+
+          </tbody>
+
+
+
+
+
+
+
+        </table>
+
+
+
+
+
+
+
+      </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      {totalItems > pageSize && (
+
+
+
+
+
+
+
+        <div className="pagination">
+
+
+
+
+
+
+
+          <button
+
+
+
+
+
+
+
+            disabled={currentPage === 0}
+
+
+
+
+
+
+
+            onClick={() => setCurrentPage(currentPage - 1)}
+
+
+
+
+
+
+
+          >
+
+
+
+
+
+
+
+            Trang trước
+
+
+
+
+
+
+
+          </button>
+
+
+
+
+
+
+
+          <span>
+
+
+
+
+
+
+
+            Trang {currentPage + 1} / {Math.ceil(totalItems / pageSize)}
+
+
+
+
+
+
+
+          </span>
+
+
+
+
+
+
+
+          <button
+
+
+
+
+
+
+
+            disabled={currentPage >= Math.ceil(totalItems / pageSize) - 1}
+
+
+
+
+
+
+
+            onClick={() => setCurrentPage(currentPage + 1)}
+
+
+
+
+
+
+
+          >
+
+
+
+
+
+
+
+            Trang sau
+
+
+
+
+
+
+
+          </button>
+
+
+
+
+
+
+
+        </div>
+
+
+
+
+
+
+
+      )}
+
+
+
+
+
+
+
+    </div>
+
+
+
+
+
+
+
+  );
+
+
+
+
+
+
+
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export default ColorList;
+
+
+
+
+
+
+

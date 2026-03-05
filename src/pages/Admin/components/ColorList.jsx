@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { colorAPI } from "../../../services/api";
+import Pagination from "./Pagination";
 import "./Brand/BrandList.css";
 
 const ColorList = ({ onEdit, onAdd, refreshTrigger }) => {
@@ -7,16 +8,22 @@ const ColorList = ({ onEdit, onAdd, refreshTrigger }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(5);
+  const [totalItems, setTotalItems] = useState(0);
 
   const loadItems = useCallback(async () => {
     try {
       setLoading(true);
       const response = await colorAPI.getAll(currentPage, pageSize);
-      // Backend returns: { status: 0, message: "...", data: { content: [...], ... } }
+      // Backend returns: { status: 0, message: "...", data: { content: [...], totalElements: 100, ... } }
       const itemsList =
         response?.data?.content || response?.content || response || [];
       setItems(Array.isArray(itemsList) ? itemsList : []);
+      setTotalItems(
+        response?.data?.totalElements ||
+          response?.totalElements ||
+          itemsList.length,
+      );
       setError(null);
     } catch (err) {
       setError("Không thể tải màu sắc");
@@ -76,7 +83,7 @@ const ColorList = ({ onEdit, onAdd, refreshTrigger }) => {
       <div className="brand-list-header">
         <div className="header-left">
           <h2 className="section-title">Màu sắc</h2>
-          <div className="brand-count">Tổng: {items.length}</div>
+          <div className="brand-count">Tổng: {totalItems}</div>
         </div>
         <div className="header-right">
           <button onClick={onAdd} className="btn-primary">
@@ -142,6 +149,14 @@ const ColorList = ({ onEdit, onAdd, refreshTrigger }) => {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(totalItems / pageSize)}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

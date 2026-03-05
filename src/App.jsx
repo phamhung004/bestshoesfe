@@ -32,7 +32,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/catalog" element={<Catalog />} />
-          <Route path="/purchase/:productId" element={<Purchase />} />
+          <Route path="/products/:productId" element={<Purchase />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/login" element={<Login />} />

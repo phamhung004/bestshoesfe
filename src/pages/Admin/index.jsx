@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import React, { useState, useEffect } from 'react';
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeader from './components/AdminHeader';
@@ -20,6 +21,16 @@ import PromotionForm from './components/PromotionForm';
 // import ColorForm from './components/ColorForm';
 // import ProductList from './components/Product/ProductList';
 // import ProductForm from './components/Product/ProductForm';
+=======
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import AdminSidebar from "./components/AdminSidebar";
+import AdminHeader from "./components/AdminHeader";
+import CouponList from "./components/CouponList";
+import CouponForm from "./components/CouponForm";
+import PromotionList from "./components/PromotionList";
+import PromotionForm from "./components/PromotionForm";
+>>>>>>> Stashed changes
 import AdminStats from "./components/AdminStats";
 import CustomerList from "./components/User/CustomerList";
 import CustomerForm from "./components/User/CustomerForm";
@@ -32,18 +43,30 @@ import CategoryList from "./components/Category/CategoryList";
 import CategoryForm from "./components/Category/CategoryForm";
 import MaterialList from "./components/Material/MaterialList";
 import MaterialForm from "./components/Material/MaterialForm";
-import SizeList from "./components/SizeList";
-import SizeForm from "./components/SizeForm";
-import ColorList from "./components/ColorList";
-import ColorForm from "./components/ColorForm";
+import SizeList from "./components/Size/SizeList";
+import SizeForm from "./components/Size/SizeForm";
+import ColorList from "./components/Color/ColorList";
+import ColorForm from "./components/Color/ColorForm";
 import ProductList from "./components/Product/ProductList";
 import ProductForm from "./components/Product/ProductForm";
+<<<<<<< Updated upstream
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
   // const [activeSection, setActiveSection] = useState("dashboard");
   // const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   // const [darkMode, setDarkMode] = useState(false);
+=======
+import ProductAddPage from "./components/Product/ProductAddPage";
+import ProductEditPage from "./components/Product/ProductEditPage";
+import ProductDetail from "./components/Product/ProductDetail";
+import ProductVariantEditPage from "./components/ProductVariant/ProductVariantEditPage";
+import "./AdminDashboard.css";
+
+const AdminDashboard = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+>>>>>>> Stashed changes
   const [activeSection, setActiveSection] = useState("statistics");
   // User management state
   const [showCustomerForm, setShowCustomerForm] = useState(false);
@@ -70,6 +93,7 @@ const AdminDashboard = () => {
   const [editingColor, setEditingColor] = useState(null);
   const [refreshColorList, setRefreshColorList] = useState(false);
 
+<<<<<<< Updated upstream
   // Toggle dark mode
   useEffect(() => {
     if (darkMode) {
@@ -78,6 +102,72 @@ const AdminDashboard = () => {
       document.body.classList.remove('dark-mode');
     }
   }, [darkMode]);
+=======
+  useEffect(() => {
+    const openProduct = location.state?.openProductEdit;
+    if (openProduct) {
+      setActiveSection("product-management/products");
+      setEditingProduct(openProduct);
+      setShowProductForm(true);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state?.openProductEdit]);
+
+  useEffect(() => {
+    const path = location.pathname;
+
+    if (path === "/admin") {
+      setActiveSection("statistics");
+      return;
+    }
+
+    if (path === "/admin/products") {
+      navigate("/admin/products/list", { replace: true });
+      setActiveSection("product-management/products");
+      return;
+    }
+
+    const sectionMap = [
+      { prefix: "/admin/products/list", section: "product-management/products" },
+      { prefix: "/admin/products/add", section: "product-management/products" },
+      { prefix: "/admin/products/edit", section: "product-management/products" },
+      { prefix: "/admin/products/detail", section: "product-management/products" },
+      { prefix: "/admin/brands/list", section: "product-management/brands" },
+      {
+        prefix: "/admin/categories/list",
+        section: "product-management/categories",
+      },
+      { prefix: "/admin/colors/list", section: "product-management/colors" },
+      { prefix: "/admin/sizes/list", section: "product-management/sizes" },
+      { prefix: "/admin/materials/list", section: "product-management/materials" },
+    ];
+
+    const matched = sectionMap.find((item) => path.startsWith(item.prefix));
+
+    if (matched) {
+      setActiveSection(matched.section);
+    }
+  }, [location.pathname, navigate]);
+
+  const handleSectionChange = (nextSection) => {
+    const sectionToPath = {
+      "statistics": "/admin",
+      "product-management/products": "/admin/products/list",
+      "product-management/brands": "/admin/brands/list",
+      "product-management/categories": "/admin/categories/list",
+      "product-management/colors": "/admin/colors/list",
+      "product-management/sizes": "/admin/sizes/list",
+      "product-management/materials": "/admin/materials/list",
+    };
+
+    setActiveSection(nextSection);
+
+    const nextPath = sectionToPath[nextSection] || "/admin";
+    if (location.pathname !== nextPath) {
+      navigate(nextPath);
+    }
+  };
+>>>>>>> Stashed changes
 
   const handleAddBrand = () => {
     setEditingBrand(null);
@@ -213,6 +303,7 @@ const AdminDashboard = () => {
     setEditingProduct(null);
   };
 
+
   // Coupon handlers
   const handleAddCoupon = () => {
     setEditingCoupon(null);
@@ -227,7 +318,7 @@ const AdminDashboard = () => {
   const handleSaveCoupon = () => {
     setShowCouponForm(false);
     setEditingCoupon(null);
-    setRefreshCouponList(prev => !prev);
+    setRefreshCouponList((prev) => !prev);
   };
 
   const handleCancelCouponForm = () => {
@@ -249,7 +340,7 @@ const AdminDashboard = () => {
   const handleSavePromotion = () => {
     setShowPromotionForm(false);
     setEditingPromotion(null);
-    setRefreshPromotionList(prev => !prev);
+    setRefreshPromotionList((prev) => !prev);
   };
 
   const handleCancelPromotionForm = () => {
@@ -312,6 +403,22 @@ const AdminDashboard = () => {
   };
 
   const renderContent = () => {
+    if (location.pathname.startsWith("/admin/products/add")) {
+      return <ProductAddPage />;
+    }
+
+    if (location.pathname.startsWith("/admin/products/edit")) {
+      return <ProductEditPage />;
+    }
+
+    if (location.pathname.startsWith("/admin/products/detail")) {
+      return <ProductDetail />;
+    }
+
+    if (location.pathname.startsWith("/admin/product-variants/") && location.pathname.endsWith("/edit")) {
+      return <ProductVariantEditPage />;
+    }
+
     switch (activeSection) {
       case 'analytics':
         return <AnalyticsDashboard />;
@@ -438,6 +545,7 @@ const AdminDashboard = () => {
       // case 'promotions/promotions-list':
       case "product-management/brands":
         return (
+<<<<<<< Updated upstream
             <BrandList
                 onEdit={handleEditBrand}
                 onAdd={handleAddBrand}
@@ -454,6 +562,74 @@ const AdminDashboard = () => {
         );
 
       case 'sales-management/coupons':
+=======
+          <BrandList
+            onEdit={handleEditBrand}
+            onAdd={handleAddBrand}
+            refreshTrigger={refreshBrandList}
+          />
+        );
+
+      case "product-management/categories":
+        return (
+          <CategoryList
+            onEdit={handleEditCategory}
+            onAdd={handleAddCategory}
+            refreshTrigger={refreshCategoryList}
+          />
+        );
+
+
+      case "in-store-sales":
+        return (
+          <div className="admin-content-section">
+            <h2 className="section-title">Bán hàng tại quầy</h2>
+            <div className="placeholder-content">
+              <div className="placeholder-icon">🏪</div>
+              <h3>Chức năng bán hàng tại quầy</h3>
+              <p>Đang phát triển...</p>
+            </div>
+          </div>
+        );
+
+      case "order-management":
+        return (
+          <div className="admin-content-section">
+            <h2 className="section-title">Quản lý đơn hàng</h2>
+            <div className="placeholder-content">
+              <div className="placeholder-icon">📋</div>
+              <h3>Quản lý đơn hàng</h3>
+              <p>Đang phát triển...</p>
+            </div>
+          </div>
+        );
+
+      case "user-management":
+        return (
+          <div className="admin-content-section">
+            <h2 className="section-title">Quản lý người dùng</h2>
+            <div className="placeholder-content">
+              <div className="placeholder-icon">👥</div>
+              <h3>Quản lý người dùng</h3>
+              <p>Đang phát triển...</p>
+            </div>
+          </div>
+        );
+
+      case "returns":
+        return (
+          <div className="admin-content-section">
+            <h2 className="section-title">Quản lý trả hàng</h2>
+            <div className="placeholder-content">
+              <div className="placeholder-icon">↩️</div>
+              <h3>Quản lý trả hàng</h3>
+              <p>Đang phát triển...</p>
+            </div>
+          </div>
+        );
+
+      case "sales-management/coupons":
+>>>>>>> Stashed changes
         return (
             <CouponList
                 onEdit={handleEditCoupon}
@@ -480,6 +656,18 @@ const AdminDashboard = () => {
           />
         );
 
+<<<<<<< Updated upstream
+=======
+      case "sales-management/promotions":
+        return (
+          <PromotionList
+            onEdit={handleEditPromotion}
+            onAdd={handleAddPromotion}
+            refreshTrigger={refreshPromotionList}
+          />
+        );
+
+>>>>>>> Stashed changes
       default:
         return (
             <div className="admin-content-section">
@@ -491,6 +679,7 @@ const AdminDashboard = () => {
   };
 
   return (
+<<<<<<< Updated upstream
     // <div className={`admin-dashboard ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
     //   <AdminSidebar
     //     activeSection={activeSection}
@@ -511,6 +700,17 @@ const AdminDashboard = () => {
     //       </ErrorBoundary>
     //     </main>
     //   </div>
+=======
+    <div className="admin-dashboard">
+      <AdminSidebar
+        activeSection={activeSection}
+        onSectionChange={handleSectionChange}
+      />
+      <div className="admin-main">
+        <AdminHeader />
+        <main className="admin-content">{renderContent()}</main>
+      </div>
+>>>>>>> Stashed changes
 
     //   {showBrandForm && (
     //     <BrandForm

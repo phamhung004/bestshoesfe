@@ -1,29 +1,39 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { promotionAPI } from '../../../services/api';
-import './PromotionList.css';
+import React, { useState, useEffect, useCallback } from "react";
+import { promotionAPI } from "../../../services/api";
+import Pagination from "./Pagination";
+import "./PromotionList.css";
 
 const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [filteredPromotions, setFilteredPromotions] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(5);
+  const [totalItems, setTotalItems] = useState(0);
 
   const loadPromotions = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await promotionAPI.getAll();
-      setPromotions(data);
+      const data = await promotionAPI.getAll(currentPage, pageSize);
+      const promotionsList = data?.data?.content || data?.content || data || [];
+      setPromotions(Array.isArray(promotionsList) ? promotionsList : []);
+      setTotalItems(
+        data?.data?.totalElements ||
+          data?.totalElements ||
+          promotionsList.length,
+      );
       setError(null);
     } catch (err) {
-      setError('Không thể tải danh sách đợt giảm giá');
-      console.error('Error loading promotions:', err);
+      setError("Không thể tải danh sách đợt giảm giá");
+      console.error("Error loading promotions:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
     loadPromotions();
@@ -34,23 +44,24 @@ const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
     let filtered = promotions;
 
     // Status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(promotion =>
-        statusFilter === 'active' ? promotion.isActive : !promotion.isActive
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((promotion) =>
+        statusFilter === "active" ? promotion.isActive : !promotion.isActive,
       );
     }
 
     // Type filter
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(promotion => promotion.type === typeFilter);
+    if (typeFilter !== "all") {
+      filtered = filtered.filter((promotion) => promotion.type === typeFilter);
     }
 
     // Search term filter
-    if (searchTerm.trim() !== '') {
+    if (searchTerm.trim() !== "") {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(promotion =>
-        promotion.name?.toLowerCase().includes(searchLower) ||
-        promotion.description?.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        (promotion) =>
+          promotion.name?.toLowerCase().includes(searchLower) ||
+          promotion.description?.toLowerCase().includes(searchLower),
       );
     }
 
@@ -58,14 +69,20 @@ const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
   }, [promotions, searchTerm, statusFilter, typeFilter]);
 
   const handleDelete = async (promotionId, promotionName) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa đợt giảm giá "${promotionName}"?`)) {
+    if (
+      window.confirm(
+        `Bạn có chắc chắn muốn xóa đợt giảm giá "${promotionName}"?`,
+      )
+    ) {
       try {
         await promotionAPI.delete(promotionId);
-        setPromotions(prevPromotions => prevPromotions.filter(p => p.promotionId !== promotionId));
-        alert('Xóa đợt giảm giá thành công!');
+        setPromotions((prevPromotions) =>
+          prevPromotions.filter((p) => p.promotionId !== promotionId),
+        );
+        alert("Xóa đợt giảm giá thành công!");
       } catch (err) {
-        alert('Không thể xóa đợt giảm giá. Vui lòng thử lại.');
-        console.error('Error deleting promotion:', err);
+        alert("Không thể xóa đợt giảm giá. Vui lòng thử lại.");
+        console.error("Error deleting promotion:", err);
       }
     }
   };
@@ -73,36 +90,34 @@ const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
   const handleToggleStatus = async (promotionId, currentStatus) => {
     try {
       const updatedPromotion = await promotionAPI.toggleStatus(promotionId);
-      setPromotions(prevPromotions =>
-        prevPromotions.map(promotion =>
-          promotion.promotionId === promotionId
-            ? updatedPromotion
-            : promotion
-        )
+      setPromotions((prevPromotions) =>
+        prevPromotions.map((promotion) =>
+          promotion.promotionId === promotionId ? updatedPromotion : promotion,
+        ),
       );
     } catch (err) {
-      alert('Không thể thay đổi trạng thái đợt giảm giá. Vui lòng thử lại.');
-      console.error('Error toggling promotion status:', err);
+      alert("Không thể thay đổi trạng thái đợt giảm giá. Vui lòng thử lại.");
+      console.error("Error toggling promotion status:", err);
     }
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("vi-VN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const formatCurrency = (amount) => {
-    if (amount === null || amount === undefined) return '0';
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
+    if (amount === null || amount === undefined) return "0";
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(amount);
   };
 
@@ -114,22 +129,24 @@ const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
     const isUpcoming = now < startDate;
     const isActive = promotion.isActive && !isExpired && !isUpcoming;
 
-    if (!promotion.isActive) return <span className="status-badge inactive">Đã tắt</span>;
+    if (!promotion.isActive)
+      return <span className="status-badge inactive">Đã tắt</span>;
     if (isExpired) return <span className="status-badge expired">Hết hạn</span>;
-    if (isUpcoming) return <span className="status-badge upcoming">Sắp tới</span>;
+    if (isUpcoming)
+      return <span className="status-badge upcoming">Sắp tới</span>;
     if (isActive) return <span className="status-badge active">Hoạt động</span>;
     return <span className="status-badge unknown">Không xác định</span>;
   };
 
   const getTypeBadge = (type) => {
     switch (type) {
-      case 'flash_sale':
+      case "flash_sale":
         return <span className="type-badge flash-sale">Flash Sale</span>;
-      case 'seasonal':
+      case "seasonal":
         return <span className="type-badge seasonal">Theo mùa</span>;
-      case 'clearance':
+      case "clearance":
         return <span className="type-badge clearance">Thanh lý</span>;
-      case 'special':
+      case "special":
         return <span className="type-badge special">Đặc biệt</span>;
       default:
         return <span className="type-badge default">{type}</span>;
@@ -169,7 +186,9 @@ const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
         <div className="header-right">
           <div className="filters-section">
             <div className="filter-group">
-              <label htmlFor="status-filter" className="filter-label">Trạng thái:</label>
+              <label htmlFor="status-filter" className="filter-label">
+                Trạng thái:
+              </label>
               <select
                 id="status-filter"
                 value={statusFilter}
@@ -182,7 +201,9 @@ const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
               </select>
             </div>
             <div className="filter-group">
-              <label htmlFor="type-filter" className="filter-label">Loại:</label>
+              <label htmlFor="type-filter" className="filter-label">
+                Loại:
+              </label>
               <select
                 id="type-filter"
                 value={typeFilter}
@@ -232,9 +253,9 @@ const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
             {filteredPromotions.length === 0 ? (
               <tr>
                 <td colSpan="9" className="no-data">
-                  {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
-                    ? 'Không tìm thấy đợt giảm giá nào phù hợp'
-                    : 'Chưa có đợt giảm giá nào'}
+                  {searchTerm || statusFilter !== "all" || typeFilter !== "all"
+                    ? "Không tìm thấy đợt giảm giá nào phù hợp"
+                    : "Chưa có đợt giảm giá nào"}
                 </td>
               </tr>
             ) : (
@@ -247,7 +268,7 @@ const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
                       {promotion.description && (
                         <span className="name-description">
                           {promotion.description.substring(0, 50)}
-                          {promotion.description.length > 50 ? '...' : ''}
+                          {promotion.description.length > 50 ? "..." : ""}
                         </span>
                       )}
                     </div>
@@ -256,14 +277,12 @@ const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
                   <td className="promotion-discount">
                     {promotion.discountPercentage
                       ? `${promotion.discountPercentage}%`
-                      : '-'
-                    }
+                      : "-"}
                   </td>
                   <td className="promotion-amount">
                     {promotion.discountAmount
                       ? formatCurrency(promotion.discountAmount)
-                      : '-'
-                    }
+                      : "-"}
                   </td>
                   <td className="date-range">
                     <div className="date-start">
@@ -285,14 +304,25 @@ const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
                         ✏️
                       </button>
                       <button
-                        onClick={() => handleToggleStatus(promotion.promotionId, promotion.isActive)}
+                        onClick={() =>
+                          handleToggleStatus(
+                            promotion.promotionId,
+                            promotion.isActive,
+                          )
+                        }
                         className="btn-toggle"
-                        title={promotion.isActive ? 'Tắt đợt giảm giá' : 'Bật đợt giảm giá'}
+                        title={
+                          promotion.isActive
+                            ? "Tắt đợt giảm giá"
+                            : "Bật đợt giảm giá"
+                        }
                       >
-                        {promotion.isActive ? '👁️' : '🙈'}
+                        {promotion.isActive ? "👁️" : "🙈"}
                       </button>
                       <button
-                        onClick={() => handleDelete(promotion.promotionId, promotion.name)}
+                        onClick={() =>
+                          handleDelete(promotion.promotionId, promotion.name)
+                        }
                         className="btn-delete"
                         title="Xóa"
                       >
@@ -306,9 +336,16 @@ const PromotionList = ({ onEdit, onAdd, refreshTrigger }) => {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(totalItems / pageSize)}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };
 
 export default PromotionList;
-

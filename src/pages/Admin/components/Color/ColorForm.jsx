@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { colorAPI } from "../../../services/api";
-import "./Brand/BrandForm.css";
+import { colorAPI } from "../../../../services/api";
+import { useToast } from "../../../../context/useToast";
+import "../Brand/BrandForm.css";
 
 const ColorForm = ({ color, onSave, onCancel, isEditing = false }) => {
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     colorName: "",
     colorCode: "",
@@ -25,8 +27,11 @@ const ColorForm = ({ color, onSave, onCancel, isEditing = false }) => {
   }, [color]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    const newValue = type === "checkbox" ? checked : value;
+    const { name, value, type } = e.target;
+    let newValue = value;
+    if (name === "status") {
+      newValue = value === "true";
+    }
     setFormData((prev) => ({ ...prev, [name]: newValue }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
   };
@@ -43,18 +48,22 @@ const ColorForm = ({ color, onSave, onCancel, isEditing = false }) => {
     if (!validate()) return;
     setLoading(true);
     try {
-      const payload = { ...formData, colorName: formData.colorName.trim() };
+      const payload = {
+        colorName: formData.colorName.trim(),
+        colorCode: formData.colorCode.trim(),
+        status: formData.status,
+      };
       if (isEditing && color) {
         await colorAPI.update(color.colorId, payload);
-        alert("Cập nhật thành công");
+        showToast("Cập nhật màu thành công", "success");
       } else {
         await colorAPI.create(payload);
-        alert("Thêm thành công");
+        showToast("Thêm màu thành công", "success");
       }
       onSave();
     } catch (err) {
       console.error("Error saving color:", err);
-      alert("Có lỗi xảy ra");
+      showToast(err.message || "Không thể lưu màu", "error");
     } finally {
       setLoading(false);
     }
@@ -65,9 +74,9 @@ const ColorForm = ({ color, onSave, onCancel, isEditing = false }) => {
       <div className="brand-form-container">
         <div className="brand-form-header">
           <h2 className="form-title">
-            {isEditing ? "Chỉnh sửa màu" : "Thêm màu mới"}
+            {isEditing ? "✏️ Chỉnh sửa màu" : "➕ Thêm màu mới"}
           </h2>
-          <button onClick={onCancel} className="btn-close">
+          <button onClick={onCancel} className="btn-close" title="Đóng">
             ✕
           </button>
         </div>
@@ -83,6 +92,7 @@ const ColorForm = ({ color, onSave, onCancel, isEditing = false }) => {
                 name="colorName"
                 value={formData.colorName}
                 onChange={handleChange}
+                placeholder="Ví dụ: Đỏ, Xanh, Đen..."
                 className={`form-input ${errors.colorName ? "error" : ""}`}
               />
               {errors.colorName && (
@@ -97,30 +107,35 @@ const ColorForm = ({ color, onSave, onCancel, isEditing = false }) => {
                 name="colorCode"
                 value={formData.colorCode}
                 onChange={handleChange}
+                placeholder="Ví dụ: #FF5733 hoặc FF5733"
                 className="form-input"
               />
             </div>
 
-            <div className="form-group checkbox-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  name="status"
-                  className="form-checkbox"
-                  checked={formData.status}
-                  onChange={handleChange}
-                />
-                <span className="checkbox-text">Kích hoạt</span>
-              </label>
+            <div className="form-group">
+              <label className="form-label">Trạng thái</label>
+              <select
+                name="status"
+                value={formData.status.toString()}
+                onChange={handleChange}
+                className="form-input"
+              >
+                <option value="true">Hoạt động</option>
+                <option value="false">Không hoạt động</option>
+              </select>
             </div>
           </div>
 
           <div className="form-actions">
             <button type="button" onClick={onCancel} className="btn-cancel">
-              Hủy
+              Hủy bỏ
             </button>
             <button type="submit" disabled={loading} className="btn-submit">
-              {loading ? "Đang lưu..." : isEditing ? "Cập nhật" : "Thêm mới"}
+              {loading
+                ? "⏳ Đang lưu..."
+                : isEditing
+                  ? "✏️ Cập nhật"
+                  : "✅ Thêm mới"}
             </button>
           </div>
         </form>

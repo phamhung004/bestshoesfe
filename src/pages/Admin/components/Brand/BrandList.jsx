@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { brandAPI } from "../../../../services/api";
 import { useToast } from "../../../../context/useToast";
+import { useDebounce } from "../../../../hooks/useDebounce";
+import Pagination from "../Pagination";
 import "./BrandList.css";
 
 const BrandList = ({ onEdit, onAdd, refreshTrigger }) => {
@@ -11,18 +13,29 @@ const BrandList = ({ onEdit, onAdd, refreshTrigger }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredBrands, setFilteredBrands] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(5);
+  const [totalItems, setTotalItems] = useState(0);
+
+  // Debounce search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const loadBrands = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await brandAPI.getAll(currentPage, pageSize);
-      // Backend returns: { status: 0, message: "...", data: { content: [...], ... } }
+      const response = await brandAPI.getAll(
+        debouncedSearchTerm.trim() ? debouncedSearchTerm.trim() : undefined,
+        currentPage,
+        pageSize,
+      );
       const brandsList =
         response?.data?.content || response?.content || response || [];
       setBrands(Array.isArray(brandsList) ? brandsList : []);
+      setTotalItems(
+        response?.data?.totalElements ||
+          response?.totalElements ||
+          brandsList.length,
+      );
       setError(null);
     } catch (err) {
       setError("Không thể tải danh sách thương hiệu");
@@ -30,32 +43,15 @@ const BrandList = ({ onEdit, onAdd, refreshTrigger }) => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, debouncedSearchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(0); // Reset to first page when search changes
+  }, [debouncedSearchTerm]);
 
   useEffect(() => {
     loadBrands();
-  }, [loadBrands, refreshTrigger]); // Reload khi refreshTrigger thay đổi
-
-  useEffect(() => {
-    // Filter brands based on search term
-    if (searchTerm.trim() === "") {
-      setFilteredBrands(brands);
-    } else {
-      const filtered = brands.filter(
-        (brand) =>
-          brand.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (brand.description &&
-            brand.description
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase())) ||
-          (brand.originCountry &&
-            brand.originCountry
-              .toLowerCase()
-              .includes(searchTerm.toLowerCase())),
-      );
-      setFilteredBrands(filtered);
-    }
-  }, [brands, searchTerm]);
+  }, [loadBrands, refreshTrigger]);
 
   const handleDelete = async (brandId, brandName) => {
     if (
@@ -78,7 +74,10 @@ const BrandList = ({ onEdit, onAdd, refreshTrigger }) => {
       await loadBrands(); // Reload the list immediately
       showToast("Thay đổi trạng thái thành công", "success");
     } catch (err) {
-      showToast("Không thể thay đổi trạng thái thương hiệu. Vui lòng thử lại.", "error");
+      showToast(
+        "Không thể thay đổi trạng thái thương hiệu. Vui lòng thử lại.",
+        "error",
+      );
       console.error("Error toggling brand status:", err);
     }
   };
@@ -115,9 +114,7 @@ const BrandList = ({ onEdit, onAdd, refreshTrigger }) => {
       <div className="brand-list-header">
         <div className="header-left">
           <h2 className="section-title">Quản lý thương hiệu</h2>
-          <div className="brand-count">
-            Tổng cộng: {filteredBrands.length} thương hiệu
-          </div>
+          <div className="brand-count">Tổng cộng: {totalItems} thương hiệu</div>
         </div>
         <div className="header-right">
           <div className="search-box">
@@ -153,7 +150,7 @@ const BrandList = ({ onEdit, onAdd, refreshTrigger }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredBrands.length === 0 ? (
+            {brands.length === 0 ? (
               <tr>
                 <td colSpan="10" className="no-data">
                   {searchTerm
@@ -162,7 +159,7 @@ const BrandList = ({ onEdit, onAdd, refreshTrigger }) => {
                 </td>
               </tr>
             ) : (
-              filteredBrands.map((brand) => (
+              brands.map((brand) => (
                 <tr key={brand.brandId}>
                   <td>{brand.brandId}</td>
                   <td>
@@ -233,6 +230,14 @@ const BrandList = ({ onEdit, onAdd, refreshTrigger }) => {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(totalItems / pageSize)}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

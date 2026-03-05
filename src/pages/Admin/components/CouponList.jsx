@@ -1,29 +1,37 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { couponAPI } from '../../../services/api';
-import './CouponList.css';
+import React, { useState, useEffect, useCallback } from "react";
+import { couponAPI } from "../../../services/api";
+import Pagination from "./Pagination";
+import "./CouponList.css";
 
 const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [filteredCoupons, setFilteredCoupons] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(5);
+  const [totalItems, setTotalItems] = useState(0);
 
   const loadCoupons = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await couponAPI.getAll();
-      setCoupons(data);
+      const data = await couponAPI.getAll(currentPage, pageSize);
+      const couponsList = data?.data?.content || data?.content || data || [];
+      setCoupons(Array.isArray(couponsList) ? couponsList : []);
+      setTotalItems(
+        data?.data?.totalElements || data?.totalElements || couponsList.length,
+      );
       setError(null);
     } catch (err) {
-      setError('Không thể tải danh sách mã giảm giá');
-      console.error('Error loading coupons:', err);
+      setError("Không thể tải danh sách mã giảm giá");
+      console.error("Error loading coupons:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
     loadCoupons();
@@ -34,24 +42,25 @@ const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
     let filtered = coupons;
 
     // Status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(coupon =>
-        statusFilter === 'active' ? coupon.status : !coupon.status
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((coupon) =>
+        statusFilter === "active" ? coupon.status : !coupon.status,
       );
     }
 
     // Type filter
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(coupon => coupon.type === typeFilter);
+    if (typeFilter !== "all") {
+      filtered = filtered.filter((coupon) => coupon.type === typeFilter);
     }
 
     // Search term filter
-    if (searchTerm.trim() !== '') {
+    if (searchTerm.trim() !== "") {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(coupon =>
-        coupon.code.toLowerCase().includes(searchLower) ||
-        coupon.name?.toLowerCase().includes(searchLower) ||
-        coupon.description?.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        (coupon) =>
+          coupon.code.toLowerCase().includes(searchLower) ||
+          coupon.name?.toLowerCase().includes(searchLower) ||
+          coupon.description?.toLowerCase().includes(searchLower),
       );
     }
 
@@ -59,14 +68,18 @@ const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
   }, [coupons, searchTerm, statusFilter, typeFilter]);
 
   const handleDelete = async (couponId, couponCode) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa mã giảm giá "${couponCode}"?`)) {
+    if (
+      window.confirm(`Bạn có chắc chắn muốn xóa mã giảm giá "${couponCode}"?`)
+    ) {
       try {
         await couponAPI.delete(couponId);
-        setCoupons(prevCoupons => prevCoupons.filter(coupon => coupon.couponId !== couponId));
-        alert('Xóa mã giảm giá thành công!');
+        setCoupons((prevCoupons) =>
+          prevCoupons.filter((coupon) => coupon.couponId !== couponId),
+        );
+        alert("Xóa mã giảm giá thành công!");
       } catch (err) {
-        alert('Không thể xóa mã giảm giá. Vui lòng thử lại.');
-        console.error('Error deleting coupon:', err);
+        alert("Không thể xóa mã giảm giá. Vui lòng thử lại.");
+        console.error("Error deleting coupon:", err);
       }
     }
   };
@@ -74,36 +87,34 @@ const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
   const handleToggleStatus = async (couponId, currentStatus) => {
     try {
       const updatedCoupon = await couponAPI.toggleStatus(couponId);
-      setCoupons(prevCoupons =>
-        prevCoupons.map(coupon =>
-          coupon.couponId === couponId
-            ? updatedCoupon
-            : coupon
-        )
+      setCoupons((prevCoupons) =>
+        prevCoupons.map((coupon) =>
+          coupon.couponId === couponId ? updatedCoupon : coupon,
+        ),
       );
     } catch (err) {
-      alert('Không thể thay đổi trạng thái mã giảm giá. Vui lòng thử lại.');
-      console.error('Error toggling coupon status:', err);
+      alert("Không thể thay đổi trạng thái mã giảm giá. Vui lòng thử lại.");
+      console.error("Error toggling coupon status:", err);
     }
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("vi-VN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const formatCurrency = (amount) => {
-    if (amount === null || amount === undefined) return '0';
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
+    if (amount === null || amount === undefined) return "0";
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(amount);
   };
 
@@ -115,9 +126,11 @@ const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
     const isUpcoming = now < startDate;
     const isActive = coupon.status && !isExpired && !isUpcoming;
 
-    if (!coupon.status) return <span className="status-badge inactive">Ẩn</span>;
+    if (!coupon.status)
+      return <span className="status-badge inactive">Ẩn</span>;
     if (isExpired) return <span className="status-badge expired">Hết hạn</span>;
-    if (isUpcoming) return <span className="status-badge upcoming">Sắp tới</span>;
+    if (isUpcoming)
+      return <span className="status-badge upcoming">Sắp tới</span>;
     if (isActive) return <span className="status-badge active">Hoạt động</span>;
     return <span className="status-badge unknown">Không xác định</span>;
   };
@@ -160,7 +173,9 @@ const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
         <div className="header-right">
           <div className="filters-section">
             <div className="filter-group">
-              <label htmlFor="status-filter" className="filter-label">Trạng thái:</label>
+              <label htmlFor="status-filter" className="filter-label">
+                Trạng thái:
+              </label>
               <select
                 id="status-filter"
                 value={statusFilter}
@@ -173,7 +188,9 @@ const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
               </select>
             </div>
             <div className="filter-group">
-              <label htmlFor="type-filter" className="filter-label">Loại:</label>
+              <label htmlFor="type-filter" className="filter-label">
+                Loại:
+              </label>
               <select
                 id="type-filter"
                 value={typeFilter}
@@ -224,9 +241,9 @@ const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
             {filteredCoupons.length === 0 ? (
               <tr>
                 <td colSpan="12" className="no-data">
-                  {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
-                    ? 'Không tìm thấy mã giảm giá nào phù hợp'
-                    : 'Chưa có mã giảm giá nào'}
+                  {searchTerm || statusFilter !== "all" || typeFilter !== "all"
+                    ? "Không tìm thấy mã giảm giá nào phù hợp"
+                    : "Chưa có mã giảm giá nào"}
                 </td>
               </tr>
             ) : (
@@ -237,30 +254,33 @@ const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
                     <code>{coupon.code}</code>
                   </td>
                   <td className="coupon-name">
-                    {coupon.name || <span className="no-name">Chưa đặt tên</span>}
+                    {coupon.name || (
+                      <span className="no-name">Chưa đặt tên</span>
+                    )}
                   </td>
                   <td>
-                    <span className={`coupon-type ${coupon.type.toLowerCase().replace(' ', '-')}`}>
-                      {coupon.type === 'Percentage' ? 'Phần trăm' : 'Số tiền cố định'}
+                    <span
+                      className={`coupon-type ${coupon.type.toLowerCase().replace(" ", "-")}`}
+                    >
+                      {coupon.type === "Percentage"
+                        ? "Phần trăm"
+                        : "Số tiền cố định"}
                     </span>
                   </td>
                   <td className="coupon-value">
-                    {coupon.type === 'Percentage'
+                    {coupon.type === "Percentage"
                       ? `${coupon.value}%`
-                      : formatCurrency(coupon.value)
-                    }
+                      : formatCurrency(coupon.value)}
                   </td>
                   <td>
                     {coupon.minimumAmount
                       ? formatCurrency(coupon.minimumAmount)
-                      : 'Không giới hạn'
-                    }
+                      : "Không giới hạn"}
                   </td>
                   <td>
                     {coupon.maximumDiscount
                       ? formatCurrency(coupon.maximumDiscount)
-                      : 'Không giới hạn'
-                    }
+                      : "Không giới hạn"}
                   </td>
                   <td className="usage-info">
                     {getUsageInfo(coupon.usedCount || 0, coupon.usageLimit)}
@@ -285,14 +305,22 @@ const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
                         ✏️
                       </button>
                       <button
-                        onClick={() => handleToggleStatus(coupon.couponId, coupon.status)}
+                        onClick={() =>
+                          handleToggleStatus(coupon.couponId, coupon.status)
+                        }
                         className="btn-toggle"
-                        title={coupon.status ? 'Ẩn mã giảm giá' : 'Kích hoạt mã giảm giá'}
+                        title={
+                          coupon.status
+                            ? "Ẩn mã giảm giá"
+                            : "Kích hoạt mã giảm giá"
+                        }
                       >
-                        {coupon.status ? '👁️' : '🙈'}
+                        {coupon.status ? "👁️" : "🙈"}
                       </button>
                       <button
-                        onClick={() => handleDelete(coupon.couponId, coupon.code)}
+                        onClick={() =>
+                          handleDelete(coupon.couponId, coupon.code)
+                        }
                         className="btn-delete"
                         title="Xóa"
                       >
@@ -306,6 +334,14 @@ const CouponList = ({ onEdit, onAdd, refreshTrigger }) => {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(totalItems / pageSize)}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

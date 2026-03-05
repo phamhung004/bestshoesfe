@@ -1,0 +1,293 @@
+﻿import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { productAPI, productVariantAPI } from "../../../../services/api";
+import "./ProductDetail.css";
+
+const ProductDetail = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [product, setProduct] = useState(null);
+  const [variants, setVariants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchProduct();
+  }, [id]);
+
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await productAPI.getById(id);
+      const productData = response?.data ?? response;
+      setProduct(productData);
+
+      if (productData && (productData.productId || productData.id)) {
+        const resolvedProductId = productData.productId || productData.id;
+        try {
+          const variantRes = await productVariantAPI.getByProductWithDetails(
+            resolvedProductId,
+          );
+          const list = variantRes?.data ?? variantRes;
+          setVariants(Array.isArray(list) ? list : []);
+        } catch (detailErr) {
+          try {
+            const variantRes = await productVariantAPI.getByProduct(
+              resolvedProductId,
+            );
+            const list = variantRes?.data ?? variantRes;
+            setVariants(Array.isArray(list) ? list : []);
+          } catch {
+            setVariants([]);
+          }
+        }
+      }
+    } catch (err) {
+      setError("KhÃ´ng thá»ƒ táº£i thÃ´ng tin sáº£n pháº©m. Vui lÃ²ng thá»­ láº¡i.");
+      console.error("Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = () => {
+    navigate("/admin/products/list", { state: { openProductEdit: product } });
+  };
+
+  if (loading) {
+    return (
+      <div className="product-detail-page">
+        <div className="product-detail-loading">
+          <div className="detail-loading-spinner" />
+          <p>Äang táº£i thÃ´ng tin sáº£n pháº©m...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="product-detail-page">
+        <div className="product-detail-error">
+          <span className="detail-error-icon">âš ï¸</span>
+          <h2>KhÃ´ng táº£i Ä‘Æ°á»£c sáº£n pháº©m</h2>
+          <p>{error}</p>
+          <button
+            type="button"
+            className="product-detail-btn product-detail-btn--secondary"
+            onClick={() => navigate(-1)}
+          >
+            Quay láº¡i
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="product-detail-page">
+        <div className="product-detail-empty">
+          <span className="detail-empty-icon">ðŸ“¦</span>
+          <h2>KhÃ´ng tÃ¬m tháº¥y sáº£n pháº©m</h2>
+          <p>MÃ£ sáº£n pháº©m cÃ³ thá»ƒ khÃ´ng Ä‘Ãºng hoáº·c Ä‘Ã£ bá»‹ xÃ³a.</p>
+          <button
+            type="button"
+            className="product-detail-btn product-detail-btn--primary"
+            onClick={() => navigate("/admin/products/list")}
+          >
+            Vá» trang quáº£n trá»‹
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const productId = product.productId ?? product.id;
+  const isActive = product.status !== false;
+
+  return (
+    <div className="product-detail-page">
+      <header className="product-detail-header">
+        <nav className="product-detail-breadcrumb">
+          <button
+            type="button"
+            className="product-detail-back"
+            onClick={() => navigate(-1)}
+            title="Quay láº¡i"
+          >
+            â† Quay láº¡i
+          </button>
+          <span className="breadcrumb-sep">/</span>
+          <span>Sáº£n pháº©m</span>
+          <span className="breadcrumb-sep">/</span>
+          <span className="breadcrumb-current">{product.name || `#${productId}`}</span>
+        </nav>
+        <div className="product-detail-header-actions">
+          <button
+            type="button"
+            className="product-detail-btn product-detail-btn--secondary"
+            onClick={() => navigate(-1)}
+          >
+            Quay láº¡i
+          </button>
+          <button
+            type="button"
+            className="product-detail-btn product-detail-btn--primary"
+            onClick={handleEdit}
+          >
+            Chá»‰nh sá»­a sáº£n pháº©m
+          </button>
+        </div>
+      </header>
+
+      <div className="product-detail-hero">
+        <h1 className="product-detail-title">{product.name}</h1>
+        <span
+          className={`product-detail-badge product-detail-badge--${isActive ? "active" : "inactive"}`}
+        >
+          {isActive ? "Äang bÃ¡n" : "Ngá»«ng bÃ¡n"}
+        </span>
+      </div>
+
+      <div className="product-detail-layout">
+        <section className="product-detail-card product-detail-card--info">
+          <h2 className="product-detail-card-title">ThÃ´ng tin cÆ¡ báº£n</h2>
+          <dl className="product-detail-dl">
+            <div className="product-detail-row">
+              <dt>MÃ£ sáº£n pháº©m</dt>
+              <dd>{productId}</dd>
+            </div>
+            <div className="product-detail-row">
+              <dt>TÃªn sáº£n pháº©m</dt>
+              <dd>{product.name || "â€”"}</dd>
+            </div>
+            <div className="product-detail-row product-detail-row--full">
+              <dt>MÃ´ táº£</dt>
+              <dd className="product-detail-description">
+                {product.description || "ChÆ°a cÃ³ mÃ´ táº£."}
+              </dd>
+            </div>
+            <div className="product-detail-row">
+              <dt>Tráº¡ng thÃ¡i</dt>
+              <dd>
+                <span
+                  className={`product-detail-status product-detail-status--${isActive ? "active" : "inactive"}`}
+                >
+                  {isActive ? "Hoáº¡t Ä‘á»™ng" : "KhÃ´ng hoáº¡t Ä‘á»™ng"}
+                </span>
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="product-detail-card product-detail-card--meta">
+          <h2 className="product-detail-card-title">PhÃ¢n loáº¡i</h2>
+          <dl className="product-detail-dl">
+            <div className="product-detail-row">
+              <dt>ThÆ°Æ¡ng hiá»‡u</dt>
+              <dd>{product.brand?.name ?? "â€”"}</dd>
+            </div>
+            <div className="product-detail-row">
+              <dt>Danh má»¥c</dt>
+              <dd>{product.category?.name ?? "â€”"}</dd>
+            </div>
+            <div className="product-detail-row">
+              <dt>Cháº¥t liá»‡u</dt>
+              <dd>{product.material?.materialName ?? product.material?.name ?? "â€”"}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="product-detail-card product-detail-card--time">
+          <h2 className="product-detail-card-title">Thá»i gian</h2>
+          <dl className="product-detail-dl">
+            <div className="product-detail-row">
+              <dt>NgÃ y táº¡o</dt>
+              <dd>
+                {product.createdAt
+                  ? new Date(product.createdAt).toLocaleDateString("vi-VN", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })
+                  : "â€”"}
+              </dd>
+            </div>
+            <div className="product-detail-row">
+              <dt>Cáº­p nháº­t láº§n cuá»‘i</dt>
+              <dd>
+                {product.updatedAt
+                  ? new Date(product.updatedAt).toLocaleDateString("vi-VN", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })
+                  : "â€”"}
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+                <section className="product-detail-card product-detail-card--variants">
+          <h2 className="product-detail-card-title">
+            Bi?n th? ({variants.length})
+          </h2>
+          <div className="product-detail-table-wrap">
+            <table className="product-detail-table">
+              <thead>
+                <tr>
+                  <th>Mã</th>
+                  <th>Size</th>
+                  <th>Màu</th>
+                  <th>Giá</th>
+                  <th>Tr?ng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {variants.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" style={{ textAlign: "center" }}>
+                      Chua có bi?n th? nào.
+                    </td>
+                  </tr>
+                ) : (
+                  variants.map((v) => (
+                    <tr key={v.variantId ?? v.id}>
+                      <td>{v.variantId ?? v.id}</td>
+                      <td>{v.size?.name ?? v.sizeName ?? "—"}</td>
+                      <td>{v.color?.name ?? v.colorName ?? "—"}</td>
+                      <td>
+                        {v.price != null
+                          ? new Intl.NumberFormat("vi-VN", {
+                              style: "currency",
+                              currency: "VND",
+                            }).format(v.price)
+                          : "—"}
+                      </td>
+                      <td>
+                        <span
+                          className={`product-detail-status product-detail-status--${v.status !== false ? "active" : "inactive"}`}
+                        >
+                          {v.status !== false ? "Còn hàng" : "H?t"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ProductDetail;

@@ -1,13 +1,13 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import './ProductCard.css';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import "./ProductCard.css";
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
 
   const handlePurchase = () => {
     // Navigate to purchase page with product ID
-    navigate(`/purchase/${product.productId}`);
+    navigate(`/products/${product.productId}`);
   };
 
   return (

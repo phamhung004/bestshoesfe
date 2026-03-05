@@ -1,23 +1,23 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import './Login.css';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import "./Login.css";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     if (!email || !password) {
-      setError('Please enter both email and password.');
+      setError("Please enter both email and password.");
       return;
     }
     // Mock sign-in behaviour (replace with real auth)
-    navigate('/purchase');
+    navigate("/products");
   };
 
   return (
@@ -32,10 +32,14 @@ const Login = () => {
 
           <div className="social-row">
             <button className="social-btn google">Sign in with Google</button>
-            <button className="social-btn facebook">Sign in with Facebook</button>
+            <button className="social-btn facebook">
+              Sign in with Facebook
+            </button>
           </div>
 
-          <div className="divider"><span>or</span></div>
+          <div className="divider">
+            <span>or</span>
+          </div>
 
           {error && <div className="form-error">{error}</div>}
 
@@ -55,7 +59,7 @@ const Login = () => {
               <span className="label">Password</span>
               <div className="password-row">
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
@@ -67,7 +71,7 @@ const Login = () => {
                   onClick={() => setShowPassword((s) => !s)}
                   aria-label="Toggle password visibility"
                 >
-                  {showPassword ? 'Hide' : 'Show'}
+                  {showPassword ? "Hide" : "Show"}
                 </button>
               </div>
             </label>
@@ -76,15 +80,21 @@ const Login = () => {
               <label className="remember">
                 <input type="checkbox" /> Remember me
               </label>
-              <Link to="/#forgot" className="forgot">Forgot?</Link>
+              <Link to="/#forgot" className="forgot">
+                Forgot?
+              </Link>
             </div>
 
-            <button className="primary-btn" type="submit">Sign In</button>
+            <button className="primary-btn" type="submit">
+              Sign In
+            </button>
           </form>
 
           <div className="auth-foot">
             <span>Don't have an account?</span>
-            <Link to="/register" className="link">Create account</Link>
+            <Link to="/register" className="link">
+              Create account
+            </Link>
           </div>
         </div>
       </div>
@@ -93,5 +103,3 @@ const Login = () => {
 };
 
 export default Login;
-
-

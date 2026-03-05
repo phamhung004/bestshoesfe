@@ -1,0 +1,293 @@
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { productAPI, productVariantAPI } from "../../../../services/api";
+import "./ProductDetail.css";
+
+const ProductDetail = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [product, setProduct] = useState(null);
+  const [variants, setVariants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchProduct();
+  }, [id]);
+
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await productAPI.getById(id);
+      const productData = response?.data ?? response;
+      setProduct(productData);
+
+      if (productData && (productData.productId || productData.id)) {
+        const resolvedProductId = productData.productId || productData.id;
+        try {
+          const variantRes = await productVariantAPI.getByProductWithDetails(
+            resolvedProductId,
+          );
+          const list = variantRes?.data ?? variantRes;
+          setVariants(Array.isArray(list) ? list : []);
+        } catch (detailErr) {
+          try {
+            const variantRes = await productVariantAPI.getByProduct(
+              resolvedProductId,
+            );
+            const list = variantRes?.data ?? variantRes;
+            setVariants(Array.isArray(list) ? list : []);
+          } catch {
+            setVariants([]);
+          }
+        }
+      }
+    } catch (err) {
+      setError("Không thể tải thông tin sản phẩm. Vui lòng thử lại.");
+      console.error("Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = () => {
+    navigate("/admin/products/list", { state: { openProductEdit: product } });
+  };
+
+  if (loading) {
+    return (
+      <div className="product-detail-page">
+        <div className="product-detail-loading">
+          <div className="detail-loading-spinner" />
+          <p>Đang tải thông tin sản phẩm...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="product-detail-page">
+        <div className="product-detail-error">
+          <span className="detail-error-icon">⚠️</span>
+          <h2>Không tải được sản phẩm</h2>
+          <p>{error}</p>
+          <button
+            type="button"
+            className="product-detail-btn product-detail-btn--secondary"
+            onClick={() => navigate(-1)}
+          >
+            Quay lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="product-detail-page">
+        <div className="product-detail-empty">
+          <span className="detail-empty-icon">📦</span>
+          <h2>Không tìm thấy sản phẩm</h2>
+          <p>Mã sản phẩm có thể không đúng hoặc đã bị xóa.</p>
+          <button
+            type="button"
+            className="product-detail-btn product-detail-btn--primary"
+            onClick={() => navigate("/admin/products/list")}
+          >
+            Về trang quản trị
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const productId = product.productId ?? product.id;
+  const isActive = product.status !== false;
+
+  return (
+    <div className="product-detail-page">
+      <header className="product-detail-header">
+        <nav className="product-detail-breadcrumb">
+          <button
+            type="button"
+            className="product-detail-back"
+            onClick={() => navigate(-1)}
+            title="Quay lại"
+          >
+            ← Quay lại
+          </button>
+          <span className="breadcrumb-sep">/</span>
+          <span>Sản phẩm</span>
+          <span className="breadcrumb-sep">/</span>
+          <span className="breadcrumb-current">{product.name || `#${productId}`}</span>
+        </nav>
+        <div className="product-detail-header-actions">
+          <button
+            type="button"
+            className="product-detail-btn product-detail-btn--secondary"
+            onClick={() => navigate(-1)}
+          >
+            Quay lại
+          </button>
+          <button
+            type="button"
+            className="product-detail-btn product-detail-btn--primary"
+            onClick={handleEdit}
+          >
+            Chỉnh sửa sản phẩm
+          </button>
+        </div>
+      </header>
+
+      <div className="product-detail-hero">
+        <h1 className="product-detail-title">{product.name}</h1>
+        <span
+          className={`product-detail-badge product-detail-badge--${isActive ? "active" : "inactive"}`}
+        >
+          {isActive ? "Đang bán" : "Ngừng bán"}
+        </span>
+      </div>
+
+      <div className="product-detail-layout">
+        <section className="product-detail-card product-detail-card--info">
+          <h2 className="product-detail-card-title">Thông tin cơ bản</h2>
+          <dl className="product-detail-dl">
+            <div className="product-detail-row">
+              <dt>Mã sản phẩm</dt>
+              <dd>{productId}</dd>
+            </div>
+            <div className="product-detail-row">
+              <dt>Tên sản phẩm</dt>
+              <dd>{product.name || "—"}</dd>
+            </div>
+            <div className="product-detail-row product-detail-row--full">
+              <dt>Mô tả</dt>
+              <dd className="product-detail-description">
+                {product.description || "Chưa có mô tả."}
+              </dd>
+            </div>
+            <div className="product-detail-row">
+              <dt>Trạng thái</dt>
+              <dd>
+                <span
+                  className={`product-detail-status product-detail-status--${isActive ? "active" : "inactive"}`}
+                >
+                  {isActive ? "Hoạt động" : "Không hoạt động"}
+                </span>
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="product-detail-card product-detail-card--meta">
+          <h2 className="product-detail-card-title">Phân loại</h2>
+          <dl className="product-detail-dl">
+            <div className="product-detail-row">
+              <dt>Thương hiệu</dt>
+              <dd>{product.brand?.name ?? "—"}</dd>
+            </div>
+            <div className="product-detail-row">
+              <dt>Danh mục</dt>
+              <dd>{product.category?.name ?? "—"}</dd>
+            </div>
+            <div className="product-detail-row">
+              <dt>Chất liệu</dt>
+              <dd>{product.material?.materialName ?? product.material?.name ?? "—"}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="product-detail-card product-detail-card--time">
+          <h2 className="product-detail-card-title">Thời gian</h2>
+          <dl className="product-detail-dl">
+            <div className="product-detail-row">
+              <dt>Ngày tạo</dt>
+              <dd>
+                {product.createdAt
+                  ? new Date(product.createdAt).toLocaleDateString("vi-VN", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })
+                  : "—"}
+              </dd>
+            </div>
+            <div className="product-detail-row">
+              <dt>Cập nhật lần cuối</dt>
+              <dd>
+                {product.updatedAt
+                  ? new Date(product.updatedAt).toLocaleDateString("vi-VN", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })
+                  : "—"}
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+                <section className="product-detail-card product-detail-card--variants">
+          <h2 className="product-detail-card-title">
+            Bi?n th? ({variants.length})
+          </h2>
+          <div className="product-detail-table-wrap">
+            <table className="product-detail-table">
+              <thead>
+                <tr>
+                  <th>M�</th>
+                  <th>Size</th>
+                  <th>M�u</th>
+                  <th>Gi�</th>
+                  <th>Tr?ng th�i</th>
+                </tr>
+              </thead>
+              <tbody>
+                {variants.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" style={{ textAlign: "center" }}>
+                      Chua c� bi?n th? n�o.
+                    </td>
+                  </tr>
+                ) : (
+                  variants.map((v) => (
+                    <tr key={v.variantId ?? v.id}>
+                      <td>{v.variantId ?? v.id}</td>
+                      <td>{v.size?.name ?? v.sizeName ?? "�"}</td>
+                      <td>{v.color?.name ?? v.colorName ?? "�"}</td>
+                      <td>
+                        {v.price != null
+                          ? new Intl.NumberFormat("vi-VN", {
+                              style: "currency",
+                              currency: "VND",
+                            }).format(v.price)
+                          : "�"}
+                      </td>
+                      <td>
+                        <span
+                          className={`product-detail-status product-detail-status--${v.status !== false ? "active" : "inactive"}`}
+                        >
+                          {v.status !== false ? "C�n h�ng" : "H?t"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ProductDetail;

@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 // Base API configuration
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -613,3 +614,1125 @@ export default {
   analyticsAPI,
 
 };
+=======
+// Base API configuration
+
+
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+
+
+
+
+
+
+
+const DEFAULT_PAGE_NUM = 0;
+
+
+
+const DEFAULT_PAGE_SIZE = 5;
+
+
+
+
+
+
+
+const normalizePagination = (pageNum = DEFAULT_PAGE_NUM, pageSize = DEFAULT_PAGE_SIZE) => {
+
+
+
+  const normalizedPageNum = Number.isFinite(Number(pageNum)) && Number(pageNum) >= 0 ? Number(pageNum) : DEFAULT_PAGE_NUM;
+
+
+
+  const normalizedPageSize = Number.isFinite(Number(pageSize)) && Number(pageSize) >= 1 ? Number(pageSize) : DEFAULT_PAGE_SIZE;
+
+
+
+
+
+
+
+  return {
+
+
+
+    pageNum: Math.floor(normalizedPageNum),
+
+
+
+    pageSize: Math.floor(normalizedPageSize),
+
+
+
+  };
+
+
+
+};
+
+
+
+
+
+
+
+const withOptionalStatus = (payload, status) => {
+
+
+
+  if (status !== undefined && status !== null) {
+
+
+
+    payload.status = status;
+
+
+
+  }
+
+
+
+  return payload;
+
+
+
+};
+
+
+
+
+
+
+
+// Generic API call function
+
+
+
+const apiCall = async (endpoint, options = {}) => {
+
+
+
+  const url = `${API_BASE_URL}${endpoint}`;
+
+
+
+  const config = {
+
+
+
+    headers: {
+
+
+
+      "Content-Type": "application/json",
+
+
+
+      ...options.headers,
+
+
+
+    },
+
+
+
+    ...options,
+
+
+
+  };
+
+
+
+
+
+
+
+  try {
+
+
+
+    const response = await fetch(url, config);
+
+
+
+
+
+
+
+    if (!response.ok) {
+
+
+
+      let errorData = {};
+
+
+
+      try {
+
+
+
+        errorData = await response.json();
+
+
+
+      } catch {
+
+
+
+        // response is not json
+
+
+
+      }
+
+
+
+
+
+
+
+      const error = new Error(`HTTP error! status: ${response.status}`);
+
+
+
+      error.response = {
+
+
+
+        status: response.status,
+
+
+
+        data: errorData,
+
+
+
+      };
+
+
+
+      throw error;
+
+
+
+    }
+
+
+
+
+
+
+
+    if (response.status === 204 || response.headers.get("content-length") === "0") {
+
+
+
+      return null;
+
+
+
+    }
+
+
+
+
+
+
+
+    return await response.json();
+
+
+
+  } catch (error) {
+
+
+
+    console.error("API call failed:", error);
+
+
+
+    throw error;
+
+
+
+  }
+
+
+
+};
+
+
+
+
+
+
+
+export const brandAPI = {
+
+
+
+  getAll: (name, pageNum = DEFAULT_PAGE_NUM, pageSize = DEFAULT_PAGE_SIZE, status) => {
+
+
+
+    const payload = withOptionalStatus(normalizePagination(pageNum, pageSize), status);
+
+
+
+    if (name) payload.name = name;
+
+
+
+    return apiCall("/brands/list", { method: "POST", body: JSON.stringify(payload) });
+
+
+
+  },
+
+
+
+  getActive: (pageNum = DEFAULT_PAGE_NUM, pageSize = DEFAULT_PAGE_SIZE) => {
+
+
+
+    const payload = normalizePagination(pageNum, pageSize);
+
+
+
+    return apiCall("/brands/active", { method: "POST", body: JSON.stringify(payload) });
+
+
+
+  },
+
+
+
+  getById: (id) => apiCall(`/brands/${id}`),
+
+
+
+  getBySlug: (slug) => apiCall(`/brands/slug/${slug}`),
+
+
+
+  search: (name) => apiCall(`/brands/search?name=${encodeURIComponent(name)}`),
+
+
+
+  create: (brand) => apiCall("/brands/create", { method: "POST", body: JSON.stringify(brand) }),
+
+
+
+  update: (id, brand) => apiCall(`/brands/${id}`, { method: "PUT", body: JSON.stringify(brand) }),
+
+
+
+  delete: (id) => apiCall(`/brands/${id}`, { method: "DELETE" }),
+
+
+
+  toggleStatus: (id) => apiCall(`/brands/${id}/toggle-status`, { method: "PATCH" }),
+
+
+
+};
+
+
+
+
+
+
+
+export const categoryAPI = {
+
+
+
+  getAll: (name, pageNum = DEFAULT_PAGE_NUM, pageSize = DEFAULT_PAGE_SIZE, status) => {
+
+
+
+    const payload = withOptionalStatus(normalizePagination(pageNum, pageSize), status);
+
+
+
+    if (name) payload.name = name;
+
+
+
+    return apiCall("/categories/list", { method: "POST", body: JSON.stringify(payload) });
+
+
+
+  },
+
+
+
+  getById: (id) => apiCall(`/categories/${id}`),
+
+
+
+  create: (category) => apiCall("/categories/create", { method: "POST", body: JSON.stringify(category) }),
+
+
+
+  update: (id, category) => apiCall(`/categories/${id}`, { method: "PUT", body: JSON.stringify(category) }),
+
+
+
+  delete: (id) => apiCall(`/categories/${id}`, { method: "DELETE" }),
+
+
+
+  toggleStatus: (id) => apiCall(`/categories/${id}/toggle-status`, { method: "PATCH" }),
+
+
+
+  search: (name) => apiCall(`/categories/search?name=${encodeURIComponent(name)}`),
+
+
+
+};
+
+
+
+
+
+
+
+export const materialAPI = {
+
+
+
+  getAll: (materialName, pageNum = DEFAULT_PAGE_NUM, pageSize = DEFAULT_PAGE_SIZE, status) => {
+
+
+
+    const payload = withOptionalStatus(normalizePagination(pageNum, pageSize), status);
+
+
+
+    if (materialName) payload.materialName = materialName;
+
+
+
+    return apiCall("/materials/list", { method: "POST", body: JSON.stringify(payload) });
+
+
+
+  },
+
+
+
+  getById: (id) => apiCall(`/materials/${id}`),
+
+
+
+  create: (material) => apiCall("/materials/create", { method: "POST", body: JSON.stringify(material) }),
+
+
+
+  update: (id, material) => apiCall(`/materials/${id}`, { method: "PUT", body: JSON.stringify(material) }),
+
+
+
+  delete: (id) => apiCall(`/materials/${id}`, { method: "DELETE" }),
+
+
+
+  toggleStatus: (id) => apiCall(`/materials/${id}/toggle-status`, { method: "PATCH" }),
+
+
+
+};
+
+
+
+
+
+
+
+export const sizeAPI = {
+
+
+
+  getAll: (sizeName, pageNum = DEFAULT_PAGE_NUM, pageSize = DEFAULT_PAGE_SIZE, status) => {
+
+
+
+    const payload = withOptionalStatus(normalizePagination(pageNum, pageSize), status);
+
+
+
+    if (sizeName) payload.sizeName = sizeName;
+
+
+
+    return apiCall("/sizes/list", { method: "POST", body: JSON.stringify(payload) });
+
+
+
+  },
+
+
+
+  getById: (id) => apiCall(`/sizes/${id}`),
+
+
+
+  create: (size) => apiCall("/sizes/create", { method: "POST", body: JSON.stringify(size) }),
+
+
+
+  update: (id, size) => apiCall(`/sizes/${id}`, { method: "PUT", body: JSON.stringify(size) }),
+
+
+
+  delete: (id) => apiCall(`/sizes/${id}`, { method: "DELETE" }),
+
+
+
+  toggleStatus: (id) => apiCall(`/sizes/${id}/toggle-status`, { method: "PATCH" }),
+
+
+
+};
+
+
+
+
+
+
+
+export const colorAPI = {
+
+
+
+  getAll: (colorName, pageNum = DEFAULT_PAGE_NUM, pageSize = DEFAULT_PAGE_SIZE, status) => {
+
+
+
+    const payload = withOptionalStatus(normalizePagination(pageNum, pageSize), status);
+
+
+
+    if (colorName) payload.colorName = colorName;
+
+
+
+    return apiCall("/colors/list", { method: "POST", body: JSON.stringify(payload) });
+
+
+
+  },
+
+
+
+  getById: (id) => apiCall(`/colors/${id}`),
+
+
+
+  create: (color) => apiCall("/colors/create", { method: "POST", body: JSON.stringify(color) }),
+
+
+
+  update: (id, color) => apiCall(`/colors/${id}`, { method: "PUT", body: JSON.stringify(color) }),
+
+
+
+  delete: (id) => apiCall(`/colors/${id}`, { method: "DELETE" }),
+
+
+
+  toggleStatus: (id) => apiCall(`/colors/${id}/toggle-status`, { method: "PATCH" }),
+
+
+
+};
+
+
+
+
+
+
+
+export const productAPI = {
+
+
+
+  getAll: (name, pageNum = DEFAULT_PAGE_NUM, pageSize = DEFAULT_PAGE_SIZE, status) => {
+
+
+
+    const payload = withOptionalStatus(normalizePagination(pageNum, pageSize), status);
+
+
+
+    if (name) payload.name = name;
+
+
+
+    return apiCall("/products/list", { method: "POST", body: JSON.stringify(payload) });
+
+
+
+  },
+
+
+
+  getActive: (pageNum = DEFAULT_PAGE_NUM, pageSize = DEFAULT_PAGE_SIZE) => {
+
+
+
+    const payload = normalizePagination(pageNum, pageSize);
+
+
+
+    return apiCall("/products/active", { method: "POST", body: JSON.stringify(payload) });
+
+
+
+  },
+
+
+
+  getActiveWithDetails: (pageNum = DEFAULT_PAGE_NUM, pageSize = DEFAULT_PAGE_SIZE) => {
+
+
+
+    const payload = normalizePagination(pageNum, pageSize);
+
+
+
+    return apiCall("/products/active/details", { method: "POST", body: JSON.stringify(payload) });
+
+
+
+  },
+
+
+
+  getById: (id) => apiCall(`/products/${id}`, { method: "GET" }),
+
+
+
+  getByCategory: (categoryId) => apiCall(`/products/category/${categoryId}`),
+
+
+
+  getByBrand: (brandId) => apiCall(`/products/brand/${brandId}`),
+
+
+
+  search: (name) => apiCall(`/products/search?name=${encodeURIComponent(name)}`),
+
+
+
+  getByFilters: (filters = {}) => {
+
+
+
+    const params = new URLSearchParams();
+
+
+
+    if (filters.categoryId) params.append("categoryId", filters.categoryId);
+
+
+
+    if (filters.brandId) params.append("brandId", filters.brandId);
+
+
+
+    if (filters.materialId) params.append("materialId", filters.materialId);
+
+
+
+    return apiCall(`/products/filter?${params.toString()}`);
+
+
+
+  },
+
+
+
+  create: (product) => apiCall("/products/create", { method: "POST", body: JSON.stringify(product) }),
+
+
+
+  update: (id, product) => apiCall(`/products/${id}`, { method: "PUT", body: JSON.stringify(product) }),
+
+
+
+  delete: (id) => apiCall(`/products/${id}`, { method: "DELETE" }),
+
+
+
+  toggleStatus: (id) => apiCall(`/products/${id}/toggle-status`, { method: "PATCH" }),
+
+
+
+};
+
+
+
+
+
+
+
+export const productVariantAPI = {
+
+
+
+  getAll: (productId, sizeId = null, colorId = null, status = true, pageNum = DEFAULT_PAGE_NUM, pageSize = DEFAULT_PAGE_SIZE) => {
+
+
+
+    const payload = normalizePagination(pageNum, pageSize);
+
+
+
+    if (productId !== undefined && productId !== null) payload.productId = productId;
+
+
+
+    if (sizeId !== undefined && sizeId !== null) payload.sizeId = sizeId;
+
+
+
+    if (colorId !== undefined && colorId !== null) payload.colorId = colorId;
+
+
+
+    if (status !== undefined && status !== null) payload.status = status;
+
+
+
+
+
+
+
+    return apiCall("/product-variants/list", {
+
+
+
+      method: "POST",
+
+
+
+      body: JSON.stringify(payload),
+
+
+
+    });
+
+
+
+  },
+
+
+
+  getActive: (pageNum = DEFAULT_PAGE_NUM, pageSize = DEFAULT_PAGE_SIZE) => {
+
+
+
+    const payload = normalizePagination(pageNum, pageSize);
+
+
+
+    return apiCall("/product-variants/active", { method: "POST", body: JSON.stringify(payload) });
+
+
+
+  },
+
+
+
+  getActiveWithDetails: (pageNum = DEFAULT_PAGE_NUM, pageSize = DEFAULT_PAGE_SIZE) => {
+
+
+
+    const payload = normalizePagination(pageNum, pageSize);
+
+
+
+    return apiCall("/product-variants/active/details", { method: "POST", body: JSON.stringify(payload) });
+
+
+
+  },
+
+
+
+  getById: (id) => apiCall(`/product-variants/${id}`),
+
+
+
+  getByProduct: (productId) => apiCall(`/product-variants/product/${productId}`),
+
+
+
+  getByProductWithDetails: (productId) => apiCall(`/product-variants/product/${productId}/details`),
+
+
+
+  getBySize: (sizeId) => apiCall(`/product-variants/size/${sizeId}`),
+
+
+
+  getByColor: (colorId) => apiCall(`/product-variants/color/${colorId}`),
+
+
+
+  getByFilters: (filters = {}) => {
+
+
+
+    const params = new URLSearchParams();
+
+
+
+    const appendArrayParam = (key, value) => {
+
+
+
+      if (Array.isArray(value)) {
+
+
+
+        value.forEach((v) => params.append(key, v));
+
+
+
+      } else if (value !== undefined && value !== null) {
+
+
+
+        params.append(key, value);
+
+
+
+      }
+
+
+
+    };
+
+
+
+
+
+
+
+    appendArrayParam("categoryId", filters.categoryId);
+
+
+
+    appendArrayParam("brandId", filters.brandId);
+
+
+
+    appendArrayParam("materialId", filters.materialId);
+
+
+
+    appendArrayParam("sizeId", filters.sizeId);
+
+
+
+    appendArrayParam("colorId", filters.colorId);
+
+
+
+
+
+
+
+    const query = params.toString();
+
+
+
+    return apiCall(`/product-variants/filter${query ? `?${query}` : ""}`);
+
+
+
+  },
+
+
+
+  create: (variant) => apiCall("/product-variants/create", { method: "POST", body: JSON.stringify(variant) }),
+
+
+
+  update: (id, variant) => apiCall(`/product-variants/${id}`, { method: "PUT", body: JSON.stringify(variant) }),
+
+
+
+  delete: (id) => apiCall(`/product-variants/${id}`, { method: "DELETE" }),
+
+
+
+  toggleStatus: (id) => apiCall(`/product-variants/${id}/toggle-status`, { method: "PATCH" }),
+
+
+
+  getImages: (variantId) => apiCall(`/product-variants/${variantId}/images`, { method: "GET" }),
+
+
+
+  saveImages: (variantId, images) =>
+
+
+
+    apiCall(`/product-variants/${variantId}/images`, { method: "POST", body: JSON.stringify(images) }),
+
+
+
+};
+
+
+
+
+
+
+
+export const productImageAPI = {
+
+
+
+  getByVariantIds: (variantIds = []) => {
+
+
+
+    if (!Array.isArray(variantIds) || variantIds.length === 0) return Promise.resolve([]);
+
+
+
+    const idsParam = variantIds.join(",");
+
+
+
+    return apiCall(`/product-images/variants?variantIds=${encodeURIComponent(idsParam)}`);
+
+
+
+  },
+
+
+
+};
+
+
+
+
+
+
+
+export const couponAPI = {
+
+
+
+  getAll: () => apiCall("/coupons"),
+
+
+
+  getActive: () => apiCall("/coupons/active"),
+
+
+
+  getById: (id) => apiCall(`/coupons/${id}`),
+
+
+
+  getByCode: (code) => apiCall(`/coupons/code/${encodeURIComponent(code)}`),
+
+
+
+  search: (query) => apiCall(`/coupons/search?q=${encodeURIComponent(query)}`),
+
+
+
+  create: (coupon) => apiCall("/coupons", { method: "POST", body: JSON.stringify(coupon) }),
+
+
+
+  update: (id, coupon) => apiCall(`/coupons/${id}`, { method: "PUT", body: JSON.stringify(coupon) }),
+
+
+
+  delete: (id) => apiCall(`/coupons/${id}`, { method: "DELETE" }),
+
+
+
+  toggleStatus: (id) => apiCall(`/coupons/${id}/toggle-status`, { method: "PATCH" }),
+
+
+
+  validate: (code, customerId = null) => {
+
+
+
+    const params = new URLSearchParams();
+
+
+
+    if (customerId) params.append("customerId", customerId);
+
+
+
+    return apiCall(`/coupons/validate/${encodeURIComponent(code)}?${params.toString()}`);
+
+
+
+  },
+
+
+
+};
+
+
+
+
+
+
+
+export const promotionAPI = {
+
+
+
+  getAll: () => apiCall("/promotions"),
+
+
+
+  getActive: () => apiCall("/promotions/active"),
+
+
+
+  getById: (id) => apiCall(`/promotions/${id}`),
+
+
+
+  search: (query) => apiCall(`/promotions/search?q=${encodeURIComponent(query)}`),
+
+
+
+  getByType: (type) => apiCall(`/promotions/type/${encodeURIComponent(type)}`),
+
+
+
+  getExpired: () => apiCall("/promotions/expired"),
+
+
+
+  getUpcoming: () => apiCall("/promotions/upcoming"),
+
+
+
+  getCurrentlyRunning: () => apiCall("/promotions/currently-running"),
+
+
+
+  getExpiringSoon: (days = 7) => apiCall(`/promotions/expiring-soon?days=${days}`),
+
+
+
+  getStatus: (id) => apiCall(`/promotions/${id}/status`),
+
+
+
+  validate: (id) => apiCall(`/promotions/${id}/validate`),
+
+
+
+  calculateDiscount: (id, originalPrice) =>
+
+
+
+    apiCall(`/promotions/${id}/calculate-discount?originalPrice=${encodeURIComponent(originalPrice)}`),
+
+
+
+  create: (promotion) => apiCall("/promotions", { method: "POST", body: JSON.stringify(promotion) }),
+
+
+
+  update: (id, promotion) => apiCall(`/promotions/${id}`, { method: "PUT", body: JSON.stringify(promotion) }),
+
+
+
+  delete: (id) => apiCall(`/promotions/${id}`, { method: "DELETE" }),
+
+
+
+  toggleStatus: (id) => apiCall(`/promotions/${id}/toggle-status`, { method: "PATCH" }),
+
+
+
+  activate: (id) => apiCall(`/promotions/${id}/activate`, { method: "PATCH" }),
+
+
+
+  deactivate: (id) => apiCall(`/promotions/${id}/deactivate`, { method: "PATCH" }),
+
+
+
+};
+
+
+
+
+
+
+
+export default {
+
+
+
+  brandAPI,
+
+
+
+  categoryAPI,
+
+
+
+  materialAPI,
+
+
+
+  sizeAPI,
+
+
+
+  colorAPI,
+
+
+
+  productAPI,
+
+
+
+  productVariantAPI,
+
+
+
+  productImageAPI,
+
+
+
+  couponAPI,
+
+
+
+  promotionAPI,
+
+
+
+};
+
+
+
+>>>>>>> Stashed changes
