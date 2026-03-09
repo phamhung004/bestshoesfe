@@ -45,6 +45,9 @@ export const getOrderDetail = (orderNumber) =>
 export const cancelOrder = (orderNumber) =>
     axiosClient.put(`/orders/${orderNumber}/cancel`);
 
+export const updateShippingAddress = (orderNumber, data) =>
+    axiosClient.patch(`/orders/${orderNumber}/shipping-address`, data);
+
 // ═══════════════════════════════════════════════════════════
 // Reviews
 // ═══════════════════════════════════════════════════════════

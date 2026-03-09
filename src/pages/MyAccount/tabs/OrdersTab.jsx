@@ -261,7 +261,17 @@ const OrdersTab = ({ onOpenReturns }) => {
 
             {/* Detail Modal */}
             {detailOrder && (
-                <OrderDetailModal order={detailOrder} onClose={() => setDetailOrder(null)} />
+                <OrderDetailModal
+                    order={detailOrder}
+                    onClose={() => setDetailOrder(null)}
+                    onOrderUpdated={(updated) => {
+                        setOrders(prev => prev.map(o =>
+                            o.orderNumber === updated.orderNumber ? { ...o, ...updated } : o
+                        ));
+                        setDetailOrder(prev => prev ? { ...prev, ...updated } : prev);
+                        showToast('Đã cập nhật địa chỉ giao hàng thành công', 'success');
+                    }}
+                />
             )}
 
             {/* Return Request Modal */}

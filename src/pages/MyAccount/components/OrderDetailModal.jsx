@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
-import { X, MapPin, Package, CreditCard, Printer, ShoppingBag, RotateCcw, ChevronRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, MapPin, Package, CreditCard, Printer, ShoppingBag, RotateCcw, ChevronRight, Edit3 } from 'lucide-react';
 import { formatVND, formatDate } from '../mockAccountData';
+import ChangeAddressModal from './ChangeAddressModal';
 
 const STATUS_STEPS = {
     'Chờ xác nhận': ['Đặt hàng', 'Xác nhận', 'Đang giao', 'Đã giao'],
@@ -31,7 +32,10 @@ const StatusBadge = ({ status }) => {
     return <span className={`acc-status-badge ${map[status] || ''}`}>{status}</span>;
 };
 
-const OrderDetailModal = ({ order, onClose }) => {
+const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdated }) => {
+    const [order, setOrder] = useState(initialOrder);
+    const [showChangeAddress, setShowChangeAddress] = useState(false);
+
     useEffect(() => {
         const onKey = (e) => { if (e.key === 'Escape') onClose(); };
         document.addEventListener('keydown', onKey);
@@ -102,7 +106,18 @@ const OrderDetailModal = ({ order, onClose }) => {
 
                     {/* Delivery Address */}
                     <div className="acc-detail-section">
-                        <h4 className="acc-section-label"><MapPin size={14} /> Địa chỉ giao hàng</h4>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h4 className="acc-section-label"><MapPin size={14} /> Địa chỉ giao hàng</h4>
+                            {order.status === 'Chờ xác nhận' && (
+                                <button
+                                    className="acc-btn-outline-sm"
+                                    style={{ fontSize: 12, padding: '4px 10px' }}
+                                    onClick={() => setShowChangeAddress(true)}
+                                >
+                                    <Edit3 size={13} /> Thay đổi
+                                </button>
+                            )}
+                        </div>
                         <div className="acc-address-card-detail">
                             <div className="acc-address-name">{order.customerName} · {order.customerPhone}</div>
                             <div className="acc-address-line">
@@ -207,6 +222,31 @@ const OrderDetailModal = ({ order, onClose }) => {
                     )}
                 </div>
             </div>
+
+            {/* Change Address Modal */}
+            {showChangeAddress && (
+                <ChangeAddressModal
+                    order={order}
+                    onClose={() => setShowChangeAddress(false)}
+                    onSuccess={(updatedOrder) => {
+                        setShowChangeAddress(false);
+                        if (updatedOrder) {
+                            setOrder(prev => ({
+                                ...prev,
+                                customerName: updatedOrder.customerName ?? prev.customerName,
+                                customerPhone: updatedOrder.customerPhone ?? prev.customerPhone,
+                                shippingProvince: updatedOrder.shippingProvince ?? prev.shippingProvince,
+                                shippingDistrict: updatedOrder.shippingDistrict ?? prev.shippingDistrict,
+                                shippingWard: updatedOrder.shippingWard ?? prev.shippingWard,
+                                shippingAddress: updatedOrder.shippingAddress ?? prev.shippingAddress,
+                                shippingCost: updatedOrder.shippingCost ?? prev.shippingCost,
+                                totalAmount: updatedOrder.totalAmount ?? prev.totalAmount,
+                            }));
+                            onOrderUpdated?.(updatedOrder);
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 };
