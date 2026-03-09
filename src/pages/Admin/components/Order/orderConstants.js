@@ -31,10 +31,10 @@ export const ALL_STATUSES = [
  *  - "Trả hàng/Hoàn tiền" is also terminal
  */
 export const VALID_NEXT_STATUSES = {
-    'Chờ xác nhận': ['Đã xác nhận', 'Đang giao', 'Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'],
-    'Đã xác nhận': ['Đang giao', 'Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'],
-    'Đang giao': ['Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'],
-    'Đã giao': ['Trả hàng/Hoàn tiền', 'Đã hủy'],
+    'Chờ xác nhận': ['Đã xác nhận', 'Đã hủy'],
+    'Đã xác nhận': ['Đang giao', 'Đã hủy'],
+    'Đang giao': ['Đã giao', 'Đã hủy'],
+    'Đã giao': ['Trả hàng/Hoàn tiền'],
     'Trả hàng/Hoàn tiền': [],
     'Đã hủy': [],
 };
