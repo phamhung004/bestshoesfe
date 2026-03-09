@@ -48,6 +48,7 @@ export const normalizeOrder = (o) => {
         total_amount: o.totalAmount ?? o.total_amount,
         status: o.status,
         payment_status: o.paymentStatus ?? o.payment_status,
+        payment_method: o.paymentMethod ?? o.payment_method,
         created_at: o.createdAt ?? o.created_at,
         updated_at: o.updatedAt ?? o.updated_at,
         item_count: o.itemCount ?? o.item_count,

@@ -3,7 +3,7 @@ import { formatVND } from '../../../../utils/formatPrice';
 import {
     formatDate, getInitials,
 } from './orderHelpers';
-import { STATUS_CONFIG, PAYMENT_CONFIG, ALL_STATUSES, getValidNextStatuses, isTerminalStatus } from './orderConstants';
+import { STATUS_CONFIG, PAYMENT_CONFIG, PAYMENT_METHOD_LABEL, ALL_STATUSES, getValidNextStatuses, isTerminalStatus } from './orderConstants';
 import { useProvinces } from '../../../../hooks/useProvinces';
 import { shippingApi } from '../../../../api/shippingApi';
 
@@ -636,6 +636,14 @@ const OrderSlideOver = ({
                     {/* Payment info */}
                     <div className="om-so-card">
                         <h3>Thanh toán</h3>
+                        {order.payment_method && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                                <span>Phương thức TT:</span>
+                                <span style={{ fontWeight: 600 }}>
+                                    {PAYMENT_METHOD_LABEL[order.payment_method] || order.payment_method}
+                                </span>
+                            </div>
+                        )}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                             <span>Trạng thái TT:</span>
                             <span

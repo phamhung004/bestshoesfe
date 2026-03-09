@@ -8,8 +8,18 @@ export const STATUS_CONFIG = {
 };
 
 export const PAYMENT_CONFIG = {
-    'Đã thanh toán': { color: '#16A34A', bg: '#DCFCE7' },
-    'Chưa thanh toán': { color: '#EA580C', bg: '#FFF7ED' },
+    'Đã thanh toán':             { color: '#16A34A', bg: '#DCFCE7' },
+    'Chưa thanh toán':           { color: '#EA580C', bg: '#FFF7ED' },
+    'Chờ thanh toán':            { color: '#CA8A04', bg: '#FEF9C3' },
+    'Cần xác nhận thanh toán': { color: '#7C3AED', bg: '#EDE9FE' },
+    'Không thanh toán':          { color: '#EF4444', bg: '#FEE2E2' },
+};
+
+export const PAYMENT_METHOD_LABEL = {
+    'COD':            'Thanh toán khi nhận hàng (COD)',
+    'BANK_TRANSFER':  'Chuyển khoản ngân hàng',
+    'CASH':           'Tiền mặt',
+    'cash':           'Tiền mặt',
 };
 
 export const ALL_STATUSES = [

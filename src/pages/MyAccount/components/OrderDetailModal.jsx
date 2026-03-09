@@ -199,7 +199,7 @@ const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdated }) => {
                     <div className="acc-detail-section">
                         <h4 className="acc-section-label"><CreditCard size={14} /> Thanh toán</h4>
                         <div className="acc-payment-info">
-                            <span>Phương thức: <strong>{order.orderType === 'In-store' ? 'Tại quầy' : 'COD / Chuyển khoản'}</strong></span>
+                            <span>Phương thức: <strong>{order.orderType === 'In-store' ? 'Tại quầy' : (order.paymentMethod === 'BANK_TRANSFER' ? 'Chuyển khoản ngân hàng' : 'Thanh toán khi nhận hàng (COD)')}</strong></span>
                             <span className={`acc-pay-badge${order.paymentStatus === 'Đã thanh toán' ? ' acc-pay-paid' : ' acc-pay-unpaid'}`}>
                                 {order.paymentStatus}
                             </span>
