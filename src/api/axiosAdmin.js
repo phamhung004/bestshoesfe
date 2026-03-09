@@ -43,6 +43,15 @@ axiosAdmin.interceptors.response.use(
       return Promise.reject(new Error('Phiên đăng nhập hết hạn.'));
     }
 
+    if (status === 403) {
+      const forbiddenError = new Error(
+        error.response.data?.message ?? 'Bạn không có quyền thực hiện hành động này.'
+      );
+      forbiddenError.type = 'ForbiddenError';
+      forbiddenError.status = 403;
+      return Promise.reject(forbiddenError);
+    }
+
     if (status === 404) {
       const notFoundError = new Error(
         error.response.data?.message ?? 'Không tìm thấy dữ liệu.'

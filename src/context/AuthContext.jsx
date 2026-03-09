@@ -39,10 +39,21 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const isAuthenticated = !!token && !!user;
-  const isAdmin = isAuthenticated && user?.role !== 'CUSTOMER';
+  const userRole = user?.role ?? null;
+  const isAdmin = isAuthenticated && userRole !== 'CUSTOMER';
+  const isManager = isAdmin && ['ADMIN', 'MANAGER'].includes(userRole);
+  const isFullAdmin = isAuthenticated && userRole === 'ADMIN';
+
+  /** Check if the current user has one of the given roles */
+  const hasRole = useCallback(
+    (...roles) => isAuthenticated && roles.includes(userRole),
+    [isAuthenticated, userRole]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated, isAdmin, loading }}>
+    <AuthContext.Provider
+      value={{ user, token, login, logout, isAuthenticated, isAdmin, isManager, isFullAdmin, hasRole, loading }}
+    >
       {children}
     </AuthContext.Provider>
   );

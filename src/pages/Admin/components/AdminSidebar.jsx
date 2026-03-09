@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 import './AdminSidebar.css';
 
 // SVG Icons as components for better visual quality
@@ -105,29 +106,37 @@ const Icons = {
   ),
 };
 
+const ALL_ROLES = ['ADMIN', 'MANAGER', 'STAFF'];
+const ADMIN_MANAGER = ['ADMIN', 'MANAGER'];
+const ADMIN_ONLY = ['ADMIN'];
+
 const menuStructure = [
   {
     id: 'dashboard',
     label: 'Tổng quan',
     icon: Icons.Dashboard,
     type: 'single',
+    roles: ALL_ROLES,
   },
   {
     id: 'analytics',
     label: 'Phân tích',
     icon: Icons.Analytics,
     type: 'single',
+    roles: ADMIN_MANAGER,
   },{
     id: 'products',
     label: 'Sản phẩm',
     icon: Icons.Analytics,
     type: 'single',
+    roles: ALL_ROLES,
   },
   {
     id: 'product-management',
     label: 'Quản lý sản phẩm',
     icon: Icons.Products,
     type: 'parent',
+    roles: ALL_ROLES,
     children: [
       { id: 'products', label: 'Sản phẩm', icon: Icons.Box },
       { id: 'brands', label: 'Thương hiệu', icon: Icons.Tag },
@@ -142,15 +151,17 @@ const menuStructure = [
     label: 'Đơn hàng',
     icon: Icons.Orders,
     type: 'single',
+    roles: ALL_ROLES,
   },
   {
     id: 'user-management',
     label: 'Tài khoản',
     icon: Icons.Users,
     type: 'parent',
+    roles: ADMIN_MANAGER,
     children: [
-      { id: 'customers', label: 'Khách hàng', icon: Icons.Users },
-      { id: 'employees', label: 'Nhân viên', icon: Icons.Users },
+      { id: 'customers', label: 'Khách hàng', icon: Icons.Users, roles: ADMIN_MANAGER },
+      { id: 'employees', label: 'Nhân viên', icon: Icons.Users, roles: ADMIN_ONLY },
     ],
   },
   {
@@ -158,24 +169,28 @@ const menuStructure = [
     label: 'Quản lý tài khoản',
     icon: Icons.Returns,
     type: 'single',
+    roles: ADMIN_MANAGER,
   },
   {
     id: 'returns',
     label: 'Trả hàng',
     icon: Icons.Returns,
     type: 'single',
+    roles: ALL_ROLES,
   },
   {
     id: 'in-store-sales',
     label: 'Bán hàng tại quầy',
     icon: Icons.POS,
     type: 'single',
+    roles: ALL_ROLES,
   },
   {
     id: 'promotions',
     label: 'Khuyến mãi',
     icon: Icons.Discount,
     type: 'parent',
+    roles: ADMIN_MANAGER,
     children: [
       { id: 'promotions-list', label: 'Đợt giảm giá', icon: Icons.Tag },
       { id: 'coupons', label: 'Mã giảm giá', icon: Icons.Tag },
@@ -184,6 +199,23 @@ const menuStructure = [
 ];
 
 const AdminSidebar = ({ activeSection, onSectionChange, isCollapsed, onToggleCollapse }) => {
+  const { user } = useAuth();
+  const userRole = user?.role ?? 'STAFF';
+
+  // Filter menu items based on current user's role
+  const visibleMenu = menuStructure
+    .filter((item) => !item.roles || item.roles.includes(userRole))
+    .map((item) => {
+      if (item.type === 'parent' && item.children) {
+        const filteredChildren = item.children.filter(
+          (child) => !child.roles || child.roles.includes(userRole)
+        );
+        return { ...item, children: filteredChildren };
+      }
+      return item;
+    })
+    .filter((item) => item.type !== 'parent' || (item.children && item.children.length > 0));
+
   const [expandedItems, setExpandedItems] = useState({
     'product-management': activeSection.startsWith('product-management/'),
     'user-management': activeSection.startsWith('user-management/'),
@@ -356,7 +388,7 @@ const AdminSidebar = ({ activeSection, onSectionChange, isCollapsed, onToggleCol
       </button>
 
       <nav className="sidebar-nav">
-        {menuStructure.map((item, index) => renderMenuItem(item, index))}
+        {visibleMenu.map((item, index) => renderMenuItem(item, index))}
       </nav>
 
       <div className="sidebar-footer">

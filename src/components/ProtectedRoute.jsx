@@ -1,8 +1,13 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const ProtectedRoute = ({ children, requireAdmin = false }) => {
-  const { isAuthenticated, isAdmin, loading } = useAuth();
+/**
+ * @param {Object} props
+ * @param {boolean}  [props.requireAdmin]  - Require any admin role (ADMIN / MANAGER / STAFF)
+ * @param {string[]} [props.allowedRoles]  - Restrict to specific roles, e.g. ['ADMIN','MANAGER']
+ */
+const ProtectedRoute = ({ children, requireAdmin = false, allowedRoles = [] }) => {
+  const { isAuthenticated, isAdmin, hasRole, loading } = useAuth();
   const location = useLocation();
 
   if (loading) return null;
@@ -13,6 +18,10 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
 
   if (requireAdmin && !isAdmin) {
     return <Navigate to="/" replace />;
+  }
+
+  if (allowedRoles.length > 0 && !hasRole(...allowedRoles)) {
+    return <Navigate to="/admin" replace />;
   }
 
   return children;
