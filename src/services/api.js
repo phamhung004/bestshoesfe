@@ -725,6 +725,11 @@ export const orderAPI = {
     method: 'PATCH',
     body: JSON.stringify(data),
   }),
+
+  // Confirm payment for a non-COD order flagged as "Cần xác nhận thanh toán" (REM-04A)
+  confirmPayment: (id) => apiCall(`/admin/orders/${id}/confirm-payment`, {
+    method: 'PATCH',
+  }),
 };
 
 

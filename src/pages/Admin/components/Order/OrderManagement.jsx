@@ -271,7 +271,23 @@ const OrderManagement = () => {
             showToast('❌ Lỗi: ' + (backendMsg || 'Không thể cập nhật trạng thái'));
         }
     }, [showToast, fetchOrders, fetchStatusCounts, selectedOrderDetail]);
-    // ── Update address (API) ───────────────────────────────────────────
+
+    // ── Confirm payment (REM-04A) ───────────────────────────────────────
+    const handleConfirmPayment = useCallback(async (orderId) => {
+        try {
+            const response = await orderAPI.confirmPayment(orderId);
+            showToast('✅ Đã xác nhận thanh toán');
+            if (response?.data) {
+                const updated = normalizeOrder(response.data);
+                setSelectedOrderDetail(updated);
+                setSelectedOrder((prev) => prev ? { ...prev, ...updated } : prev);
+            }
+            fetchOrders();
+        } catch (err) {
+            const backendMsg = err?.response?.data?.message;
+            showToast('❌ Lỗi: ' + (backendMsg || 'Không thể xác nhận thanh toán'));
+        }
+    }, [showToast, fetchOrders]);
     const handleAddressUpdate = useCallback(async (orderId, addressData) => {
         try {
             const response = await orderAPI.updateAddress(orderId, addressData);
@@ -480,6 +496,7 @@ const OrderManagement = () => {
                 onPrintOrder={handlePrintOrder}
                 onAddressUpdate={handleAddressUpdate}
                 onItemsUpdate={handleItemsUpdate}
+                onConfirmPayment={handleConfirmPayment}
             />
 
             {/* Toast notification */}

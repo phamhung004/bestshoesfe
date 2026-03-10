@@ -224,13 +224,23 @@ const OrderTable = ({
 
                                     {/* Payment status */}
                                     <td>
-                                        <span
-                                            className="om-badge"
-                                            style={{ background: paymentCfg.bg, color: paymentCfg.color }}
-                                        >
-                                            <span className="om-badge-dot" style={{ background: paymentCfg.color }} />
-                                            {order.payment_status}
-                                        </span>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                            <span
+                                                className="om-badge"
+                                                style={{ background: paymentCfg.bg, color: paymentCfg.color }}
+                                            >
+                                                <span className="om-badge-dot" style={{ background: paymentCfg.color }} />
+                                                {order.payment_status}
+                                            </span>
+                                            {order.payment_status === 'Cần xác nhận thanh toán' && (
+                                                <span style={{
+                                                    fontSize: 11, fontWeight: 600, color: '#C2410C',
+                                                    display: 'inline-flex', alignItems: 'center', gap: 3,
+                                                }}>
+                                                    ⚠️ Chưa xác nhận TT
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
 
                                     {/* Order status */}

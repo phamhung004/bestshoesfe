@@ -26,10 +26,12 @@ const OrderSlideOver = ({
     onPrintOrder,
     onAddressUpdate,
     onItemsUpdate,
+    onConfirmPayment,
 }) => {
     const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
     const [notes, setNotes] = useState('');
     const [saved, setSaved] = useState(false);
+    const [confirmingPayment, setConfirmingPayment] = useState(false);
     const saveTimeout = useRef(null);
 
     // ── Address edit state ────────────────────────────────────
@@ -654,6 +656,34 @@ const OrderSlideOver = ({
                                 {order.payment_status}
                             </span>
                         </div>
+                        {order.payment_status === 'Cần xác nhận thanh toán' && (
+                            <div style={{ marginTop: 8 }}>
+                                <div style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                                    background: '#FFF7ED', color: '#C2410C',
+                                    border: '1px solid #FED7AA', borderRadius: 6,
+                                    padding: '4px 10px', fontSize: 12, fontWeight: 600, marginBottom: 8,
+                                }}>
+                                    ⚠️ Chưa xác nhận TT
+                                </div>
+                                {onConfirmPayment && (
+                                    <div>
+                                        <button
+                                            className="om-btn om-btn-primary"
+                                            style={{ fontSize: 13 }}
+                                            disabled={confirmingPayment}
+                                            onClick={async () => {
+                                                setConfirmingPayment(true);
+                                                try { await onConfirmPayment(order.order_id); }
+                                                finally { setConfirmingPayment(false); }
+                                            }}
+                                        >
+                                            {confirmingPayment ? 'Đang xử lý...' : '✅ Xác nhận đã nhận tiền'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Order timeline */}
