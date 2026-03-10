@@ -324,10 +324,18 @@ const OrderSlideOver = ({
                                 <div className="om-status-dropdown">
                                     {validNextStatuses.map((s) => {
                                         const cfg = STATUS_CONFIG[s] || {};
+                                        const isNonCodUnpaid = s === 'Đã giao'
+                                            && order.payment_method
+                                            && order.payment_method.toUpperCase() !== 'COD'
+                                            && order.payment_status !== 'Đã thanh toán';
                                         return (
                                             <button
                                                 key={s}
+                                                disabled={isNonCodUnpaid}
+                                                title={isNonCodUnpaid ? 'Cần xác nhận thanh toán trước khi giao hàng' : undefined}
+                                                style={isNonCodUnpaid ? { opacity: 0.45, cursor: 'not-allowed' } : undefined}
                                                 onClick={() => {
+                                                    if (isNonCodUnpaid) return;
                                                     onStatusChange(order.order_id, s);
                                                     setStatusDropdownOpen(false);
                                                 }}
