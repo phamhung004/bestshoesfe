@@ -12,6 +12,17 @@ export const RETURN_REASONS = [
     'Khác',
 ];
 
+// Mapping from preset reason label → backend enum value
+export const REASON_TO_CATEGORY = {
+    'Sản phẩm bị lỗi / hư hỏng': 'PRODUCT_DEFECT',
+    'Sản phẩm không đúng mô tả':  'NOT_AS_DESCRIBED',
+    'Không vừa size':              'WRONG_SIZE',
+    'Giao sai màu sắc':           'WRONG_COLOR',
+    'Nhận sai sản phẩm':          'WRONG_PRODUCT',
+    'Sản phẩm kém chất lượng':    'POOR_QUALITY',
+    'Khác':                        'OTHER',
+};
+
 // Return status display config: badge CSS class suffix + label
 export const RETURN_STATUS_CONFIG = {
     'Chờ duyệt':   { cls: 'acc-badge-yellow',  label: 'Chờ duyệt'   },

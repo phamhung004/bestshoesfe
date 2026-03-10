@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Upload, Loader, AlertCircle } from 'lucide-react';
 import { formatVND } from '../mockAccountData';
-import { RETURN_REASONS, MAX_RETURN_IMAGES, RETURN_WINDOW_DAYS } from '../../../constants/returnConstants';
+import { RETURN_REASONS, MAX_RETURN_IMAGES, RETURN_WINDOW_DAYS, REASON_TO_CATEGORY } from '../../../constants/returnConstants';
 import { uploadReturnImages, createReturnRequest } from '../../../api/returnApi';
 
 const STEPS = [
@@ -130,6 +130,7 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                 orderNumber: order.orderNumber,
                 items: checkedItems.map(i => ({ orderItemId: i.orderItemId, quantity: i.returnQty })),
                 returnReason: reason,
+                returnReasonCategory: REASON_TO_CATEGORY[reason] || 'OTHER',
                 description: description.trim() || undefined,
                 imageUrls: uploadedUrls,
             });

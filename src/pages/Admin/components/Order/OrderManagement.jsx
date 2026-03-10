@@ -3,6 +3,7 @@ import { formatVND } from '../../../../utils/formatPrice';
 import { normalizeOrder } from './orderMappers';
 import { STATUS_CONFIG } from './orderConstants';
 import { orderAPI } from '../../../../services/api';
+import { useAuth } from '../../../../context/AuthContext';
 import OrderKpiCards from './OrderKpiCards';
 import OrderFilters from './OrderFilters';
 import OrderTable from './OrderTable';
@@ -15,6 +16,8 @@ import './OrderManagement.css';
  * Connects to backend API for all data operations.
  */
 const OrderManagement = () => {
+    const { isManager } = useAuth();
+
     // ── State ─────────────────────────────────────────────────────
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -288,6 +291,24 @@ const OrderManagement = () => {
             showToast('❌ Lỗi: ' + (backendMsg || 'Không thể xác nhận thanh toán'));
         }
     }, [showToast, fetchOrders]);
+
+    // ── Confirm refund (V3-07) ──────────────────────────────────────
+    const handleConfirmRefund = useCallback(async (orderId) => {
+        try {
+            const response = await orderAPI.confirmRefund(orderId);
+            showToast('✅ Đã xác nhận hoàn tiền');
+            if (response?.data) {
+                const updated = normalizeOrder(response.data);
+                setSelectedOrderDetail(updated);
+                setSelectedOrder((prev) => prev ? { ...prev, ...updated } : prev);
+            }
+            fetchOrders();
+        } catch (err) {
+            const backendMsg = err?.response?.data?.message;
+            showToast('❌ Lỗi: ' + (backendMsg || 'Không thể xác nhận hoàn tiền'));
+        }
+    }, [showToast, fetchOrders]);
+
     const handleAddressUpdate = useCallback(async (orderId, addressData) => {
         try {
             const response = await orderAPI.updateAddress(orderId, addressData);
@@ -450,9 +471,11 @@ const OrderManagement = () => {
                     <button className="om-btn om-btn-outline om-btn-sm" onClick={handleExportCsv}>
                         📊 Xuất Excel
                     </button>
-                    <button className="om-btn om-btn-danger-outline om-btn-sm" onClick={handleBulkCancel}>
-                        ❌ Hủy đơn
-                    </button>
+                    {isManager && (
+                        <button className="om-btn om-btn-danger-outline om-btn-sm" onClick={handleBulkCancel}>
+                            ❌ Hủy đơn
+                        </button>
+                    )}
                     <button className="om-clear-link" onClick={handleDeselectAll}>
                         Bỏ chọn tất cả
                     </button>
@@ -473,6 +496,7 @@ const OrderManagement = () => {
                 onCancelOrder={handleCancelOrder}
                 allSelected={selectedIds.size > 0 && selectedIds.size === orders.length}
                 loading={loading}
+                isManager={isManager}
             />
 
             {/* Pagination */}
@@ -497,6 +521,8 @@ const OrderManagement = () => {
                 onAddressUpdate={handleAddressUpdate}
                 onItemsUpdate={handleItemsUpdate}
                 onConfirmPayment={handleConfirmPayment}
+                onConfirmRefund={handleConfirmRefund}
+                isManager={isManager}
             />
 
             {/* Toast notification */}

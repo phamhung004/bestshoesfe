@@ -29,6 +29,17 @@ export const REASON_CONFIG = {
 
 export const ALL_REASONS = Object.keys(REASON_CONFIG);
 
+// Mapping from admin reason label → backend enum value
+export const REASON_TO_CATEGORY = {
+    'Sản phẩm lỗi':      'PRODUCT_DEFECT',
+    'Sai size':           'WRONG_SIZE',
+    'Sai màu':            'WRONG_COLOR',
+    'Không như mô tả':    'NOT_AS_DESCRIBED',
+    'Đổi ý':              'OTHER',
+    'Giao thiếu hàng':    'WRONG_PRODUCT',
+    'Khác':               'OTHER',
+};
+
 // ── Refund methods ──────────────────────────────────────────────
 export const REFUND_METHODS = [
     { value: 'Tiền mặt', icon: '💵', label: 'Tiền mặt' },

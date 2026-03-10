@@ -730,6 +730,11 @@ export const orderAPI = {
   confirmPayment: (id) => apiCall(`/admin/orders/${id}/confirm-payment`, {
     method: 'PATCH',
   }),
+
+  // Confirm refund has been processed for a cancelled/returned prepaid order
+  confirmRefund: (id) => apiCall(`/admin/orders/${id}/confirm-refund`, {
+    method: 'PATCH',
+  }),
 };
 
 

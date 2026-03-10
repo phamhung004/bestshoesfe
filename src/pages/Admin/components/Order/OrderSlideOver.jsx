@@ -27,11 +27,14 @@ const OrderSlideOver = ({
     onAddressUpdate,
     onItemsUpdate,
     onConfirmPayment,
+    onConfirmRefund,
+    isManager,
 }) => {
     const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
     const [notes, setNotes] = useState('');
     const [saved, setSaved] = useState(false);
     const [confirmingPayment, setConfirmingPayment] = useState(false);
+    const [confirmingRefund, setConfirmingRefund] = useState(false);
     const saveTimeout = useRef(null);
 
     // ── Address edit state ────────────────────────────────────
@@ -365,7 +368,7 @@ const OrderSlideOver = ({
                     <div className="om-so-card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                             <h3 style={{ margin: 0 }}>Địa chỉ giao hàng</h3>
-                            {order.status === 'Chờ xác nhận' && !isEditingAddress && (
+                            {isManager && ['Chờ xác nhận', 'Đã xác nhận'].includes(order.status) && !isEditingAddress && (
                                 <button
                                     className="om-btn om-btn-outline om-btn-sm"
                                     onClick={handleStartEdit}
@@ -478,7 +481,7 @@ const OrderSlideOver = ({
                     <div className="om-so-card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                             <h3 style={{ margin: 0 }}>Sản phẩm ({(isEditingItems ? editItems : order.items)?.length || 0})</h3>
-                            {order.status === 'Chờ xác nhận' && !isEditingItems && (
+                            {isManager && order.status === 'Chờ xác nhận' && !isEditingItems && (
                                 <button
                                     className="om-btn om-btn-outline om-btn-sm"
                                     onClick={handleStartEditItems}
@@ -686,6 +689,42 @@ const OrderSlideOver = ({
                         )}
                     </div>
 
+                    {/* Refund status (V3-07) */}
+                    {order.refund_status && (
+                        <div className="om-so-card">
+                            <h3>Hoàn tiền</h3>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                                <span>Trạng thái:</span>
+                                <span
+                                    className="om-badge"
+                                    style={{
+                                        background: order.refund_status === 'Cần hoàn tiền' ? '#FEF2F2' : '#F0FDF4',
+                                        color: order.refund_status === 'Cần hoàn tiền' ? '#DC2626' : '#16A34A',
+                                    }}
+                                >
+                                    <span className="om-badge-dot" style={{
+                                        background: order.refund_status === 'Cần hoàn tiền' ? '#DC2626' : '#16A34A',
+                                    }} />
+                                    {order.refund_status}
+                                </span>
+                            </div>
+                            {order.refund_status === 'Cần hoàn tiền' && onConfirmRefund && (
+                                <button
+                                    className="om-btn om-btn-primary"
+                                    style={{ fontSize: 13 }}
+                                    disabled={confirmingRefund}
+                                    onClick={async () => {
+                                        setConfirmingRefund(true);
+                                        try { await onConfirmRefund(order.order_id); }
+                                        finally { setConfirmingRefund(false); }
+                                    }}
+                                >
+                                    {confirmingRefund ? 'Đang xử lý...' : '💰 Xác nhận đã hoàn tiền'}
+                                </button>
+                            )}
+                        </div>
+                    )}
+
                     {/* Order timeline */}
                     <div className="om-so-card">
                         <h3>Tiến trình đơn hàng</h3>
@@ -741,7 +780,7 @@ const OrderSlideOver = ({
                     >
                         🖨️ In hóa đơn
                     </button>
-                    {!isTerminal && (
+                    {isManager && !isTerminal && (
                         <button
                             className="om-btn om-btn-danger-outline"
                             onClick={() => onCancelOrder(order)}

@@ -34,6 +34,7 @@ const OrderTable = ({
     onCancelOrder,
     allSelected,
     loading,
+    isManager,
 }) => {
     // Track which row's "more" dropdown is open
     const [openMore, setOpenMore] = useState(null);
@@ -240,6 +241,22 @@ const OrderTable = ({
                                                     ⚠️ Chưa xác nhận TT
                                                 </span>
                                             )}
+                                            {order.refund_status === 'Cần hoàn tiền' && (
+                                                <span style={{
+                                                    fontSize: 11, fontWeight: 600, color: '#DC2626',
+                                                    display: 'inline-flex', alignItems: 'center', gap: 3,
+                                                }}>
+                                                    💰 Cần hoàn tiền
+                                                </span>
+                                            )}
+                                            {order.refund_status === 'Đã hoàn tiền' && (
+                                                <span style={{
+                                                    fontSize: 11, fontWeight: 600, color: '#16A34A',
+                                                    display: 'inline-flex', alignItems: 'center', gap: 3,
+                                                }}>
+                                                    ✅ Đã hoàn tiền
+                                                </span>
+                                            )}
                                         </div>
                                     </td>
 
@@ -308,7 +325,7 @@ const OrderTable = ({
                                                 </button>
                                                 {openMore === order.order_id && (
                                                     <div className="om-more-dropdown">
-                                                        {!isTerminalStatus(order.status) && (
+                                                        {isManager && !isTerminalStatus(order.status) && (
                                                             <button onClick={() => { onCancelOrder(order); setOpenMore(null); }} className="destructive">
                                                                 ❌ Hủy đơn
                                                             </button>

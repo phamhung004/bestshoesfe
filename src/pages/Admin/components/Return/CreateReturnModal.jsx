@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-    ALL_REASONS, REFUND_METHODS,
+    ALL_REASONS, REFUND_METHODS, REASON_TO_CATEGORY,
     formatVND, formatDate, getInitials,
 } from './mockReturns';
 import { returnAPI } from '../../../../services/api';
@@ -106,6 +106,7 @@ const CreateReturnModal = ({ onClose, onCreate }) => {
                     quantity: checkedItems[item.order_item_id],
                 })),
                 returnReason: reason,
+                returnReasonCategory: REASON_TO_CATEGORY[reason] || 'OTHER',
                 description: description,
                 refundMethod: refundMethod,
             };
