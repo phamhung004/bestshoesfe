@@ -8,6 +8,13 @@ const apiCall = async (endpoint, options = {}) => {
   const headers = options._skipContentType
     ? { ...options.headers }
     : { 'Content-Type': 'application/json', ...options.headers };
+
+  // Attach JWT token if available
+  const token = localStorage.getItem('token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const { _skipContentType, ...restOptions } = options;
   const config = {
     headers,
