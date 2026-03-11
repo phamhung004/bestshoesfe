@@ -28,7 +28,7 @@ const ReturnDetailSlideOver = ({
     const reasonCfg = REASON_CONFIG[returnItem.return_reason] || {};
 
     // Calculate refund breakdown
-    const itemsTotal = returnItem.items.reduce((sum, item) => sum + item.total_price, 0);
+    const itemsTotal = (returnItem.items || []).reduce((sum, item) => sum + (item.total_price || 0), 0);
     const shippingRefund = returnItem.shipping_cost_refund || 0;
     const deduction = returnItem.deduction || 0;
     const refundTotal = itemsTotal + shippingRefund - deduction;
@@ -116,17 +116,17 @@ const ReturnDetailSlideOver = ({
                                 </span>
                             )}
                         </div>
-                        {returnItem.items.map(item => (
+                        {(returnItem.items || []).map(item => (
                             <div key={item.order_item_id} className="rm-so-item">
                                 <img
-                                    src={item.product.image_url}
-                                    alt={item.product.name}
+                                    src={item.product?.image_url}
+                                    alt={item.product?.name}
                                     className="rm-so-item-thumb"
                                 />
                                 <div className="rm-so-item-info">
-                                    <div className="rm-so-item-name">{item.product.name}</div>
+                                    <div className="rm-so-item-name">{item.product?.name}</div>
                                     <div className="rm-so-item-variant">
-                                        Size: {item.size.size_name} / Màu: {item.color.color_name}
+                                        Size: {item.size?.size_name} / Màu: {item.color?.color_name}
                                     </div>
                                     <div className="rm-so-item-variant">
                                         Số lượng trả: {item.quantity} &nbsp;|&nbsp; Đơn giá: {formatVND(item.unit_price)}
