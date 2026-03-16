@@ -42,9 +42,10 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
             {hasPromo && <span className="pos-card-promo-badge">KM</span>}
             <img
                 className="pos-card-img"
-                src={product.imageUrl}
+                src={product.imageUrl || '/placeholder-shoe.png'}
                 alt={product.name}
                 loading="lazy"
+                onError={(e) => { e.target.onerror = null; e.target.src = '/placeholder-shoe.png'; }}
             />
             <div className="pos-card-body">
                 <div className="pos-card-name">{product.name}</div>

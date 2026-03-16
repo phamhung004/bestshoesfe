@@ -48,7 +48,7 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
             <div className="pos-modal" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="pos-modal-header">
-                    <img className="pos-modal-thumb" src={product.imageUrl} alt={product.name} />
+                    <img className="pos-modal-thumb" src={product.imageUrl || '/placeholder-shoe.png'} alt={product.name} onError={(e) => { e.target.onerror = null; e.target.src = '/placeholder-shoe.png'; }} />
                     <div>
                         <div className="pos-modal-title">{product.name}</div>
                         <div className="pos-modal-brand">{getBrandName(product.brandId)}</div>
