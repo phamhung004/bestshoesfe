@@ -539,6 +539,7 @@ const ProductManagementPage = () => {
       brandId:       basicInfo.brandId    ? Number(basicInfo.brandId)    : null,
       materialId:    basicInfo.materialId ? Number(basicInfo.materialId) : null,
       status:        basicInfo.status || 'ACTIVE',
+      sku:           basicInfo.sku?.trim() || '',
       tags:          basicInfo.tags || [],
       slug:          basicInfo.slug || slugify(basicInfo.name),
       seoTitle:      basicInfo.seoTitle || '',

@@ -4,6 +4,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
+import { productAPI } from '../../../services/api';
 import './DashboardOverview.css';
 
 // Custom Tooltip Component
@@ -181,6 +182,17 @@ const DashboardOverview = () => {
   const [categoryData, setCategoryData] = useState([]);
   const [brandData, setBrandData] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [activeProductCount, setActiveProductCount] = useState(null);
+
+  // Fetch real product count
+  useEffect(() => {
+    productAPI.countActive()
+      .then((res) => {
+        const count = res?.data ?? res;
+        if (typeof count === 'number') setActiveProductCount(count);
+      })
+      .catch(() => {/* keep null – falls back to mock in stats */});
+  }, []);
 
   // Initialize data
   useEffect(() => {
@@ -203,7 +215,7 @@ const DashboardOverview = () => {
     const previousRevenue = totalRevenue * (0.85 + Math.random() * 0.1);
     const revenueChange = ((totalRevenue - previousRevenue) / previousRevenue * 100);
     const orderChange = 12 + Math.random() * 8;
-    const productCount = 248;
+    const productCount = activeProductCount ?? 0;
     const productChange = 5 + Math.random() * 3;
     const userCount = 1847;
     const userChange = 18 + Math.random() * 5;
@@ -219,7 +231,7 @@ const DashboardOverview = () => {
       userCount,
       userChange,
     };
-  }, [revenueData]);
+  }, [revenueData, activeProductCount]);
 
   if (loading) {
     return (

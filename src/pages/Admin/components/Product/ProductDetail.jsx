@@ -51,6 +51,10 @@ const ProductDetail = () => {
             <span>{product.productId || product.id}</span>
           </div>
           <div className="detail-item">
+            <label>Mã sản phẩm (SKU):</label>
+            <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{product.sku || '—'}</span>
+          </div>
+          <div className="detail-item">
             <label>Tên sản phẩm:</label>
             <span>{product.name}</span>
           </div>

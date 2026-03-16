@@ -237,6 +237,9 @@ export const productAPI = {
 
   // Toggle product status
   toggleStatus: (id) => apiCall(`/products/${id}/toggle-status`, { method: 'PATCH' }),
+
+  // Count total active products (for dashboard KPI)
+  countActive: () => apiCall('/products/count-active'),
 };
 
 // Product Variant API functions

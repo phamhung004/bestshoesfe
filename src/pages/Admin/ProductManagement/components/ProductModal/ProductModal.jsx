@@ -25,6 +25,7 @@ const emptyBasicInfo = {
   seoDescription: '',
   weight: '',
   launchDate: '',
+  sku: '',
 };
 
 /**
@@ -64,6 +65,7 @@ const ProductModal = ({ mode, product, categories = [], brands = [], materials =
         seoDescription:  product.seoDescription || '',
         weight:          product.weight || '',
         launchDate:      product.launchDate || '',
+        sku:             product.sku || '',
       };
     }
     return { ...emptyBasicInfo };
@@ -110,6 +112,7 @@ const ProductModal = ({ mode, product, categories = [], brands = [], materials =
     else if (basicInfo.name.trim().length < 3) errs.name = 'Tên quá ngắn (tối thiểu 3 ký tự)';
     if (!basicInfo.categoryId) errs.categoryId = 'Vui lòng chọn danh mục';
     if (!basicInfo.brandId)    errs.brandId    = 'Vui lòng chọn thương hiệu';
+    if (!basicInfo.sku?.trim()) errs.sku = 'Mã sản phẩm (SKU) là bắt buộc';
     return errs;
   };
 
@@ -190,7 +193,7 @@ const ProductModal = ({ mode, product, categories = [], brands = [], materials =
   }, []);
 
   /* ── Error count per tab ──────────────────────────────────── */
-  const tab0Errors = ['name', 'categoryId', 'brandId'].filter((k) => errors[k]).length;
+  const tab0Errors = ['name', 'categoryId', 'brandId', 'sku'].filter((k) => errors[k]).length;
   const tab1Errors = ['variants'].filter((k) => errors[k]).length;
 
   return (
