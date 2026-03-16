@@ -36,7 +36,16 @@ const POSPage = () => {
     const [variantPickerProduct, setVariantPickerProduct] = useState(null);
     const [isCheckingOut, setIsCheckingOut] = useState(false);
     const [successOrder, setSuccessOrder] = useState(null);
+    // ── Hold orders (Hóa đơn chờ) ────────────────────────────────
+    const [holdOrders, setHoldOrders] = useState([]);
+    const [isSavingHold, setIsSavingHold] = useState(false);
 
+    // Fetch hold orders on mount
+    useEffect(() => {
+        posAPI.listHoldOrders()
+            .then(res => setHoldOrders(res?.data ?? []))
+            .catch(() => {});
+    }, []);
     // ── Computed values ─────────────────────────────────────────
     const subtotal = useMemo(
         () => cartItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0),
@@ -200,6 +209,108 @@ const POSPage = () => {
         setPaymentMethod('cash');
     }, [clearCart]);
 
+    // ── Hold order actions ──────────────────────────────────────
+    const refreshHoldOrders = useCallback(() => {
+        posAPI.listHoldOrders()
+            .then(res => setHoldOrders(res?.data ?? []))
+            .catch(() => {});
+    }, []);
+
+    const handleSaveHoldOrder = useCallback(async () => {
+        if (cartItems.length === 0) return;
+        if (holdOrders.length >= 10) {
+            alert('Tối đa 10 hóa đơn chờ. Vui lòng hoàn tất hoặc xóa bớt.');
+            return;
+        }
+        setIsSavingHold(true);
+        try {
+            const customerName = isWalkIn
+                ? (guestName || 'Khách lẻ')
+                : (selectedCustomer?.fullName || 'Khách lẻ');
+            const customerPhone = isWalkIn ? guestPhone : (selectedCustomer?.phone || '');
+            await posAPI.saveHoldOrder({
+                customerId: selectedCustomer?.customerId || null,
+                customerName,
+                customerPhone,
+                couponId: appliedCoupon?.couponId || null,
+                items: cartItems.map(item => ({ variantId: item.variantId, quantity: item.quantity })),
+            });
+            clearCart();
+            setPaymentMethod('cash');
+            await refreshHoldOrders();
+        } catch (err) {
+            alert(err?.response?.data?.message || 'Lưu thất bại. Vui lòng thử lại.');
+        } finally {
+            setIsSavingHold(false);
+        }
+    }, [cartItems, isWalkIn, guestName, guestPhone, selectedCustomer, appliedCoupon, holdOrders.length, clearCart, refreshHoldOrders]);
+
+    const handleRestoreHoldOrder = useCallback(async (holdOrder) => {
+        // If current cart is non-empty, ask to save it first
+        if (cartItems.length > 0) {
+            const ok = window.confirm(
+                'Giỏ hàng hiện tại sẽ bị xoá. Bạn có muốn lưu lại không?\n\nNhấn OK để lưu rồi mở đơn chờ, hoặc Cancel để bỏ qua.'
+            );
+            if (ok) {
+                await handleSaveHoldOrder();
+            } else {
+                clearCart();
+            }
+        }
+
+        // Delete hold record from DB (cart items are being loaded back to UI)
+        try {
+            await posAPI.deleteHoldOrder(holdOrder.orderId);
+        } catch { /* ignore */ }
+
+        // Restore cart items from hold order
+        const restoredItems = holdOrder.items.map(item => ({
+            cartKey: String(item.variantId),
+            variantId: item.variantId,
+            productId: item.productId,
+            productName: item.productName,
+            imageUrl: item.imageUrl,
+            sizeId: item.sizeId,
+            colorId: item.colorId,
+            unitPrice: item.unitPrice,
+            originalPrice: item.originalPrice,
+            promotionName: item.promotionName || null,
+            discountPercentage: null,
+            quantity: item.quantity,
+        }));
+        setCartItems(restoredItems);
+
+        // Restore customer info
+        if (holdOrder.customerId) {
+            setIsWalkIn(false);
+            setSelectedCustomer({ customerId: holdOrder.customerId, fullName: holdOrder.customerName, phone: holdOrder.customerPhone });
+            setGuestName(''); setGuestPhone('');
+        } else {
+            setIsWalkIn(true);
+            setSelectedCustomer(null);
+            setGuestName(holdOrder.customerName !== 'Khách lẻ' ? holdOrder.customerName : '');
+            setGuestPhone(holdOrder.customerPhone || '');
+        }
+
+        // Clear coupon (user must re-apply to ensure it's still valid)
+        setAppliedCoupon(null);
+        setDiscountAmount(0);
+        setPaymentMethod('cash');
+        setCashReceived(0);
+
+        await refreshHoldOrders();
+    }, [cartItems, handleSaveHoldOrder, clearCart, refreshHoldOrders]);
+
+    const handleDiscardHoldOrder = useCallback(async (orderId) => {
+        if (!window.confirm('Xóa hóa đơn chờ này?')) return;
+        try {
+            await posAPI.deleteHoldOrder(orderId);
+            await refreshHoldOrders();
+        } catch (err) {
+            alert(err?.response?.data?.message || 'Xóa thất bại.');
+        }
+    }, [refreshHoldOrders]);
+
     // ── Variant picker handler from ProductBrowser ──────────────
     const handleProductClick = useCallback((product) => {
         const inStockVariants = product.variants.filter(v => v.status === 'ACTIVE' && v.stock > 0);
@@ -248,6 +359,11 @@ const POSPage = () => {
                 onCheckout={handleCheckout}
                 isCheckingOut={isCheckingOut}
                 cartBounce={cartBounce}
+                holdOrders={holdOrders}
+                isSavingHold={isSavingHold}
+                onSaveHold={handleSaveHoldOrder}
+                onRestoreHold={handleRestoreHoldOrder}
+                onDiscardHold={handleDiscardHoldOrder}
             />
 
             {/* Variant picker modal */}

@@ -1859,6 +1859,175 @@
     animation: spin 0.8s linear infinite;
 }
 
+/* ── Hold Orders UI ──────────────────────────────────────── */
+
+/* Badge on the 💾 header button */
+.pos-hold-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #f97316;
+    color: #fff;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    line-height: 1;
+}
+
+/* Mini spinner inside 💾 header button while saving */
+.pos-hold-mini-spin {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(100, 116, 139, 0.3);
+    border-top-color: #64748b;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+/* Horizontal strip below cart header showing hold order tabs */
+.pos-hold-strip {
+    display: flex;
+    gap: 6px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--gray-200);
+    overflow-x: auto;
+    flex-shrink: 0;
+    background: #fafafa;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-300) transparent;
+}
+.pos-hold-strip::-webkit-scrollbar {
+    height: 4px;
+}
+.pos-hold-strip::-webkit-scrollbar-track {
+    background: transparent;
+}
+.pos-hold-strip::-webkit-scrollbar-thumb {
+    background: var(--gray-300);
+    border-radius: 2px;
+}
+
+/* Individual hold tab wrapper */
+.pos-hold-tab {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+    flex-shrink: 0;
+    min-width: 0;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.pos-hold-tab:hover {
+    border-color: #f97316;
+    box-shadow: 0 1px 4px rgba(249, 115, 22, 0.15);
+}
+
+/* Clickable portion of the tab (restores the hold order) */
+.pos-hold-tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--gray-700);
+    transition: background 0.12s;
+}
+.pos-hold-tab-btn:hover {
+    background: #fff7ed;
+}
+
+/* Number badge inside each tab */
+.pos-hold-tab-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #f97316;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+/* Customer name inside tab */
+.pos-hold-tab-name {
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+/* Item count label inside tab */
+.pos-hold-tab-count {
+    color: var(--gray-400);
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+/* × discard button on the right edge of each tab */
+.pos-hold-tab-close {
+    padding: 0 8px;
+    background: none;
+    border: none;
+    border-left: 1px solid var(--gray-200);
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--gray-400);
+    transition: background 0.12s, color 0.12s;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+}
+.pos-hold-tab-close:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+/* Secondary "Lưu hóa đơn chờ" button in checkout section */
+.pos-btn-hold {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: #fff;
+    color: #f97316;
+    border: 1.5px solid #f97316;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, opacity 0.15s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.pos-btn-hold:hover:not(:disabled) {
+    background: #fff7ed;
+}
+.pos-btn-hold:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 /* ── Success Modal ───────────────────────────────────────── */
 .pos-success-modal {
     text-align: center;

@@ -787,6 +787,19 @@ export const posAPI = {
     method: 'POST',
     body: JSON.stringify(data),
   }),
+
+  // ── Hold orders (Hóa đơn chờ) ─────────────────────────────
+  // Save current cart as a hold order (stock NOT deducted)
+  saveHoldOrder: (data) => apiCall('/admin/pos/hold', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  // List all hold orders (status="Chờ POS")
+  listHoldOrders: () => apiCall('/admin/pos/hold'),
+
+  // Delete / discard a hold order by ID
+  deleteHoldOrder: (orderId) => apiCall(`/admin/pos/hold/${orderId}`, { method: 'DELETE' }),
 };
 
 
