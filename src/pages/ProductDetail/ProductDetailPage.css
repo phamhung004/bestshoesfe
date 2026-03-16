@@ -192,6 +192,52 @@
     font-weight: 500;
 }
 
+/* Quantity selector */
+.pdp-qty-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.pdp-qty-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    min-width: 72px;
+}
+.pdp-qty-stepper {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.pdp-qty-btn {
+    width: 36px;
+    height: 36px;
+    background: #f9fafb;
+    border: none;
+    font-size: 18px;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.pdp-qty-btn:hover:not(:disabled) { background: #e5e7eb; }
+.pdp-qty-btn:disabled { color: #d1d5db; cursor: not-allowed; }
+.pdp-qty-value {
+    width: 44px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+    border-left: 1.5px solid #d1d5db;
+    border-right: 1.5px solid #d1d5db;
+    line-height: 36px;
+}
+
 /* CTA button */
 .pdp-add-btn {
     width: 100%;

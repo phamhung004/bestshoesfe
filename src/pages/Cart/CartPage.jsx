@@ -130,11 +130,22 @@ const CartPage = () => {
         );
     }, []);
 
-    // Bulk delete
+    // Select / deselect all
+    const allSelected = cartItems.length > 0 && cartItems.every(i => selectedItems.includes(i.cart_item_id));
+    const handleToggleSelectAll = useCallback(() => {
+        if (allSelected) {
+            setSelectedItems([]);
+        } else {
+            setSelectedItems(cartItems.map(i => i.cart_item_id));
+        }
+    }, [allSelected, cartItems]);
+
+    // Bulk delete — remove from UI and call API for each
     const handleDeleteSelected = useCallback(() => {
+        selectedItems.forEach(id => removeItem(id));
         setCartItems(prev => prev.filter(i => !selectedItems.includes(i.cart_item_id)));
         setSelectedItems([]);
-    }, [selectedItems]);
+    }, [selectedItems, removeItem]);
 
     // Bulk save
     const handleSaveSelected = useCallback(() => {
@@ -223,6 +234,9 @@ const CartPage = () => {
 
                             <BulkActionBar
                                 selectedCount={selectedItems.length}
+                                totalCount={cartItems.length}
+                                allSelected={allSelected}
+                                onToggleSelectAll={handleToggleSelectAll}
                                 onDeleteSelected={handleDeleteSelected}
                                 onSaveSelected={handleSaveSelected}
                                 onDeselectAll={handleDeselectAll}

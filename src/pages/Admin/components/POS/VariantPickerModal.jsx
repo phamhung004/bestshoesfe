@@ -26,6 +26,16 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
         return activeVariants.find(v => v.sizeId === selectedSize && v.colorId === selectedColor) || null;
     }, [selectedSize, selectedColor, activeVariants]);
 
+    // Resolve displayed image: prefer selected variant image, then any variant for selected color, then product default
+    const displayedImage = useMemo(() => {
+        if (selectedVariant?.imageUrl) return selectedVariant.imageUrl;
+        if (selectedColor) {
+            const colorVariant = activeVariants.find(v => v.colorId === selectedColor && v.imageUrl);
+            if (colorVariant) return colorVariant.imageUrl;
+        }
+        return product.imageUrl || '/placeholder-shoe.png';
+    }, [selectedVariant, selectedColor, activeVariants, product.imageUrl]);
+
     // Check if a size+color combination exists
     const hasVariant = (sizeId, colorId) =>
         activeVariants.some(v => v.sizeId === sizeId && v.colorId === colorId);
@@ -48,7 +58,7 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
             <div className="pos-modal" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="pos-modal-header">
-                    <img className="pos-modal-thumb" src={product.imageUrl || '/placeholder-shoe.png'} alt={product.name} onError={(e) => { e.target.onerror = null; e.target.src = '/placeholder-shoe.png'; }} />
+                    <img className="pos-modal-thumb" src={displayedImage} alt={product.name} onError={(e) => { e.target.onerror = null; e.target.src = '/placeholder-shoe.png'; }} />
                     <div>
                         <div className="pos-modal-title">{product.name}</div>
                         <div className="pos-modal-brand">{getBrandName(product.brandId)}</div>

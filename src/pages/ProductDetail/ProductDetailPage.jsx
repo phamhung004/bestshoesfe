@@ -14,6 +14,7 @@ const ProductDetailPage = () => {
     const navigate = useNavigate();
     const { addToCart } = useCart();
     const [addingToCart, setAddingToCart] = useState(false);
+    const [quantity, setQuantity] = useState(1);
 
     const {
         product,
@@ -38,6 +39,11 @@ const ProductDetailPage = () => {
         }
         return () => { document.title = 'BestShoes'; };
     }, [product]);
+
+    // Reset quantity when variant changes so qty never exceeds new stock
+    useEffect(() => {
+        setQuantity(1);
+    }, [selectedVariant?.variantId]);
 
     if (loading) return <ProductDetailSkeleton />;
 
@@ -203,6 +209,28 @@ const ProductDetailPage = () => {
                         {stockIndicator.text}
                     </div>
 
+                    {/* Quantity selector */}
+                    {selectedVariant && isInStock && (
+                        <div className="pdp-qty-row">
+                            <span className="pdp-qty-label">Số lượng</span>
+                            <div className="pdp-qty-stepper">
+                                <button
+                                    className="pdp-qty-btn"
+                                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                                    disabled={quantity <= 1}
+                                    aria-label="Giảm số lượng"
+                                >−</button>
+                                <span className="pdp-qty-value">{quantity}</span>
+                                <button
+                                    className="pdp-qty-btn"
+                                    onClick={() => setQuantity(q => Math.min(stockCount, q + 1))}
+                                    disabled={quantity >= stockCount}
+                                    aria-label="Tăng số lượng"
+                                >+</button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* CTA */}
                     <button
                         className={`pdp-add-btn ${(!selectedVariant || !isInStock || addingToCart) ? 'disabled' : ''}`}
@@ -210,7 +238,7 @@ const ProductDetailPage = () => {
                         onClick={async () => {
                             if (!selectedVariant || !isInStock || addingToCart) return;
                             setAddingToCart(true);
-                            await addToCart(selectedVariant.variantId, 1);
+                            await addToCart(selectedVariant.variantId, quantity);
                             setAddingToCart(false);
                         }}
                     >
