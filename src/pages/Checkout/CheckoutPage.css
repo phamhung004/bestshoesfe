@@ -444,6 +444,17 @@
     animation: fadeSlideUp 200ms ease-out;
 }
 
+.co-fee-error-box {
+    background: #FEF3C7;
+    border: 1px solid #FCD34D;
+    color: #92400E;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-top: 8px;
+}
+
 /* ─── Section E: Delivery Time ─────────────────────── */
 .co-time-grid {
     display: flex;

@@ -399,7 +399,15 @@ const CheckoutPage = () => {
         }
 
         if (!districtId || !wardCode) {
-            dispatch({ type: 'SET_SHIPPING_FEE', payload: null });
+            // If addressId is selected but GHN IDs are missing, surface a clear error
+            if (selectedAddress) {
+                dispatch({
+                    type: 'SET_SHIPPING_FEE_ERROR',
+                    payload: 'Địa chỉ này chưa có thông tin quận/huyện GHN. Vui lòng chọn "Dùng địa chỉ khác" để nhập địa chỉ mới có đầy đủ thông tin.',
+                });
+            } else {
+                dispatch({ type: 'SET_SHIPPING_FEE', payload: null });
+            }
             return;
         }
 
@@ -685,6 +693,15 @@ const CheckoutPage = () => {
                                 <h3 className="co-card-title">Phí vận chuyển (GHN)</h3>
                                 <div className="co-shipping-pill">
                                     🚚 Phí vận chuyển: {new Intl.NumberFormat('vi-VN').format(state.shippingFee.total)} ₫
+                                </div>
+                            </div>
+                        )}
+
+                        {/* E2: Shipping fee error (missing GHN IDs on saved address, etc.) */}
+                        {state.deliveryMethod === 'Online' && !state.shippingFee && state.shippingFeeError && (
+                            <div className="co-card co-stagger-5">
+                                <div className="co-fee-error-box">
+                                    ⚠ {state.shippingFeeError}
                                 </div>
                             </div>
                         )}
