@@ -161,6 +161,7 @@ const POSPage = () => {
                 customerName,
                 customerPhone,
                 couponId: appliedCoupon?.couponId || null,
+                paymentMethod: paymentMethod.toUpperCase(), // CASH | CARD | BANK_TRANSFER | PENDING
                 cashReceived: cashReceived || 0,
                 items: cartItems.map(item => ({
                     variantId: item.variantId,
