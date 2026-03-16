@@ -166,7 +166,18 @@ const ProductModal = ({ mode, product, categories = [], brands = [], materials =
       });
       // Modal is closed by parent after successful save
     } catch (err) {
-      setSaveError(err?.message ?? 'Lỗi lưu sản phẩm. Vui lòng thử lại.');
+      const data = err?.response?.data;
+      let message;
+      if (data && typeof data === 'object') {
+        if (data.message) {
+          message = data.message;
+        } else {
+          // field-errors map from @Valid: { name: "...", brandId: "..." }
+          const values = Object.values(data).filter(Boolean);
+          if (values.length > 0) message = values.join('; ');
+        }
+      }
+      setSaveError(message || err?.message || 'Lỗi lưu sản phẩm. Vui lòng thử lại.');
       setSaving(false);
     }
   };
