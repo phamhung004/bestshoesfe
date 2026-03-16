@@ -184,7 +184,19 @@ const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdated }) => {
                             </div>
                             {Number(order.couponDiscountAmount) > 0 && (
                                 <div className="acc-pricing-row acc-discount">
-                                    <span>Giảm giá</span>
+                                    <span>
+                                        Giảm giá
+                                        {order.couponCode && (
+                                            <span style={{ marginLeft: 6, fontWeight: 600, color: '#f97316' }}>
+                                                [{order.couponCode}]
+                                            </span>
+                                        )}
+                                        {order.couponName && (
+                                            <span style={{ marginLeft: 4, fontWeight: 400, color: '#6b7280', fontSize: '0.85em' }}>
+                                                – {order.couponName}
+                                            </span>
+                                        )}
+                                    </span>
                                     <span>-{formatVND(order.couponDiscountAmount)}</span>
                                 </div>
                             )}
