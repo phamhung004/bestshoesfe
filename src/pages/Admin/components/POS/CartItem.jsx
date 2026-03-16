@@ -29,7 +29,7 @@ const CartItem = ({ item, onUpdateQty, onRemove }) => {
             <div className="pos-cart-item-info">
                 <div className="pos-cart-item-name">{item.productName}</div>
                 <div className="pos-cart-item-variant">
-                    Size: {getSizeName(item.sizeId)} / Màu: {color.colorName}
+                    Cỡ: {getSizeName(item.sizeId)} / Màu: {color.colorName}
                 </div>
                 <div className="pos-cart-item-price">
                     {formatVND(item.unitPrice)}

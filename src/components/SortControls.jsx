@@ -1,17 +1,10 @@
 import React, { useState } from 'react';
 import './SortControls.css';
+import { SORT_OPTIONS } from '../constants/vi';
 
 const SortControls = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedSort, setSelectedSort] = useState('Recommendation');
-
-  const sortOptions = [
-    'Recommendation',
-    'Price: Low to High',
-    'Price: High to Low',
-    'Newest',
-    'Rating'
-  ];
+  const [selectedSort, setSelectedSort] = useState(SORT_OPTIONS[0]);
 
   const handleSortSelect = (option) => {
     setSelectedSort(option);
@@ -21,7 +14,7 @@ const SortControls = () => {
   return (
     <div className="sort-controls">
       <div className="sort-dropdown" onClick={() => setIsOpen(!isOpen)}>
-        <span className="sort-label">Sort by : {selectedSort}</span>
+        <span className="sort-label">Sắp xếp: {selectedSort}</span>
         <div className={`sort-arrow ${isOpen ? 'open' : ''}`}>
           ▼
         </div>
@@ -29,7 +22,7 @@ const SortControls = () => {
 
       {isOpen && (
         <div className="sort-options">
-          {sortOptions.map((option) => (
+          {SORT_OPTIONS.map((option) => (
             <div
               key={option}
               className={`sort-option ${selectedSort === option ? 'selected' : ''}`}

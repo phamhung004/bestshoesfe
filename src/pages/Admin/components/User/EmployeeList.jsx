@@ -95,7 +95,7 @@ const EmployeeList = ({ onAdd, onEdit }) => {
                 <th>Phòng ban</th>
                 <th>Chức vụ</th>
                 <th>Lương</th>
-                <th>Role</th>
+                <th>Vai trò</th>
                 <th>Ngày tạo</th>
                 <th>Trạng thái</th>
                 <th>Thao tác</th>

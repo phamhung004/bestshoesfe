@@ -12,16 +12,16 @@ const LoginPanel = () => {
       {/* Login Content */}
       <div className="login-content">
         <h2 className="login-title">
-          Login<br />
-          to purchase
+          Đăng nhập<br />
+          để mua hàng
         </h2>
 
         <button className="login-button">
-          <span className="login-button-text">Login</span>
+          <span className="login-button-text">Đăng nhập</span>
         </button>
 
         <p className="login-description">
-          Get to reedem voucher from discont by WellShoes and get other benefit.
+          Đăng nhập để nhận ưu đãi và nhiều quyền lợi khác từ BestShoes.
         </p>
       </div>
     </div>

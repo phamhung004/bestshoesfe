@@ -8,12 +8,14 @@ import {
   relativeTime,
 } from '../mockAccountData';
 
+import { ROLE_ICON_LABEL } from '../../../../constants/vi';
+
 /* ── Role badge ───────────────────────────────────────────── */
 const RoleBadge = ({ roleName }) => {
   const map = {
-    ADMIN:   { cls: 'am-role-admin',   label: '👑 Admin' },
-    MANAGER: { cls: 'am-role-manager', label: '🔧 Manager' },
-    STAFF:   { cls: 'am-role-staff',   label: '👤 Staff' },
+    ADMIN:   { cls: 'am-role-admin',   label: ROLE_ICON_LABEL.ADMIN },
+    MANAGER: { cls: 'am-role-manager', label: ROLE_ICON_LABEL.MANAGER },
+    STAFF:   { cls: 'am-role-staff',   label: ROLE_ICON_LABEL.STAFF },
   };
   const cfg = map[roleName] || map.STAFF;
   return <span className={`am-badge ${cfg.cls}`}>{cfg.label}</span>;

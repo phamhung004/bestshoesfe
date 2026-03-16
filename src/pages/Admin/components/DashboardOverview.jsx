@@ -62,11 +62,11 @@ const generateRevenueData = () => {
 };
 
 const generateCategoryData = () => [
-  { name: 'Running', value: 35, revenue: 125000000, color: '#6366F1' },
-  { name: 'Casual', value: 28, revenue: 100000000, color: '#10B981' },
-  { name: 'Basketball', value: 18, revenue: 65000000, color: '#F59E0B' },
-  { name: 'Training', value: 12, revenue: 42000000, color: '#8B5CF6' },
-  { name: 'Other', value: 7, revenue: 25000000, color: '#6B7280' },
+  { name: 'Chạy bộ', value: 35, revenue: 125000000, color: '#6366F1' },
+  { name: 'Thường ngày', value: 28, revenue: 100000000, color: '#10B981' },
+  { name: 'Bóng rổ', value: 18, revenue: 65000000, color: '#F59E0B' },
+  { name: 'Tập luyện', value: 12, revenue: 42000000, color: '#8B5CF6' },
+  { name: 'Khác', value: 7, revenue: 25000000, color: '#6B7280' },
 ];
 
 const generateBrandData = () => [

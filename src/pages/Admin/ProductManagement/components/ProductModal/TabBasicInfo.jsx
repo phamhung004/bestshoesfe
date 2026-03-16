@@ -189,7 +189,7 @@ const TabBasicInfo = ({ data, onChange, errors = {}, categories = [], brands = [
               </div>
 
               <div className="pm-field">
-                <label className="pm-label">Meta title</label>
+                <label className="pm-label">Tiêu đề Meta</label>
                 <input
                   className="pm-input"
                   maxLength={60}
@@ -201,7 +201,7 @@ const TabBasicInfo = ({ data, onChange, errors = {}, categories = [], brands = [
               </div>
 
               <div className="pm-field">
-                <label className="pm-label">Meta description</label>
+                <label className="pm-label">Mô tả Meta</label>
                 <textarea
                   className="pm-textarea"
                   rows={3}

@@ -93,7 +93,7 @@ const Icons = {
   ),
 };
 
-const AdminHeader = ({ title = 'Dashboard', subtitle = 'Welcome back!', darkMode, onToggleDarkMode }) => {
+const AdminHeader = ({ title = 'Bảng điều khiển', subtitle = 'Chào mừng trở lại!', darkMode, onToggleDarkMode }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -120,25 +120,25 @@ const AdminHeader = ({ title = 'Dashboard', subtitle = 'Welcome back!', darkMode
     {
       id: 1,
       type: 'warning',
-      title: 'Low Stock Alert',
-      message: '5 products are running low on stock',
-      time: '5 minutes ago',
+      title: 'Cảnh báo hàng sắp hết',
+      message: '5 sản phẩm sắp hết hàng',
+      time: '5 phút trước',
       read: false,
     },
     {
       id: 2,
       type: 'success',
-      title: 'New Order',
-      message: 'Order #1234 has been placed',
-      time: '15 minutes ago',
+      title: 'Đơn hàng mới',
+      message: 'Đơn hàng #1234 vừa được đặt',
+      time: '15 phút trước',
       read: false,
     },
     {
       id: 3,
       type: 'info',
-      title: 'System Update',
-      message: 'New features have been deployed',
-      time: '1 hour ago',
+      title: 'Cập nhật hệ thống',
+      message: 'Tính năng mới đã được triển khai',
+      time: '1 giờ trước',
       read: true,
     },
   ];
@@ -171,7 +171,7 @@ const AdminHeader = ({ title = 'Dashboard', subtitle = 'Welcome back!', darkMode
         <button
           className="header-btn"
           onClick={onToggleDarkMode}
-          title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={darkMode ? 'Chuyển sang sáng' : 'Chuyển sang tối'}
         >
           {darkMode ? <Icons.Sun /> : <Icons.Moon />}
         </button>
@@ -236,7 +236,7 @@ const AdminHeader = ({ title = 'Dashboard', subtitle = 'Welcome back!', darkMode
               <span>AD</span>
             </div>
             <div className="user-info">
-              <span className="user-name">Admin</span>
+              <span className="user-name">Quản trị viên</span>
               <span className="user-role">Quản trị viên</span>
             </div>
             <Icons.ChevronDown />
@@ -249,7 +249,7 @@ const AdminHeader = ({ title = 'Dashboard', subtitle = 'Welcome back!', darkMode
                   <span>AD</span>
                 </div>
                 <div>
-                  <h4>Admin</h4>
+                  <h4>Quản trị viên</h4>
                   <p>admin@bestshoes.com</p>
                 </div>
               </div>

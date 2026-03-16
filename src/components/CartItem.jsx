@@ -23,7 +23,7 @@ const CartItem = ({ item, onQtyChange, onRemove }) => {
             <div className="qty-val">{item.qty}X</div>
             <button onClick={increment} className="qty-btn">+</button>
           </div>
-          <button className="ci-remove" onClick={onRemove}>Remove</button>
+          <button className="ci-remove" onClick={onRemove}>Xóa</button>
         </div>
       </div>
       <div className="ci-subtotal">

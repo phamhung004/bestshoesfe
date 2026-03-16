@@ -75,8 +75,8 @@ const OrderFilters = ({
                         aria-label="Lọc loại đơn"
                     >
                         <option value="">Loại đơn</option>
-                        <option value="Online">Online</option>
-                        <option value="In-store">In-store</option>
+                        <option value="Online">Trực tuyến</option>
+                        <option value="In-store">Tại quầy</option>
                     </select>
 
                     {/* Date range */}

@@ -206,7 +206,7 @@ const OrderTable = ({
                                                 <div className="om-product-info">
                                                     <span className="om-product-name">{firstItem.product?.name}</span>
                                                     <span className="om-product-variant">
-                                                        Size: {firstItem.size?.size_name} / Màu: {firstItem.color?.color_name}
+                                                        Cỡ: {firstItem.size?.size_name} / Màu: {firstItem.color?.color_name}
                                                     </span>
                                                     {extraItems > 0 && (
                                                         <span className="om-more-products">+{extraItems} sản phẩm khác</span>
@@ -274,7 +274,7 @@ const OrderTable = ({
                                     {/* Order type */}
                                     <td>
                                         <span className={`om-type-chip ${order.order_type === 'Online' ? 'online' : 'instore'}`}>
-                                            {order.order_type}
+                                            {order.order_type === 'Online' ? 'Trực tuyến' : 'Tại quầy'}
                                         </span>
                                     </td>
 

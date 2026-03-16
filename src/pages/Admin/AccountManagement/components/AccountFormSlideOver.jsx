@@ -226,9 +226,9 @@ const AccountFormSlideOver = ({ mode, activeTab, account, onClose, onSave }) => 
               <label className="am-form-label">Vai trò <span className="required">*</span></label>
               <div className="am-role-cards">
                 {[
-                  { key: 'STAFF', icon: '👤', label: 'Staff', desc: 'Xem và xử lý đơn hàng' },
-                  { key: 'MANAGER', icon: '🔧', label: 'Manager', desc: 'Quản lý sản phẩm, đơn hàng' },
-                  { key: 'ADMIN', icon: '👑', label: 'Admin', desc: 'Toàn quyền hệ thống' },
+                  { key: 'STAFF', icon: '👤', label: 'Nhân viên', desc: 'Xem và xử lý đơn hàng' },
+                  { key: 'MANAGER', icon: '🔧', label: 'Quản lý', desc: 'Quản lý sản phẩm, đơn hàng' },
+                  { key: 'ADMIN', icon: '👑', label: 'Quản trị viên', desc: 'Toàn quyền hệ thống' },
                 ].map((r) => (
                   <div
                     key={r.key}

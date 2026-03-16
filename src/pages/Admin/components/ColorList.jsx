@@ -90,7 +90,7 @@ const ColorList = ({ onEdit, onAdd, refreshTrigger }) => {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Preview</th>
+              <th>Xem trước</th>
               <th>Tên</th>
               <th>Mã màu</th>
               <th>Trạng thái</th>

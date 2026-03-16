@@ -98,9 +98,9 @@ const AccountFilterBar = ({
               style={{ minWidth: 160 }}
             >
               <option value="">Vai trò</option>
-              <option value="ADMIN">Admin</option>
-              <option value="MANAGER">Manager</option>
-              <option value="STAFF">Staff</option>
+              <option value="ADMIN">Quản trị viên</option>
+              <option value="MANAGER">Quản lý</option>
+              <option value="STAFF">Nhân viên</option>
             </select>
 
             <select

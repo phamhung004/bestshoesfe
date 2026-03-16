@@ -164,7 +164,7 @@ const FilterSidebar = ({ onApply = noop }) => {
         {/* Apply Button */}
         <div className="filter-actions">
           <button className="apply-button" onClick={handleApply}>
-            <span className="apply-text">Apply</span>
+            <span className="apply-text">Áp dụng</span>
           </button>
         </div>
       </div>

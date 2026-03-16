@@ -115,7 +115,7 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
                         className={`pos-size-chip${!activeSize ? ' active' : ''}`}
                         onClick={() => setActiveSize(null)}
                     >
-                        All
+                        Tất cả
                     </button>
                     {sizes.map(s => (
                         <button
