@@ -48,6 +48,12 @@ const POSPage = () => {
     // Ref for search input (keyboard shortcut F1)
     const searchInputRef = useRef(null);
 
+    // Ref-based lock to prevent concurrent tab switches
+    const switchingRef = useRef(false);
+    // Always-current activeOrderId (avoids stale closures in async handlers)
+    const activeOrderIdRef = useRef(activeOrderId);
+    activeOrderIdRef.current = activeOrderId;
+
     // Fetch hold orders on mount
     useEffect(() => {
         posAPI.listHoldOrders()
@@ -328,51 +334,85 @@ const POSPage = () => {
     }, []);
 
     // Tab switch: auto-save current → load target
+    // Uses ref-based lock to prevent concurrent switches and stale closure issues.
     const handleSwitchTab = useCallback(async (holdOrderOrNull) => {
-        if (isSavingHold) return;
+        if (switchingRef.current) return;
+
+        const currentActiveId = activeOrderIdRef.current;
 
         // Clicking the already-active tab does nothing
-        if (holdOrderOrNull === null && activeOrderId === null) return;
-        if (holdOrderOrNull && holdOrderOrNull.orderId === activeOrderId) return;
+        if (holdOrderOrNull === null && currentActiveId === null) return;
+        if (holdOrderOrNull && holdOrderOrNull.orderId === currentActiveId) return;
 
-        // Auto-save current cart if it has items
-        const saved = await autoSaveCurrentCart();
-        if (!saved) return;
+        switchingRef.current = true;
+        setIsSavingHold(true);
 
-        if (holdOrderOrNull === null) {
-            // Switch to fresh new order
-            clearCart();
-            setPaymentMethod('cash');
-            setActiveOrderId(null);
-        } else {
-            // Switch to a hold order — load its data
-            restoreHoldData(holdOrderOrNull);
-            setActiveOrderId(holdOrderOrNull.orderId);
+        try {
+            // Auto-save current cart if it has items
+            if (cartItems.length > 0) {
+                if (currentActiveId) {
+                    try { await posAPI.deleteHoldOrder(currentActiveId); } catch { /* ignore */ }
+                }
+                await posAPI.saveHoldOrder(buildHoldPayload());
+            }
+
+            if (holdOrderOrNull === null) {
+                // Switch to fresh new order
+                clearCart();
+                setPaymentMethod('cash');
+                setActiveOrderId(null);
+            } else {
+                // Switch to a hold order — load its data
+                restoreHoldData(holdOrderOrNull);
+                setActiveOrderId(holdOrderOrNull.orderId);
+            }
+
+            await refreshHoldOrders();
+        } catch {
+            showToast('Chuyển đơn thất bại. Vui lòng thử lại.', 'error');
+        } finally {
+            setIsSavingHold(false);
+            switchingRef.current = false;
         }
-
-        await refreshHoldOrders();
-    }, [isSavingHold, activeOrderId, autoSaveCurrentCart, clearCart, restoreHoldData, refreshHoldOrders]);
+    }, [cartItems, buildHoldPayload, clearCart, restoreHoldData, refreshHoldOrders, showToast]);
 
     // "+" New Order button: auto-save current → clear for new
     const handleNewOrderTab = useCallback(async () => {
-        if (isSavingHold) return;
-        if (cartItems.length === 0 && activeOrderId === null) return; // Already on empty new order
+        if (switchingRef.current) return;
 
-        const saved = await autoSaveCurrentCart();
-        if (!saved) return;
+        const currentActiveId = activeOrderIdRef.current;
+        if (cartItems.length === 0 && currentActiveId === null) return; // Already on empty new order
 
-        clearCart();
-        setPaymentMethod('cash');
-        setActiveOrderId(null);
-        await refreshHoldOrders();
-    }, [isSavingHold, cartItems.length, activeOrderId, autoSaveCurrentCart, clearCart, refreshHoldOrders]);
+        switchingRef.current = true;
+        setIsSavingHold(true);
+
+        try {
+            if (cartItems.length > 0) {
+                if (currentActiveId) {
+                    try { await posAPI.deleteHoldOrder(currentActiveId); } catch { /* ignore */ }
+                }
+                await posAPI.saveHoldOrder(buildHoldPayload());
+            }
+
+            clearCart();
+            setPaymentMethod('cash');
+            setActiveOrderId(null);
+            await refreshHoldOrders();
+        } catch {
+            showToast('Không thể tạo đơn mới. Vui lòng thử lại.', 'error');
+        } finally {
+            setIsSavingHold(false);
+            switchingRef.current = false;
+        }
+    }, [cartItems, buildHoldPayload, clearCart, refreshHoldOrders, showToast]);
 
     const handleDiscardHoldOrder = useCallback(async (orderId) => {
+        if (switchingRef.current) return;
         if (!window.confirm('Xóa hóa đơn chờ này?')) return;
         try {
             await posAPI.deleteHoldOrder(orderId);
             // If we were editing this hold order, switch to new order
-            if (activeOrderId === orderId) {
+            if (activeOrderIdRef.current === orderId) {
                 clearCart();
                 setPaymentMethod('cash');
                 setActiveOrderId(null);
@@ -382,7 +422,7 @@ const POSPage = () => {
         } catch (err) {
             showToast(err?.response?.data?.message || 'Xóa thất bại.', 'error');
         }
-    }, [refreshHoldOrders, activeOrderId, clearCart, showToast]);
+    }, [refreshHoldOrders, clearCart, showToast]);
 
     // ── Variant picker handler from ProductBrowser ──────────────
     const handleProductClick = useCallback((product) => {
