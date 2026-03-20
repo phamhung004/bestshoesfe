@@ -3,16 +3,20 @@ import ProductBrowser from './ProductBrowser';
 import VariantPickerModal from './VariantPickerModal';
 import OrderCart from './OrderCart';
 import CheckoutSuccessModal from './CheckoutSuccessModal';
+import HoldOrderTabBar from './HoldOrderTabBar';
 import { POSProvider } from './POSContext';
 import { posAPI } from '../../../../services/api';
+import { useToast } from '../../../../context/ToastContext';
 import { formatVND } from './posUtils';
 import './POSPage.css';
 
 /**
  * POSPage — root split-panel layout for "Bán hàng tại quầy".
- * Manages: cart, customer, coupon, payment, checkout flow.
+ * Manages: cart, customer, coupon, payment, checkout flow, hold-order tabs.
  */
 const POSPage = () => {
+    const { showToast } = useToast();
+
     // ── Order & cart state ──────────────────────────────────────
     const [cartItems, setCartItems] = useState([]);
     const [pulseProductId, setPulseProductId] = useState(null);
@@ -39,6 +43,10 @@ const POSPage = () => {
     // ── Hold orders (Hóa đơn chờ) ────────────────────────────────
     const [holdOrders, setHoldOrders] = useState([]);
     const [isSavingHold, setIsSavingHold] = useState(false);
+    const [activeOrderId, setActiveOrderId] = useState(null); // null = new order
+
+    // Ref for search input (keyboard shortcut F1)
+    const searchInputRef = useRef(null);
 
     // Fetch hold orders on mount
     useEffect(() => {
@@ -180,6 +188,14 @@ const POSPage = () => {
 
             const res = await posAPI.checkout(request);
             const order = res.data; // POSCheckoutResponse from ApiResponse.data
+
+            // If checking out a hold order, delete it from backend
+            if (activeOrderId) {
+                try { await posAPI.deleteHoldOrder(activeOrderId); } catch { /* ignore */ }
+                setActiveOrderId(null);
+                refreshHoldOrders();
+            }
+
             setSuccessOrder(order);
         } catch (err) {
             console.error('Checkout failed:', err);
@@ -194,76 +210,90 @@ const POSPage = () => {
             )) {
                 setAppliedCoupon(null);
                 setDiscountAmount(0);
-                alert(`⚠ Mã giảm giá không còn hợp lệ: ${msg}\n\nMã đã được gỡ. Vui lòng thử lại.`);
+                showToast(`Mã giảm giá không còn hợp lệ: ${msg}`, 'warning');
             } else {
-                alert(msg);
+                showToast(msg, 'error');
             }
         } finally {
             setIsCheckingOut(false);
         }
     }, [cartItems, isWalkIn, guestName, guestPhone, selectedCustomer, appliedCoupon, cashReceived]);
 
+    // ── Hold order actions ──────────────────────────────────────
+    const refreshHoldOrders = useCallback(() => {
+        return posAPI.listHoldOrders()
+            .then(res => { setHoldOrders(res?.data ?? []); return res?.data ?? []; })
+            .catch(() => { return []; });
+    }, []);
+
     const handleNewOrder = useCallback(() => {
         setSuccessOrder(null);
         clearCart();
         setPaymentMethod('cash');
-    }, [clearCart]);
+        setActiveOrderId(null);
+        refreshHoldOrders();
+    }, [clearCart, refreshHoldOrders]);
 
-    // ── Hold order actions ──────────────────────────────────────
-    const refreshHoldOrders = useCallback(() => {
-        posAPI.listHoldOrders()
-            .then(res => setHoldOrders(res?.data ?? []))
-            .catch(() => {});
-    }, []);
+    // Build the hold request payload from current state
+    const buildHoldPayload = useCallback(() => {
+        const customerName = isWalkIn
+            ? (guestName || 'Khách lẻ')
+            : (selectedCustomer?.fullName || 'Khách lẻ');
+        const customerPhone = isWalkIn ? guestPhone : (selectedCustomer?.phone || '');
+        return {
+            customerId: selectedCustomer?.customerId || null,
+            customerName,
+            customerPhone,
+            couponId: appliedCoupon?.couponId || null,
+            items: cartItems.map(item => ({ variantId: item.variantId, quantity: item.quantity })),
+        };
+    }, [cartItems, isWalkIn, guestName, guestPhone, selectedCustomer, appliedCoupon]);
 
     const handleSaveHoldOrder = useCallback(async () => {
         if (cartItems.length === 0) return;
-        if (holdOrders.length >= 10) {
-            alert('Tối đa 10 hóa đơn chờ. Vui lòng hoàn tất hoặc xóa bớt.');
+        if (holdOrders.length >= 10 && !activeOrderId) {
+            showToast('Tối đa 10 hóa đơn chờ. Vui lòng hoàn tất hoặc xóa bớt.', 'warning');
             return;
         }
         setIsSavingHold(true);
         try {
-            const customerName = isWalkIn
-                ? (guestName || 'Khách lẻ')
-                : (selectedCustomer?.fullName || 'Khách lẻ');
-            const customerPhone = isWalkIn ? guestPhone : (selectedCustomer?.phone || '');
-            await posAPI.saveHoldOrder({
-                customerId: selectedCustomer?.customerId || null,
-                customerName,
-                customerPhone,
-                couponId: appliedCoupon?.couponId || null,
-                items: cartItems.map(item => ({ variantId: item.variantId, quantity: item.quantity })),
-            });
+            // If editing an existing hold, delete the old one first
+            if (activeOrderId) {
+                try { await posAPI.deleteHoldOrder(activeOrderId); } catch { /* ignore */ }
+            }
+            await posAPI.saveHoldOrder(buildHoldPayload());
             clearCart();
             setPaymentMethod('cash');
+            setActiveOrderId(null);
             await refreshHoldOrders();
+            showToast('Đã lưu hóa đơn chờ', 'success');
         } catch (err) {
-            alert(err?.response?.data?.message || 'Lưu thất bại. Vui lòng thử lại.');
+            showToast(err?.response?.data?.message || 'Lưu thất bại. Vui lòng thử lại.', 'error');
         } finally {
             setIsSavingHold(false);
         }
-    }, [cartItems, isWalkIn, guestName, guestPhone, selectedCustomer, appliedCoupon, holdOrders.length, clearCart, refreshHoldOrders]);
+    }, [cartItems, holdOrders.length, activeOrderId, buildHoldPayload, clearCart, refreshHoldOrders, showToast]);
 
-    const handleRestoreHoldOrder = useCallback(async (holdOrder) => {
-        // If current cart is non-empty, ask to save it first
-        if (cartItems.length > 0) {
-            const ok = window.confirm(
-                'Giỏ hàng hiện tại sẽ bị xoá. Bạn có muốn lưu lại không?\n\nNhấn OK để lưu rồi mở đơn chờ, hoặc Cancel để bỏ qua.'
-            );
-            if (ok) {
-                await handleSaveHoldOrder();
-            } else {
-                clearCart();
-            }
-        }
-
-        // Delete hold record from DB (cart items are being loaded back to UI)
+    // Auto-save current cart, returning true if saved (or nothing to save)
+    const autoSaveCurrentCart = useCallback(async () => {
+        if (cartItems.length === 0) return true;
+        setIsSavingHold(true);
         try {
-            await posAPI.deleteHoldOrder(holdOrder.orderId);
-        } catch { /* ignore */ }
+            if (activeOrderId) {
+                try { await posAPI.deleteHoldOrder(activeOrderId); } catch { /* ignore */ }
+            }
+            await posAPI.saveHoldOrder(buildHoldPayload());
+            return true;
+        } catch {
+            showToast('Không thể lưu đơn hiện tại', 'error');
+            return false;
+        } finally {
+            setIsSavingHold(false);
+        }
+    }, [cartItems, activeOrderId, buildHoldPayload, showToast]);
 
-        // Restore cart items from hold order
+    // Restore a hold order's data into the cart
+    const restoreHoldData = useCallback((holdOrder) => {
         const restoredItems = holdOrder.items.map(item => ({
             cartKey: String(item.variantId),
             variantId: item.variantId,
@@ -280,7 +310,6 @@ const POSPage = () => {
         }));
         setCartItems(restoredItems);
 
-        // Restore customer info
         if (holdOrder.customerId) {
             setIsWalkIn(false);
             setSelectedCustomer({ customerId: holdOrder.customerId, fullName: holdOrder.customerName, phone: holdOrder.customerPhone });
@@ -292,24 +321,68 @@ const POSPage = () => {
             setGuestPhone(holdOrder.customerPhone || '');
         }
 
-        // Clear coupon (user must re-apply to ensure it's still valid)
         setAppliedCoupon(null);
         setDiscountAmount(0);
         setPaymentMethod('cash');
         setCashReceived(0);
+    }, []);
+
+    // Tab switch: auto-save current → load target
+    const handleSwitchTab = useCallback(async (holdOrderOrNull) => {
+        if (isSavingHold) return;
+
+        // Clicking the already-active tab does nothing
+        if (holdOrderOrNull === null && activeOrderId === null) return;
+        if (holdOrderOrNull && holdOrderOrNull.orderId === activeOrderId) return;
+
+        // Auto-save current cart if it has items
+        const saved = await autoSaveCurrentCart();
+        if (!saved) return;
+
+        if (holdOrderOrNull === null) {
+            // Switch to fresh new order
+            clearCart();
+            setPaymentMethod('cash');
+            setActiveOrderId(null);
+        } else {
+            // Switch to a hold order — load its data
+            restoreHoldData(holdOrderOrNull);
+            setActiveOrderId(holdOrderOrNull.orderId);
+        }
 
         await refreshHoldOrders();
-    }, [cartItems, handleSaveHoldOrder, clearCart, refreshHoldOrders]);
+    }, [isSavingHold, activeOrderId, autoSaveCurrentCart, clearCart, restoreHoldData, refreshHoldOrders]);
+
+    // "+" New Order button: auto-save current → clear for new
+    const handleNewOrderTab = useCallback(async () => {
+        if (isSavingHold) return;
+        if (cartItems.length === 0 && activeOrderId === null) return; // Already on empty new order
+
+        const saved = await autoSaveCurrentCart();
+        if (!saved) return;
+
+        clearCart();
+        setPaymentMethod('cash');
+        setActiveOrderId(null);
+        await refreshHoldOrders();
+    }, [isSavingHold, cartItems.length, activeOrderId, autoSaveCurrentCart, clearCart, refreshHoldOrders]);
 
     const handleDiscardHoldOrder = useCallback(async (orderId) => {
         if (!window.confirm('Xóa hóa đơn chờ này?')) return;
         try {
             await posAPI.deleteHoldOrder(orderId);
+            // If we were editing this hold order, switch to new order
+            if (activeOrderId === orderId) {
+                clearCart();
+                setPaymentMethod('cash');
+                setActiveOrderId(null);
+            }
             await refreshHoldOrders();
+            showToast('Đã xóa hóa đơn chờ', 'info');
         } catch (err) {
-            alert(err?.response?.data?.message || 'Xóa thất bại.');
+            showToast(err?.response?.data?.message || 'Xóa thất bại.', 'error');
         }
-    }, [refreshHoldOrders]);
+    }, [refreshHoldOrders, activeOrderId, clearCart, showToast]);
 
     // ── Variant picker handler from ProductBrowser ──────────────
     const handleProductClick = useCallback((product) => {
@@ -322,49 +395,127 @@ const POSPage = () => {
         }
     }, [addToCart]);
 
+    // ── Keyboard shortcuts ─────────────────────────────────────
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Don't trigger shortcuts when typing in inputs/textareas
+            const tag = e.target.tagName;
+            const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+            if (e.key === 'Escape') {
+                if (variantPickerProduct) { setVariantPickerProduct(null); e.preventDefault(); }
+                return;
+            }
+
+            if (e.key === 'F1' || (e.key === '/' && !isInput)) {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+                return;
+            }
+            if (e.key === 'F2') {
+                e.preventDefault();
+                handleNewOrderTab();
+                return;
+            }
+            if (e.key === 'F3') {
+                e.preventDefault();
+                handleSaveHoldOrder();
+                return;
+            }
+            if (e.key === 'F8') {
+                e.preventDefault();
+                handleCheckout();
+                return;
+            }
+            // Ctrl+1..9 — switch to hold order tab
+            if (e.ctrlKey && e.key >= '1' && e.key <= '9') {
+                e.preventDefault();
+                const idx = parseInt(e.key) - 1;
+                if (idx === 0 && activeOrderId !== null) {
+                    // Ctrl+1 = switch to new order tab
+                    handleSwitchTab(null);
+                } else if (idx > 0 && holdOrders[idx - 1]) {
+                    handleSwitchTab(holdOrders[idx - 1]);
+                }
+                return;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [variantPickerProduct, handleNewOrderTab, handleSaveHoldOrder, handleCheckout, handleSwitchTab, holdOrders, activeOrderId]);
+
+    // Find active hold order info for the header
+    const activeHoldOrder = activeOrderId ? holdOrders.find(h => h.orderId === activeOrderId) : null;
+
     return (
         <POSProvider>
-        <div className="pos-layout">
-            {/* Left panel — product browser */}
-            <ProductBrowser
-                onAddToCart={addToCart}
-                pulseProductId={pulseProductId}
-                onProductClick={handleProductClick}
+        <div className="pos-page-root">
+            {/* Tab bar — hold orders at the top */}
+            <HoldOrderTabBar
+                holdOrders={holdOrders}
+                activeOrderId={activeOrderId}
+                onSwitchTab={handleSwitchTab}
+                onNewOrder={handleNewOrderTab}
+                onDiscardHold={handleDiscardHoldOrder}
+                cartItemCount={cartItems.length}
+                isSavingHold={isSavingHold}
             />
 
-            {/* Right panel — order cart */}
-            <OrderCart
-                cartItems={cartItems}
-                subtotal={subtotal}
-                discountAmount={discountAmount}
-                totalAmount={totalAmount}
-                onUpdateQty={updateCartQty}
-                onRemoveItem={removeCartItem}
-                onClearCart={clearCart}
-                isWalkIn={isWalkIn}
-                setIsWalkIn={setIsWalkIn}
-                selectedCustomer={selectedCustomer}
-                setSelectedCustomer={setSelectedCustomer}
-                guestName={guestName}
-                setGuestName={setGuestName}
-                guestPhone={guestPhone}
-                setGuestPhone={setGuestPhone}
-                appliedCoupon={appliedCoupon}
-                setAppliedCoupon={setAppliedCoupon}
-                setDiscountAmount={setDiscountAmount}
-                paymentMethod={paymentMethod}
-                setPaymentMethod={setPaymentMethod}
-                cashReceived={cashReceived}
-                setCashReceived={setCashReceived}
-                onCheckout={handleCheckout}
-                isCheckingOut={isCheckingOut}
-                cartBounce={cartBounce}
-                holdOrders={holdOrders}
-                isSavingHold={isSavingHold}
-                onSaveHold={handleSaveHoldOrder}
-                onRestoreHold={handleRestoreHoldOrder}
-                onDiscardHold={handleDiscardHoldOrder}
-            />
+            {/* Main split-panel layout */}
+            <div className="pos-layout">
+                {/* Left panel — product browser */}
+                <ProductBrowser
+                    onAddToCart={addToCart}
+                    pulseProductId={pulseProductId}
+                    onProductClick={handleProductClick}
+                    searchInputRef={searchInputRef}
+                />
+
+                {/* Right panel — order cart */}
+                <OrderCart
+                    cartItems={cartItems}
+                    subtotal={subtotal}
+                    discountAmount={discountAmount}
+                    totalAmount={totalAmount}
+                    onUpdateQty={updateCartQty}
+                    onRemoveItem={removeCartItem}
+                    onClearCart={clearCart}
+                    isWalkIn={isWalkIn}
+                    setIsWalkIn={setIsWalkIn}
+                    selectedCustomer={selectedCustomer}
+                    setSelectedCustomer={setSelectedCustomer}
+                    guestName={guestName}
+                    setGuestName={setGuestName}
+                    guestPhone={guestPhone}
+                    setGuestPhone={setGuestPhone}
+                    appliedCoupon={appliedCoupon}
+                    setAppliedCoupon={setAppliedCoupon}
+                    setDiscountAmount={setDiscountAmount}
+                    paymentMethod={paymentMethod}
+                    setPaymentMethod={setPaymentMethod}
+                    cashReceived={cashReceived}
+                    setCashReceived={setCashReceived}
+                    onCheckout={handleCheckout}
+                    isCheckingOut={isCheckingOut}
+                    cartBounce={cartBounce}
+                    holdOrders={holdOrders}
+                    isSavingHold={isSavingHold}
+                    onSaveHold={handleSaveHoldOrder}
+                    activeOrderId={activeOrderId}
+                    activeHoldOrder={activeHoldOrder}
+                />
+            </div>
+
+            {/* Keyboard shortcut hint bar */}
+            <div className="pos-shortcut-bar">
+                <span><kbd>F1</kbd> Tìm kiếm</span>
+                <span><kbd>F2</kbd> Đơn mới</span>
+                <span><kbd>F3</kbd> Lưu chờ</span>
+                <span><kbd>F8</kbd> Thanh toán</span>
+                <span><kbd>Ctrl+1-9</kbd> Chuyển tab</span>
+                <span><kbd>Esc</kbd> Đóng</span>
+            </div>
 
             {/* Variant picker modal */}
             {variantPickerProduct && (

@@ -3,12 +3,204 @@
    Reuses CSS variables from AdminDashboard.css
    ═══════════════════════════════════════════════════════════ */
 
+/* ── Page root (tab bar + layout + shortcut bar) ──────────── */
+.pos-page-root {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 80px);
+    margin: -24px;
+    overflow: hidden;
+}
+
+/* ── Hold Order Tab Bar ───────────────────────────────────── */
+.pos-tab-bar {
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    border-bottom: 2px solid var(--gray-200);
+    padding: 0 12px;
+    flex-shrink: 0;
+    min-height: 44px;
+}
+
+.pos-tab-bar-scroll {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    flex: 1;
+    padding: 6px 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-300) transparent;
+}
+.pos-tab-bar-scroll::-webkit-scrollbar { height: 3px; }
+.pos-tab-bar-scroll::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 2px; }
+
+.pos-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-bottom: 2px solid transparent;
+    border-radius: 8px 8px 0 0;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    white-space: nowrap;
+    position: relative;
+}
+.pos-tab:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: var(--gray-300);
+}
+.pos-tab--active {
+    background: #fff;
+    color: var(--primary-700);
+    border-color: var(--primary-200);
+    border-bottom-color: var(--primary-500);
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.pos-tab--active:disabled {
+    opacity: 1;
+    cursor: default;
+}
+.pos-tab--warning {
+    border-bottom-color: #f59e0b !important;
+}
+.pos-tab--warning .pos-tab-time {
+    color: #d97706;
+}
+.pos-tab--danger {
+    border-bottom-color: #ef4444 !important;
+}
+.pos-tab--danger .pos-tab-time {
+    color: #dc2626;
+    animation: pos-pulse 1.5s ease-in-out infinite;
+}
+.pos-tab--new {
+    background: transparent;
+    border: 1px dashed var(--gray-300);
+    color: var(--primary-500);
+    font-weight: 600;
+}
+.pos-tab--new:hover:not(:disabled) {
+    background: var(--primary-50, #eff6ff);
+    border-color: var(--primary-300);
+}
+.pos-tab--new:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pos-tab-main {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    font-weight: inherit;
+    padding: 0;
+}
+.pos-tab-main:disabled {
+    cursor: default;
+}
+
+.pos-tab-idx {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--primary-100, #dbeafe);
+    color: var(--primary-700);
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.pos-tab--active .pos-tab-idx {
+    background: var(--primary-500);
+    color: #fff;
+}
+
+.pos-tab-label {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pos-tab-meta {
+    font-size: 10px;
+    color: var(--gray-400);
+    font-weight: 400;
+}
+
+.pos-tab-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 10px;
+    color: var(--gray-400);
+    margin-left: 4px;
+}
+
+.pos-tab-badge-count {
+    min-width: 16px;
+    height: 16px;
+    background: var(--primary-500);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+
+.pos-tab-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 4px;
+    margin-left: 4px;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--gray-400);
+    transition: all 0.12s;
+}
+.pos-tab-close:hover:not(:disabled) {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.pos-tab-bar-warning {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #d97706;
+    white-space: nowrap;
+    padding-left: 8px;
+}
+
 /* ── Split-panel layout ───────────────────────────────────── */
 .pos-layout {
     display: flex;
     gap: 0;
-    height: calc(100vh - 80px);
-    margin: -24px;
+    flex: 1;
     overflow: hidden;
 }
 
@@ -27,6 +219,69 @@
     flex-direction: column;
     background: #fff;
     overflow: hidden;
+    height: 100%;
+}
+
+/* ── Wait time badge in header ────────────────────────────── */
+.pos-wait-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--gray-500);
+    background: var(--gray-100);
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 8px;
+}
+.pos-wait-badge.warning {
+    color: #d97706;
+    background: #fef3c7;
+}
+.pos-wait-badge.danger {
+    color: #dc2626;
+    background: #fee2e2;
+    animation: pos-pulse 1.5s ease-in-out infinite;
+}
+
+/* ── Sticky checkout footer ──────────────────────────────── */
+.pos-checkout-footer {
+    flex-shrink: 0;
+    border-top: 1px solid var(--gray-200);
+    background: #fff;
+    padding: 12px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+}
+
+/* ── Keyboard shortcut hint bar ──────────────────────────── */
+.pos-shortcut-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 6px 12px;
+    background: #f1f5f9;
+    border-top: 1px solid var(--gray-200);
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--gray-500);
+}
+.pos-shortcut-bar kbd {
+    display: inline-block;
+    padding: 1px 5px;
+    background: #fff;
+    border: 1px solid var(--gray-300);
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: inherit;
+    font-weight: 600;
+    color: var(--gray-600);
+    margin-right: 3px;
+    box-shadow: 0 1px 0 var(--gray-200);
 }
 
 /* ── Left Panel: Search bar (sticky) ─────────────────────── */
@@ -861,57 +1116,109 @@
 
 /* ── Right Panel: Customer Lookup ────────────────────────── */
 .pos-customer-section {
-    padding: 14px 20px;
+    padding: 10px 16px;
     border-bottom: 1px solid var(--gray-100);
     flex-shrink: 0;
 }
 
-.pos-customer-toggle {
+/* Mode toggle buttons — compact row */
+.pos-customer-mode-row {
     display: flex;
-    justify-content: space-between;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+.pos-customer-mode-btn {
+    display: flex;
     align-items: center;
-    margin-bottom: 10px;
-}
-
-.pos-customer-toggle label {
-    font-size: 12px;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 11px;
     font-weight: 600;
-    color: var(--gray-700);
-}
-
-/* Toggle switch */
-.pos-switch {
-    position: relative;
-    width: 40px;
-    height: 22px;
-    background: var(--gray-300);
-    border-radius: 11px;
+    font-family: inherit;
+    color: var(--gray-500);
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.15s;
+}
+.pos-customer-mode-btn:hover {
+    background: var(--gray-100);
+}
+.pos-customer-mode-btn.active {
+    color: var(--primary-700);
+    background: var(--primary-50, #eff6ff);
+    border-color: var(--primary-300);
 }
 
-.pos-switch.on {
-    background: var(--primary-500);
+/* Walk-in compact inline inputs */
+.pos-walkin-compact {
+    display: flex;
+    gap: 6px;
+    align-items: center;
 }
-
-.pos-switch-knob {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 18px;
-    height: 18px;
-    background: #fff;
-    border-radius: 50%;
-    transition: transform 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+.pos-walkin-input {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+    min-width: 0;
 }
-
-.pos-switch.on .pos-switch-knob {
-    transform: translateX(18px);
+.pos-walkin-input:focus {
+    border-color: var(--primary-400);
+}
+.pos-walkin-save-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    background: var(--primary-50, #eff6ff);
+    border: 1px solid var(--primary-200);
+    border-radius: 6px;
+    color: var(--primary-600);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.pos-walkin-save-btn:hover:not(:disabled) {
+    background: var(--primary-100);
+}
+.pos-walkin-save-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .pos-customer-search {
     position: relative;
+}
+
+.pos-customer-search-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+.pos-customer-search-row:focus-within {
+    border-color: var(--primary-400);
+}
+.pos-customer-search-icon {
+    color: var(--gray-400);
+    flex-shrink: 0;
+}
+.pos-customer-search-row input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    font-family: inherit;
+    padding: 0;
 }
 
 .pos-customer-search input {
@@ -1094,6 +1401,9 @@
 }
 
 .pos-create-customer-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     font-size: 12px;
     font-weight: 600;
     color: #fff;
@@ -1103,6 +1413,7 @@
     padding: 6px 14px;
     cursor: pointer;
     transition: background 0.15s;
+    margin: 0 auto;
 }
 
 .pos-create-customer-btn:hover {
@@ -1110,7 +1421,9 @@
 }
 
 .pos-create-customer-link {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 4px;
     width: 100%;
     margin-top: 6px;
     font-size: 11px;
@@ -1122,6 +1435,7 @@
     cursor: pointer;
     padding: 0;
     transition: color 0.15s;
+    font-family: inherit;
 }
 
 .pos-create-customer-link:hover {
@@ -1813,19 +2127,14 @@
 }
 
 /* ── Right Panel: Checkout button ────────────────────────── */
-.pos-checkout-section {
-    padding: 14px 20px 20px;
-    flex-shrink: 0;
-}
-
 .pos-checkout-btn {
     width: 100%;
-    padding: 16px;
+    padding: 14px 16px;
     background: var(--primary-500);
     color: #fff;
     border: none;
     border-radius: 12px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.15s;
@@ -1834,7 +2143,8 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 52px;
+    min-height: 50px;
+    letter-spacing: 0.3px;
 }
 
 .pos-checkout-btn:hover:not(:disabled) {
@@ -2137,6 +2447,328 @@
     background: var(--primary-600);
 }
 
+/* ── ProductCard: Stock badge ────────────────────────────── */
+.pos-card-stock-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.pos-card-stock-badge.low {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.pos-card-stock-badge.empty {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.pos-product-card.out-of-stock {
+    opacity: 0.55;
+}
+
+.pos-product-card.out-of-stock .pos-card-img {
+    filter: grayscale(0.5);
+}
+
+.pos-card-add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.pos-card-add-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: var(--gray-300);
+}
+
+/* ── ProductListItem (list view) ─────────────────────────── */
+.pos-product-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 12px 12px;
+}
+
+.pos-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.12s;
+    border: 1px solid transparent;
+}
+
+.pos-list-item:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-200);
+}
+
+.pos-list-item.out-of-stock {
+    opacity: 0.5;
+}
+
+.pos-list-item-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--gray-100);
+}
+
+.pos-list-item-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.pos-list-item-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pos-list-item-brand {
+    font-size: 11px;
+    color: var(--gray-400);
+}
+
+.pos-list-item-price {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-700);
+    white-space: nowrap;
+    min-width: 90px;
+    text-align: right;
+}
+
+.pos-list-item-price.has-promo {
+    color: #dc2626;
+}
+
+.pos-list-item-stock {
+    font-size: 11px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.pos-list-item-stock .stock-ok {
+    color: var(--gray-500);
+}
+
+.pos-list-item-stock .stock-low {
+    color: #b45309;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.pos-list-item-stock .stock-empty {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.pos-list-item-add {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    background: var(--primary-500);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.12s;
+}
+
+.pos-list-item-add:hover {
+    background: var(--primary-600);
+}
+
+.pos-list-item-add:disabled {
+    background: var(--gray-300);
+    cursor: not-allowed;
+}
+
+/* ── View toggle & search bar enhancements ───────────────── */
+.pos-view-toggle {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--gray-100);
+    border-radius: 6px;
+    padding: 2px;
+}
+
+.pos-view-toggle button {
+    width: 32px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--gray-500);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.12s;
+}
+
+.pos-view-toggle button.active {
+    background: #fff;
+    color: var(--primary-600);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.pos-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+    pointer-events: none;
+}
+
+.pos-search-bar {
+    position: relative;
+}
+
+.pos-search-bar input {
+    padding-left: 34px !important;
+}
+
+.pos-clear-filters {
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--gray-500);
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    transition: all 0.12s;
+    font-family: inherit;
+}
+
+.pos-clear-filters:hover {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+/* ── Coupon: collapsible toggle + applied badge ──────────── */
+.pos-coupon-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: transparent;
+    border: 1px dashed var(--gray-300);
+    border-radius: 8px;
+    color: var(--gray-500);
+    font-size: 13px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+
+.pos-coupon-toggle:hover {
+    border-color: var(--primary-400);
+    color: var(--primary-600);
+    background: var(--primary-50, #eff6ff);
+}
+
+.pos-coupon-applied-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.pos-coupon-badge-code {
+    font-weight: 700;
+    color: #16a34a;
+    letter-spacing: 0.5px;
+}
+
+.pos-coupon-badge-saving {
+    color: #15803d;
+    font-weight: 600;
+}
+
+.pos-coupon-badge-timer {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: #b45309;
+    font-size: 11px;
+    margin-left: auto;
+}
+
+.pos-coupon-badge-remove {
+    background: transparent;
+    border: none;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: all 0.12s;
+}
+
+.pos-coupon-badge-remove:hover {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.pos-coupon-collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    min-width: 36px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.pos-coupon-collapse-btn:hover {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1200px) {
     .pos-product-grid {
@@ -2145,9 +2777,14 @@
 }
 
 @media (max-width: 1024px) {
+    .pos-page-root {
+        height: auto;
+        min-height: 100vh;
+    }
+
     .pos-layout {
         flex-direction: column;
-        height: auto;
+        flex: none;
     }
 
     .pos-left-panel,
@@ -2163,6 +2800,14 @@
 
     .pos-product-grid-wrap {
         max-height: 60vh;
+    }
+
+    .pos-tab-bar-scroll {
+        max-width: 100%;
+    }
+
+    .pos-shortcut-bar {
+        display: none;
     }
 }
 

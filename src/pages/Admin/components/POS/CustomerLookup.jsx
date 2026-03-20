@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { User, X, UserPlus, Search, Save } from 'lucide-react';
 import { getInitials } from './posUtils';
 import { posAPI } from '../../../../services/api';
+import { useToast } from '../../../../context/ToastContext';
 import QuickCreateCustomerModal from './QuickCreateCustomerModal';
 
 /**
@@ -8,6 +10,7 @@ import QuickCreateCustomerModal from './QuickCreateCustomerModal';
  * Uses real API for customer search.
  */
 const CustomerLookup = ({ isWalkIn, setIsWalkIn, selectedCustomer, setSelectedCustomer, guestName, setGuestName, guestPhone, setGuestPhone }) => {
+    const { showToast } = useToast();
     const [searchQuery, setSearchQuery] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [filtered, setFiltered] = useState([]);
@@ -75,7 +78,7 @@ const CustomerLookup = ({ isWalkIn, setIsWalkIn, selectedCustomer, setSelectedCu
         if (!guestName.trim() || !guestPhone.trim()) return;
         const phoneRegex = /^0\d{9}$/;
         if (!phoneRegex.test(guestPhone.trim())) {
-            alert('Số điện thoại phải có 10 chữ số và bắt đầu bằng 0');
+            showToast('Số điện thoại phải có 10 chữ số và bắt đầu bằng 0', 'error');
             return;
         }
         setSavingWalkIn(true);
@@ -91,7 +94,7 @@ const CustomerLookup = ({ isWalkIn, setIsWalkIn, selectedCustomer, setSelectedCu
             setGuestPhone('');
         } catch (err) {
             const msg = err.response?.data?.message || err.message || 'Lưu khách hàng thất bại';
-            alert(msg);
+            showToast(msg, 'error');
         } finally {
             setSavingWalkIn(false);
         }
@@ -99,52 +102,52 @@ const CustomerLookup = ({ isWalkIn, setIsWalkIn, selectedCustomer, setSelectedCu
 
     return (
         <div className="pos-customer-section">
-            {/* Toggle */}
-            <div className="pos-customer-toggle">
-                <label>Khách lẻ (không cần tài khoản)</label>
-                <div
-                    className={`pos-switch${isWalkIn ? ' on' : ''}`}
-                    onClick={() => { setIsWalkIn(!isWalkIn); setSelectedCustomer(null); }}
-                    role="switch"
-                    aria-checked={isWalkIn}
-                    tabIndex={0}
-                    onKeyDown={e => e.key === 'Enter' && setIsWalkIn(!isWalkIn)}
+            {/* Mode toggle — compact row */}
+            <div className="pos-customer-mode-row">
+                <button
+                    className={`pos-customer-mode-btn ${isWalkIn ? 'active' : ''}`}
+                    onClick={() => { setIsWalkIn(true); setSelectedCustomer(null); }}
                 >
-                    <div className="pos-switch-knob" />
-                </div>
+                    <User size={14} />
+                    Khách lẻ
+                </button>
+                <button
+                    className={`pos-customer-mode-btn ${!isWalkIn ? 'active' : ''}`}
+                    onClick={() => { setIsWalkIn(false); setSelectedCustomer(null); }}
+                >
+                    <Search size={14} />
+                    Khách có tài khoản
+                </button>
             </div>
 
             {isWalkIn ? (
-                /* Walk-in guest mode */
-                <>
-                    <div className="pos-walkin-inputs">
-                        <input
-                            placeholder="Tên khách hàng"
-                            value={guestName}
-                            onChange={e => setGuestName(e.target.value)}
-                            aria-label="Tên khách hàng"
-                        />
-                        <input
-                            placeholder="Số điện thoại"
-                            value={guestPhone}
-                            onChange={e => setGuestPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                            aria-label="Số điện thoại"
-                        />
-                    </div>
-                    <div className="pos-walkin-footer">
-                        <span className="pos-walkin-hint">Không bắt buộc — bỏ qua nếu khách không muốn</span>
-                        {guestName.trim() && guestPhone.trim() && (
-                            <button
-                                className="pos-save-walkin-btn"
-                                onClick={handleSaveWalkIn}
-                                disabled={savingWalkIn}
-                                title="Lưu thông tin thành tài khoản khách hàng"
-                            >
-                                {savingWalkIn ? '...' : '💾 Lưu thành KH'}
-                            </button>
-                        )}
-                    </div>
-                </>
+                /* Walk-in guest mode — compact inline */
+                <div className="pos-walkin-compact">
+                    <input
+                        className="pos-walkin-input"
+                        placeholder="Tên khách"
+                        value={guestName}
+                        onChange={e => setGuestName(e.target.value)}
+                        aria-label="Tên khách hàng"
+                    />
+                    <input
+                        className="pos-walkin-input"
+                        placeholder="SĐT"
+                        value={guestPhone}
+                        onChange={e => setGuestPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        aria-label="Số điện thoại"
+                    />
+                    {guestName.trim() && guestPhone.trim() && (
+                        <button
+                            className="pos-walkin-save-btn"
+                            onClick={handleSaveWalkIn}
+                            disabled={savingWalkIn}
+                            title="Lưu thành tài khoản khách hàng"
+                        >
+                            <Save size={14} />
+                        </button>
+                    )}
+                </div>
             ) : selectedCustomer ? (
                 /* Selected customer card */
                 <div className="pos-selected-customer">
@@ -157,18 +160,21 @@ const CustomerLookup = ({ isWalkIn, setIsWalkIn, selectedCustomer, setSelectedCu
                         className="pos-deselect-btn"
                         onClick={() => setSelectedCustomer(null)}
                         aria-label="Bỏ chọn khách hàng"
-                    >×</button>
+                    ><X size={14} /></button>
                 </div>
             ) : (
                 /* Customer search */
                 <div className="pos-customer-search" ref={wrapRef}>
-                    <input
-                        placeholder="Tìm khách hàng theo tên, SĐT, email..."
-                        value={searchQuery}
-                        onChange={e => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
-                        onFocus={() => searchQuery && setShowSuggestions(true)}
-                        aria-label="Tìm khách hàng"
-                    />
+                    <div className="pos-customer-search-row">
+                        <Search size={14} className="pos-customer-search-icon" />
+                        <input
+                            placeholder="Tìm khách hàng theo tên, SĐT, email..."
+                            value={searchQuery}
+                            onChange={e => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
+                            onFocus={() => searchQuery && setShowSuggestions(true)}
+                            aria-label="Tìm khách hàng"
+                        />
+                    </div>
                     {showSuggestions && (
                         <div className="pos-customer-suggestions">
                             {searching && (
@@ -190,18 +196,17 @@ const CustomerLookup = ({ isWalkIn, setIsWalkIn, selectedCustomer, setSelectedCu
                                         className="pos-create-customer-btn"
                                         onClick={() => { setShowCreateModal(true); setShowSuggestions(false); }}
                                     >
-                                        + Tạo khách hàng mới
+                                        <UserPlus size={14} /> Tạo khách hàng mới
                                     </button>
                                 </div>
                             )}
                         </div>
                     )}
-                    {/* Always-visible create button below search */}
                     <button
                         className="pos-create-customer-link"
                         onClick={() => setShowCreateModal(true)}
                     >
-                        + Thêm khách hàng mới
+                        <UserPlus size={14} /> Thêm khách hàng mới
                     </button>
                 </div>
             )}

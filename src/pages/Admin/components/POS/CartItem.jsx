@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Tag, X, Minus, Plus } from 'lucide-react';
 import { formatVND } from './posUtils';
 import { usePOS } from './POSContext';
 
@@ -41,7 +42,7 @@ const CartItem = ({ item, onUpdateQty, onRemove }) => {
                 </div>
                 {item.promotionName && (
                     <div className="pos-cart-item-promo-tag">
-                        🏷️ {item.promotionName}
+                        <Tag size={10} /> {item.promotionName}
                         {item.discountPercentage ? ` (-${item.discountPercentage}%)` : ''}
                     </div>
                 )}
@@ -54,13 +55,13 @@ const CartItem = ({ item, onUpdateQty, onRemove }) => {
                         onClick={() => onUpdateQty(item.cartKey, item.quantity - 1)}
                         disabled={item.quantity <= 1}
                         aria-label="Giảm số lượng"
-                    >−</button>
+                    ><Minus size={14} /></button>
                     <span className="pos-qty-value">{item.quantity}</span>
                     <button
                         className="pos-qty-btn"
                         onClick={() => onUpdateQty(item.cartKey, item.quantity + 1)}
                         aria-label="Tăng số lượng"
-                    >+</button>
+                    ><Plus size={14} /></button>
                 </div>
             </div>
 
@@ -72,7 +73,7 @@ const CartItem = ({ item, onUpdateQty, onRemove }) => {
                 className="pos-cart-item-remove"
                 onClick={handleRemove}
                 aria-label={`Xóa ${item.productName}`}
-            >×</button>
+            ><X size={14} /></button>
         </div>
     );
 };

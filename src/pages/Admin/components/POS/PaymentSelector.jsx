@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Banknote, CreditCard, Building2 } from 'lucide-react';
 import { formatVND } from './posUtils';
 
 /**
@@ -11,12 +12,17 @@ const PaymentSelector = ({ paymentMethod, setPaymentMethod, totalAmount, cashRec
         <div className="pos-payment-section">
             <div className="pos-payment-label">Phương thức thanh toán</div>
             <div className="pos-payment-methods">
-                <button
-                    className="pos-payment-btn active"
-                    disabled
-                >
-                    <span>💵</span>
+                <button className="pos-payment-btn active">
+                    <Banknote size={16} />
                     <span>Tiền mặt</span>
+                </button>
+                <button className="pos-payment-btn" disabled title="Sắp ra mắt">
+                    <CreditCard size={16} />
+                    <span>Thẻ</span>
+                </button>
+                <button className="pos-payment-btn" disabled title="Sắp ra mắt">
+                    <Building2 size={16} />
+                    <span>Chuyển khoản</span>
                 </button>
             </div>
 

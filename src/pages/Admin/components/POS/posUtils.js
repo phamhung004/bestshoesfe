@@ -41,3 +41,15 @@ export const hasPromotion = (variants) =>
 /** Get the effective price for a variant (promotion-aware) */
 export const getEffectivePrice = (variant) =>
   variant.promotionPrice != null ? variant.promotionPrice : variant.price;
+
+/** Human-readable time-ago string from an ISO datetime */
+export const timeAgo = (isoStr) => {
+  if (!isoStr) return '';
+  const diffMs = Date.now() - new Date(isoStr).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'Vừa tạo';
+  if (mins < 60) return `${mins} phút trước`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+  return `${Math.floor(hours / 24)} ngày trước`;
+};

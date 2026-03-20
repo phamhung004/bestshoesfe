@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Tag, X, Ticket, Clock } from 'lucide-react';
 import { formatVND } from './posUtils';
 import { posAPI, couponAPI } from '../../../../services/api';
 import CouponPickerDrawer from '../../../../components/common/CouponPickerDrawer';
 
 /**
- * CouponInput — coupon code input + server-side validation via API.
- * Enhanced with: coupon ticket card, picker drawer, expiry timer, animations.
+ * CouponInput — collapsible coupon section.
+ * Collapsed: shows a small "Mã giảm giá" toggle or applied badge.
+ * Expanded: shows input row + picker.
  */
 const CouponInput = ({ subtotal, appliedCoupon, setAppliedCoupon, setDiscountAmount }) => {
     const [code, setCode] = useState('');
@@ -13,6 +15,7 @@ const CouponInput = ({ subtotal, appliedCoupon, setAppliedCoupon, setDiscountAmo
     const [validating, setValidating] = useState(false);
     const [showPicker, setShowPicker] = useState(false);
     const [countdown, setCountdown] = useState('');
+    const [expanded, setExpanded] = useState(false);
     const errorTimerRef = useRef(null);
 
     // ── Expiry countdown & auto-remove ────────────────────
@@ -137,7 +140,30 @@ const CouponInput = ({ subtotal, appliedCoupon, setAppliedCoupon, setDiscountAmo
 
     return (
         <div className="pos-coupon-section">
-            {!appliedCoupon ? (
+            {/* ── Applied coupon badge (always visible when applied) ── */}
+            {appliedCoupon && (
+                <div className="pos-coupon-applied-badge">
+                    <Tag size={14} />
+                    <span className="pos-coupon-badge-code">{appliedCoupon.code}</span>
+                    <span className="pos-coupon-badge-saving">−{formatVND(appliedCoupon.discountAmount || 0)}</span>
+                    {countdown && (
+                        <span className="pos-coupon-badge-timer"><Clock size={12} /> {countdown}</span>
+                    )}
+                    <button className="pos-coupon-badge-remove" onClick={handleRemove} aria-label="Xóa mã giảm giá">
+                        <X size={14} />
+                    </button>
+                </div>
+            )}
+
+            {/* ── Collapsed toggle (no coupon applied) ── */}
+            {!appliedCoupon && !expanded && (
+                <button className="pos-coupon-toggle" onClick={() => setExpanded(true)}>
+                    <Tag size={14} /> Mã giảm giá
+                </button>
+            )}
+
+            {/* ── Expanded input (no coupon applied) ── */}
+            {!appliedCoupon && expanded && (
                 <>
                     <div className="pos-coupon-row">
                         <input
@@ -147,6 +173,7 @@ const CouponInput = ({ subtotal, appliedCoupon, setAppliedCoupon, setDiscountAmo
                             onKeyDown={e => e.key === 'Enter' && handleApply()}
                             aria-label="Mã giảm giá"
                             disabled={validating}
+                            autoFocus
                         />
                         <button
                             className="pos-coupon-apply-btn"
@@ -161,43 +188,18 @@ const CouponInput = ({ subtotal, appliedCoupon, setAppliedCoupon, setDiscountAmo
                             title="Xem mã giảm giá khả dụng"
                             disabled={validating}
                         >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+                            <Ticket size={16} />
+                        </button>
+                        <button
+                            className="pos-coupon-collapse-btn"
+                            onClick={() => { setExpanded(false); setCode(''); setError(''); }}
+                            title="Thu gọn"
+                        >
+                            <X size={14} />
                         </button>
                     </div>
                     {error && <div className={`pos-coupon-error ${error ? 'shake' : ''}`}>{error}</div>}
                 </>
-            ) : (
-                <div className="pos-coupon-ticket">
-                    {/* Left stub */}
-                    <div className={`pos-coupon-ticket-left ${appliedCoupon.type === 'Percentage' ? 'pct' : 'fixed'}`}>
-                        <span className="pos-coupon-ticket-value">
-                            {appliedCoupon.type === 'Percentage' ? `${appliedCoupon.value}%` : formatVND(appliedCoupon.value)}
-                        </span>
-                        <span className="pos-coupon-ticket-type">GIẢM</span>
-                    </div>
-                    {/* Right info */}
-                    <div className="pos-coupon-ticket-right">
-                        <div className="pos-coupon-ticket-header">
-                            <span className="pos-coupon-ticket-code">{appliedCoupon.code}</span>
-                            <button className="pos-coupon-remove" onClick={handleRemove} aria-label="Xóa mã giảm giá">×</button>
-                        </div>
-                        <span className="pos-coupon-ticket-name">{appliedCoupon.name}</span>
-                        <div className="pos-coupon-ticket-meta">
-                            {appliedCoupon.discountAmount > 0 && (
-                                <span className="pos-coupon-saving">−{formatVND(appliedCoupon.discountAmount)}</span>
-                            )}
-                            {appliedCoupon.endDate && (
-                                <span className="pos-coupon-expiry">HSD: {formatDate(appliedCoupon.endDate)}</span>
-                            )}
-                        </div>
-                        {countdown && (
-                            <div className="pos-coupon-countdown">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                {countdown}
-                            </div>
-                        )}
-                    </div>
-                </div>
             )}
 
             {/* Coupon picker drawer */}

@@ -1,10 +1,12 @@
 import React from 'react';
+import { Plus, AlertTriangle } from 'lucide-react';
 import { formatVND, getPriceRange, hasPromotion, getEffectivePrice } from './posUtils';
 import { usePOS } from './POSContext';
 
 /**
  * ProductCard — individual product card in the POS grid.
- * Click card → opens variant modal; click button → adds cheapest variant.
+ * Click card → opens variant modal; click "+" → adds cheapest variant.
+ * Shows stock count badge (red when < 5).
  */
 const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
     const { getBrandName, getSizeName, getColor } = usePOS();
@@ -12,6 +14,8 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
     const brandName = getBrandName(product.brandId);
     const priceRange = getPriceRange(activeVariants);
     const hasPromo = hasPromotion(activeVariants);
+    const totalStock = activeVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
+    const lowStock = totalStock > 0 && totalStock < 5;
 
     // Show first 3 variants as chips, rest as "+N more"
     const displayVariants = activeVariants.slice(0, 3);
@@ -32,7 +36,7 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
 
     return (
         <div
-            className={`pos-product-card${isPulsing ? ' pulse-green' : ''}`}
+            className={`pos-product-card${isPulsing ? ' pulse-green' : ''}${totalStock === 0 ? ' out-of-stock' : ''}`}
             onClick={() => onCardClick(product)}
             role="button"
             tabIndex={0}
@@ -40,6 +44,12 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
             onKeyDown={(e) => e.key === 'Enter' && onCardClick(product)}
         >
             {hasPromo && <span className="pos-card-promo-badge">KM</span>}
+            {lowStock && (
+                <span className="pos-card-stock-badge low">
+                    <AlertTriangle size={10} /> Còn {totalStock}
+                </span>
+            )}
+            {totalStock === 0 && <span className="pos-card-stock-badge empty">Hết hàng</span>}
             <img
                 className="pos-card-img"
                 src={product.imageUrl || '/placeholder-shoe.png'}
@@ -73,9 +83,10 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
                 <button
                     className="pos-card-add-btn"
                     onClick={handleQuickAdd}
+                    disabled={totalStock === 0}
                     aria-label={`Thêm ${product.name} vào giỏ`}
                 >
-                    Thêm vào giỏ
+                    <Plus size={16} /> Thêm
                 </button>
             </div>
         </div>

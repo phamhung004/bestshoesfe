@@ -1,4 +1,5 @@
 import React from 'react';
+import { CheckCircle, Printer, Plus } from 'lucide-react';
 import { formatVND, formatDateTime } from './posUtils';
 
 /**
@@ -16,7 +17,7 @@ const CheckoutSuccessModal = ({ order, onNewOrder, onClose }) => {
             <div className="pos-modal-overlay" onClick={onClose}>
                 <div className="pos-modal" onClick={e => e.stopPropagation()} style={{ width: 420 }}>
                     <div className="pos-success-modal">
-                        <div className="pos-success-check">✓</div>
+                        <div className="pos-success-check"><CheckCircle size={36} /></div>
                         <h2>Đặt hàng thành công!</h2>
 
                         <div className="pos-success-details">
@@ -56,10 +57,10 @@ const CheckoutSuccessModal = ({ order, onNewOrder, onClose }) => {
 
                         <div className="pos-success-actions">
                             <button className="pos-success-print-btn" onClick={handlePrint}>
-                                🖨️ In hóa đơn
+                                <Printer size={14} /> In hóa đơn
                             </button>
                             <button className="pos-success-new-btn" onClick={onNewOrder}>
-                                Đơn hàng mới
+                                <Plus size={14} /> Đơn hàng mới
                             </button>
                         </div>
                     </div>

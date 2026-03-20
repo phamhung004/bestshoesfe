@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Search, ScanBarcode, X, LayoutGrid, List } from 'lucide-react';
 import ProductCard from './ProductCard';
+import ProductListItem from './ProductListItem';
 import { usePOS } from './POSContext';
 import { posAPI } from '../../../../services/api';
 
@@ -7,7 +9,7 @@ import { posAPI } from '../../../../services/api';
  * ProductBrowser — left panel: search, filters, product grid.
  * Loads products from real API.
  */
-const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
+const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick, searchInputRef }) => {
     const { categories, brands, sizes, colors, loading: refLoading } = usePOS();
 
     const [search, setSearch] = useState('');
@@ -17,6 +19,16 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
     const [activeColor, setActiveColor] = useState(null);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [viewMode, setViewMode] = useState(() => localStorage.getItem('pos-view-mode') || 'grid');
+
+    const toggleViewMode = () => {
+        const next = viewMode === 'grid' ? 'list' : 'grid';
+        setViewMode(next);
+        localStorage.setItem('pos-view-mode', next);
+    };
+
+    const hasActiveFilters = activeCat || activeBrand || activeSize || activeColor;
+    const clearAllFilters = () => { setActiveCat(null); setActiveBrand(null); setActiveSize(null); setActiveColor(null); setSearch(''); };
 
     // Fetch products from backend whenever search/category/brand changes
     const fetchProducts = useCallback(async () => {
@@ -59,15 +71,21 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
         <div className="pos-left-panel">
             {/* Search bar */}
             <div className="pos-search-bar">
+                <Search size={18} className="pos-search-icon" />
                 <input
+                    ref={searchInputRef}
                     type="text"
-                    placeholder="Tìm sản phẩm theo tên, mã SKU..."
+                    placeholder="Tìm sản phẩm theo tên, mã SKU... (F1)"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     aria-label="Tìm kiếm sản phẩm"
                 />
                 <button className="pos-barcode-btn" aria-label="Quét mã vạch" title="Quét mã vạch (sắp ra mắt)">
-                    📷
+                    <ScanBarcode size={18} />
+                </button>
+                {/* View mode toggle */}
+                <button className="pos-view-toggle" onClick={toggleViewMode} title={viewMode === 'grid' ? 'Chuyển sang danh sách' : 'Chuyển sang lưới'}>
+                    {viewMode === 'grid' ? <List size={18} /> : <LayoutGrid size={18} />}
                 </button>
             </div>
 
@@ -143,9 +161,16 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
                         />
                     ))}
                 </div>
+
+                {/* Clear filters button */}
+                {hasActiveFilters && (
+                    <button className="pos-clear-filters" onClick={clearAllFilters}>
+                        <X size={12} /> Xóa bộ lọc
+                    </button>
+                )}
             </div>
 
-            {/* Product grid */}
+            {/* Product grid or list */}
             <div className="pos-product-grid-wrap">
                 {loading || refLoading ? (
                     <div className="pos-product-grid">
@@ -163,9 +188,21 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick }) => {
                     </div>
                 ) : filtered.length === 0 ? (
                     <div className="pos-empty-state">
-                        <div className="icon">🔍</div>
+                        <Search size={40} strokeWidth={1.5} />
                         <h3>Không tìm thấy sản phẩm</h3>
                         <p>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+                    </div>
+                ) : viewMode === 'list' ? (
+                    <div className="pos-product-list">
+                        {filtered.map(p => (
+                            <ProductListItem
+                                key={p.productId}
+                                product={p}
+                                onCardClick={onProductClick}
+                                onQuickAdd={onAddToCart}
+                                pulseId={pulseProductId}
+                            />
+                        ))}
                     </div>
                 ) : (
                     <div className="pos-product-grid">

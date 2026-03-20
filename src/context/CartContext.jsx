@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { cartApi } from '../api/cartApi';
 import { useAuth } from './AuthContext';
-import { useToast } from './useToast';
+import { ToastContext } from './ToastContext';
 
 const CartContext = createContext(null);
 
@@ -33,7 +33,8 @@ export const CartProvider = ({ children }) => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [loading, setLoading] = useState(false);
   const { isAuthenticated } = useAuth();
-  const { showToast } = useToast();
+  const toastCtx = useContext(ToastContext);
+  const showToast = toastCtx?.showToast ?? (() => {});
   const prevAuthRef = useRef(isAuthenticated);
 
   const getSessionForRequest = useCallback(() => {

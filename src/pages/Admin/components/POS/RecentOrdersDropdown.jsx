@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { ClipboardList } from 'lucide-react';
 import { formatVND, formatDateTime } from './posUtils';
 import { posAPI } from '../../../../services/api';
 
@@ -46,7 +47,7 @@ const RecentOrdersDropdown = () => {
                 aria-label="Đơn gần đây"
                 title="Đơn gần đây"
             >
-                📋
+                <ClipboardList size={16} />
             </button>
             {open && (
                 <div className="pos-recent-dropdown">

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Trash2, Save, ShoppingCart, Clock, CreditCard } from 'lucide-react';
 import CartItem from './CartItem';
 import CustomerLookup from './CustomerLookup';
 import CouponInput from './CouponInput';
@@ -8,7 +9,8 @@ import RecentOrdersDropdown from './RecentOrdersDropdown';
 import { formatVND } from './posUtils';
 
 /**
- * OrderCart — right panel: header, customer, cart items, coupon, summary, payment, checkout.
+ * OrderCart — right panel: dynamic header, customer, scrollable cart items,
+ * sticky footer with coupon/summary/payment/checkout.
  */
 const OrderCart = ({
     cartItems, subtotal, discountAmount, totalAmount,
@@ -20,8 +22,23 @@ const OrderCart = ({
     onCheckout, isCheckingOut, cartBounce,
     // Hold order props
     holdOrders = [], isSavingHold = false,
-    onSaveHold, onRestoreHold, onDiscardHold,
+    onSaveHold,
+    activeOrderId, activeHoldOrder,
 }) => {
+    const [waitMinutes, setWaitMinutes] = useState(0);
+
+    // Calculate waiting time for active hold order
+    useEffect(() => {
+        if (!activeHoldOrder?.createdAt) { setWaitMinutes(0); return; }
+        const calc = () => {
+            const mins = Math.floor((Date.now() - new Date(activeHoldOrder.createdAt).getTime()) / 60000);
+            setWaitMinutes(mins);
+        };
+        calc();
+        const interval = setInterval(calc, 30000);
+        return () => clearInterval(interval);
+    }, [activeHoldOrder?.createdAt]);
+
     const handleClear = () => {
         if (cartItems.length === 0) return;
         if (window.confirm('Xóa toàn bộ đơn hàng?')) onClearCart();
@@ -32,22 +49,28 @@ const OrderCart = ({
             {/* Header */}
             <div className="pos-cart-header">
                 <div className="pos-cart-header-left">
-                    <h2>Thanh toán</h2>
+                    <h2>
+                        {activeOrderId
+                            ? `Hóa đơn chờ — ${activeHoldOrder?.customerName || 'Khách lẻ'}`
+                            : 'Đơn mới'}
+                    </h2>
+                    {activeOrderId && waitMinutes > 0 && (
+                        <span className={`pos-wait-badge ${waitMinutes >= 10 ? 'danger' : waitMinutes >= 5 ? 'warning' : ''}`}>
+                            <Clock size={12} />
+                            Đã chờ {waitMinutes} phút
+                        </span>
+                    )}
                 </div>
                 <div className="pos-cart-header-btns">
                     <RecentOrdersDropdown />
                     <button
                         className="pos-icon-btn"
                         onClick={onSaveHold}
-                        disabled={cartItems.length === 0 || isSavingHold || holdOrders.length >= 10}
-                        title="Lưu hóa đơn chờ"
+                        disabled={cartItems.length === 0 || isSavingHold || (holdOrders.length >= 10 && !activeOrderId)}
+                        title="Lưu hóa đơn chờ (F3)"
                         aria-label="Lưu hóa đơn chờ"
-                        style={{ fontSize: 18, position: 'relative' }}
                     >
-                        {isSavingHold ? <span className="pos-hold-mini-spin" /> : '💾'}
-                        {holdOrders.length > 0 && (
-                            <span className="pos-hold-badge">{holdOrders.length}</span>
-                        )}
+                        {isSavingHold ? <span className="pos-hold-mini-spin" /> : <Save size={16} />}
                     </button>
                     <button
                         className="pos-icon-btn danger"
@@ -55,35 +78,10 @@ const OrderCart = ({
                         aria-label="Xóa đơn"
                         title="Xóa đơn"
                     >
-                        🗑️
+                        <Trash2 size={16} />
                     </button>
                 </div>
             </div>
-
-            {/* Hold orders strip */}
-            {holdOrders.length > 0 && (
-                <div className="pos-hold-strip">
-                    {holdOrders.map((h, idx) => (
-                        <div key={h.orderId} className="pos-hold-tab" title={`${h.customerName} • ${h.itemCount} món`}>
-                            <button
-                                className="pos-hold-tab-btn"
-                                onClick={() => onRestoreHold(h)}
-                            >
-                                <span className="pos-hold-tab-num">{idx + 1}</span>
-                                <span className="pos-hold-tab-name">{h.customerName}</span>
-                                <span className="pos-hold-tab-count">{h.itemCount} món</span>
-                            </button>
-                            <button
-                                className="pos-hold-tab-close"
-                                onClick={() => onDiscardHold(h.orderId)}
-                                title="Xóa hóa đơn chờ"
-                            >
-                                ×
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            )}
 
             {/* Customer lookup */}
             <CustomerLookup
@@ -97,11 +95,11 @@ const OrderCart = ({
                 setGuestPhone={setGuestPhone}
             />
 
-            {/* Cart items */}
+            {/* Scrollable cart items area */}
             <div className="pos-cart-items">
                 {cartItems.length === 0 ? (
                     <div className="pos-cart-empty">
-                        <div className="icon">🛒</div>
+                        <ShoppingCart size={40} strokeWidth={1.5} />
                         <h3>Chưa có sản phẩm</h3>
                         <p>Chọn sản phẩm từ danh sách bên trái</p>
                     </div>
@@ -117,50 +115,46 @@ const OrderCart = ({
                 )}
             </div>
 
-            {/* Coupon */}
-            <CouponInput
-                subtotal={subtotal}
-                appliedCoupon={appliedCoupon}
-                setAppliedCoupon={setAppliedCoupon}
-                setDiscountAmount={setDiscountAmount}
-            />
+            {/* Sticky footer: coupon + summary + payment + checkout button */}
+            <div className="pos-checkout-footer">
+                {/* Coupon */}
+                <CouponInput
+                    subtotal={subtotal}
+                    appliedCoupon={appliedCoupon}
+                    setAppliedCoupon={setAppliedCoupon}
+                    setDiscountAmount={setDiscountAmount}
+                />
 
-            {/* Summary */}
-            <OrderSummary
-                subtotal={subtotal}
-                discountAmount={discountAmount}
-                appliedCoupon={appliedCoupon}
-            />
+                {/* Summary */}
+                <OrderSummary
+                    subtotal={subtotal}
+                    discountAmount={discountAmount}
+                    appliedCoupon={appliedCoupon}
+                />
 
-            {/* Payment */}
-            <PaymentSelector
-                paymentMethod={paymentMethod}
-                setPaymentMethod={setPaymentMethod}
-                totalAmount={totalAmount}
-                cashReceived={cashReceived}
-                setCashReceived={setCashReceived}
-            />
+                {/* Payment */}
+                <PaymentSelector
+                    paymentMethod={paymentMethod}
+                    setPaymentMethod={setPaymentMethod}
+                    totalAmount={totalAmount}
+                    cashReceived={cashReceived}
+                    setCashReceived={setCashReceived}
+                />
 
-            {/* Checkout */}
-            <div className="pos-checkout-section">
-                <button
-                    className="pos-btn-hold"
-                    onClick={onSaveHold}
-                    disabled={cartItems.length === 0 || isSavingHold || holdOrders.length >= 10}
-                    title={holdOrders.length >= 10 ? 'Tối đa 10 hóa đơn chờ' : 'Lưu hóa đơn chờ'}
-                >
-                    {isSavingHold ? <span className="pos-checkout-spinner" /> : '💾'} Lưu hóa đơn chờ
-                </button>
+                {/* Checkout button */}
                 <button
                     className="pos-checkout-btn"
                     onClick={onCheckout}
                     disabled={cartItems.length === 0 || isCheckingOut}
-                    title={cartItems.length === 0 ? 'Giỏ hàng trống' : ''}
+                    title={cartItems.length === 0 ? 'Giỏ hàng trống' : 'Thanh toán (F8)'}
                 >
                     {isCheckingOut ? (
                         <span className="pos-checkout-spinner" />
                     ) : (
-                        <>Thanh toán {cartItems.length > 0 ? formatVND(totalAmount) : ''}</>
+                        <>
+                            <CreditCard size={18} />
+                            THANH TOÁN {cartItems.length > 0 ? `— ${formatVND(totalAmount)}` : ''}
+                        </>
                     )}
                 </button>
             </div>
