@@ -30,7 +30,7 @@ function Footer() {
   const supportLinks = [
     { label: 'Chính sách đổi trả', href: '#' },
     { label: 'Hướng dẫn chọn size', href: '#' },
-    { label: 'Theo dõi đơn hàng', href: '#' },
+    { label: 'Theo dõi đơn hàng', href: '/tra-cuu-don-hang' },
     { label: 'Câu hỏi thường gặp', href: '#' },
     { label: 'Liên hệ hỗ trợ', href: '/#contact' },
     { label: 'Chính sách bảo mật', href: '#' }

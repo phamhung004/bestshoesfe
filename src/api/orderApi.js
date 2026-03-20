@@ -3,9 +3,17 @@ import axiosClient from './axiosClient';
 export const orderApi = {
   /**
    * Customer checkout — create order from cart
+   * Supports both logged-in users and guest checkout.
    * @param {Object} data - CheckoutRequest fields
+   * @param {string|null} sessionId - Session ID for guest (null for logged-in user)
    */
-  checkout: (data) => axiosClient.post('/orders/checkout', data),
+  checkout: (data, sessionId = null) => {
+    const config = {};
+    if (sessionId) {
+      config.headers = { 'X-Session-Id': sessionId };
+    }
+    return axiosClient.post('/orders/checkout', data, config);
+  },
 
   /**
    * Get current customer's order history
@@ -17,4 +25,13 @@ export const orderApi = {
    * @param {string} orderNumber
    */
   getOrderByNumber: (orderNumber) => axiosClient.get(`/orders/${orderNumber}`),
+
+  /**
+   * Public order tracking — no auth required.
+   * Guest provides order number + phone for verification.
+   * @param {string} orderNumber
+   * @param {string} phone
+   */
+  trackOrder: (orderNumber, phone) =>
+    axiosClient.get('/orders/track', { params: { orderNumber, phone } }),
 };

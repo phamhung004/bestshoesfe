@@ -1069,7 +1069,9 @@
 }
 
 @keyframes co-spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .co-coupon-cancel-link {
@@ -1106,8 +1108,15 @@
 }
 
 @keyframes co-fadeIn {
-    from { opacity: 0; transform: translateY(-4px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .co-coupon-ticket-left {
@@ -1141,8 +1150,13 @@
     border-radius: 50%;
 }
 
-.co-coupon-ticket-left::before { top: -6px; }
-.co-coupon-ticket-left::after { bottom: -6px; }
+.co-coupon-ticket-left::before {
+    top: -6px;
+}
+
+.co-coupon-ticket-left::after {
+    bottom: -6px;
+}
 
 .co-coupon-ticket-value {
     font-size: 16px;
@@ -1239,8 +1253,15 @@
 }
 
 @keyframes co-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
 }
 
 /* Shake animation for errors */
@@ -1249,11 +1270,27 @@
 }
 
 @keyframes co-shake {
-    0%, 100% { transform: translateX(0); }
-    20% { transform: translateX(-6px); }
-    40% { transform: translateX(6px); }
-    60% { transform: translateX(-4px); }
-    80% { transform: translateX(4px); }
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-6px);
+    }
+
+    40% {
+        transform: translateX(6px);
+    }
+
+    60% {
+        transform: translateX(-4px);
+    }
+
+    80% {
+        transform: translateX(4px);
+    }
 }
 
 /* Discount label with coupon info */
@@ -2080,17 +2117,41 @@
    RESPONSIVE — 14-inch laptop screens
    ═══════════════════════════════════════════════════════ */
 @media (max-width: 1536px) {
-    .checkout-container { padding: 0 20px; }
-    .checkout-right-panel { width: 40%; max-width: 480px; }
-    .checkout-layout { gap: 20px; }
+    .checkout-container {
+        padding: 0 20px;
+    }
+
+    .checkout-right-panel {
+        width: 40%;
+        max-width: 480px;
+    }
+
+    .checkout-layout {
+        gap: 20px;
+    }
 }
 
 @media (max-width: 1366px) {
-    .checkout-container { padding: 0 16px; }
-    .checkout-right-panel { width: 38%; max-width: 460px; }
-    .checkout-layout { gap: 16px; }
-    .checkout-page-title { font-size: 26px; }
-    .checkout-page-header { padding: 20px 0 6px; }
+    .checkout-container {
+        padding: 0 16px;
+    }
+
+    .checkout-right-panel {
+        width: 38%;
+        max-width: 460px;
+    }
+
+    .checkout-layout {
+        gap: 16px;
+    }
+
+    .checkout-page-title {
+        font-size: 26px;
+    }
+
+    .checkout-page-header {
+        padding: 20px 0 6px;
+    }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -2207,4 +2268,85 @@
     .cart-step-indicator {
         max-width: 300px;
     }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Guest Checkout Styles
+   ═══════════════════════════════════════════════════════ */
+
+/* Guest mode banner */
+.co-guest-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 12px;
+    padding: 16px;
+    animation: fadeSlideUp 0.3s ease;
+}
+
+.co-guest-banner-icon {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.co-guest-banner-content {
+    flex: 1;
+}
+
+.co-guest-banner-title {
+    font-weight: 600;
+    color: #92400e;
+    margin: 0 0 4px;
+    font-size: 0.95rem;
+}
+
+.co-guest-banner-desc {
+    color: #78350f;
+    font-size: 0.875rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.co-guest-banner-desc a {
+    color: #d97706;
+    font-weight: 600;
+    text-decoration: underline;
+    transition: color 200ms;
+}
+
+.co-guest-banner-desc a:hover {
+    color: #b45309;
+}
+
+/* Guest success state */
+.co-success-guest-note {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: #166534;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+.co-success-guest-register {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin: 0 0 20px;
+    text-align: center;
+}
+
+.co-success-guest-register a {
+    color: #7c3aed;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 200ms;
+}
+
+.co-success-guest-register a:hover {
+    color: #6d28d9;
+    text-decoration: underline;
 }

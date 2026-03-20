@@ -37,8 +37,18 @@ axiosClient.interceptors.response.use(
     if (status === 401) {
       // Don't redirect if the failing request is itself an auth endpoint (login/register)
       if (!error.config?.url?.includes('/auth/')) {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        const currentPath = window.location.pathname;
+        // Don't redirect if on checkout page (guest checkout flow)
+        // or if it's a cart/shipping/coupon API call (used by guests)
+        const isGuestSafePath = currentPath === '/checkout' || currentPath === '/cart';
+        const isGuestSafeApi = error.config?.url?.includes('/cart')
+          || error.config?.url?.includes('/shipping')
+          || error.config?.url?.includes('/coupon')
+          || error.config?.url?.includes('/orders/checkout');
+        if (!isGuestSafePath && !isGuestSafeApi) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
       }
       return Promise.reject(
         new Error(error.response.data?.message ?? 'Phiên đăng nhập hết hạn.')

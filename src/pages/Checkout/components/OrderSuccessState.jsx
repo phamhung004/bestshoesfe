@@ -6,7 +6,7 @@ import {
     getItemSubtotal,
 } from '../checkoutConstants';
 
-const OrderSuccessState = ({ orderData, items, total }) => {
+const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
@@ -161,12 +161,31 @@ const OrderSuccessState = ({ orderData, items, total }) => {
 
                     {/* Action buttons */}
                     <div className="co-success-actions">
-                        <Link to="/" className="co-success-btn-primary">
-                            Theo dõi đơn hàng
-                        </Link>
-                        <Link to="/catalog" className="co-success-btn-outline">
-                            Tiếp tục mua sắm
-                        </Link>
+                        {isLoggedIn ? (
+                            <>
+                                <Link to="/account" className="co-success-btn-primary">
+                                    Theo dõi đơn hàng
+                                </Link>
+                                <Link to="/catalog" className="co-success-btn-outline">
+                                    Tiếp tục mua sắm
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <div className="co-success-guest-note">
+                                    📋 Lưu mã đơn hàng của bạn: <strong>{orderData?.orderNumber}</strong>
+                                </div>
+                                <p className="co-success-guest-register">
+                                    <Link to="/register">Tạo tài khoản</Link> để theo dõi đơn hàng và nhận ưu đãi exclusive.
+                                </p>
+                                <Link to={`/tra-cuu-don-hang`} className="co-success-btn-primary">
+                                    🔍 Tra cứu đơn hàng
+                                </Link>
+                                <Link to="/catalog" className="co-success-btn-outline">
+                                    Tiếp tục mua sắm
+                                </Link>
+                            </>
+                        )}
                     </div>
 
                     {/* Share section */}

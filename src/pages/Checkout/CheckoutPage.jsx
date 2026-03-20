@@ -452,14 +452,21 @@ const CheckoutPage = () => {
         const touched = {};
 
         // Recipient fields — always required
-        ['customerName', 'customerPhone', 'email'].forEach((f) => {
+        ['customerName', 'customerPhone'].forEach((f) => {
             const err = validateField(f, state.formData[f], state);
             if (err) newErrors[f] = err;
             touched[f] = true;
         });
 
-        // Address fields — only if delivery + manual form
-        if (state.deliveryMethod === 'Online' && !selectedAddress) {
+        // Email — optional but validate format if filled
+        if (state.formData.email) {
+            const emailErr = validateField('email', state.formData.email, state);
+            if (emailErr) newErrors['email'] = emailErr;
+            touched['email'] = true;
+        }
+
+        // Address fields — required if Online delivery AND (guest OR manual form OR no saved address)
+        if (state.deliveryMethod === 'Online' && (!isLoggedIn || state.showManualForm || !state.selectedAddressId)) {
             ['province', 'district', 'ward', 'street'].forEach((f) => {
                 const err = validateField(f, state.formData[f], state);
                 if (err) newErrors[f] = err;
@@ -528,8 +535,9 @@ const CheckoutPage = () => {
                 checkoutData.ghnWardCode = state.formData.wardCode || null;
             }
 
-            // Call real API
-            const res = await orderApi.checkout(checkoutData);
+            // Call real API — pass sessionId for guest users
+            const sessionId = !isAuthenticated ? localStorage.getItem('cart_session_id') : null;
+            const res = await orderApi.checkout(checkoutData, sessionId);
             const orderResult = res.data;
 
             // Build address display string for success page
@@ -590,7 +598,7 @@ const CheckoutPage = () => {
         } finally {
             dispatch({ type: 'SET_SUBMITTING', payload: false });
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state, selectedAddress, clearCart, cartItems]);
 
     // ── RENDER SUCCESS STATE ────────────────────────────
@@ -601,6 +609,7 @@ const CheckoutPage = () => {
                     orderData={state.orderData}
                     items={state.orderData?.items || []}
                     total={state.orderData?.totalAmount || total}
+                    isLoggedIn={isLoggedIn}
                 />
             </div>
         );
@@ -635,6 +644,20 @@ const CheckoutPage = () => {
                 <div className="checkout-layout" ref={formRef}>
                     {/* ── LEFT PANEL ── */}
                     <div className="checkout-left-panel">
+                        {/* Guest banner */}
+                        {!isLoggedIn && (
+                            <div className="co-guest-banner">
+                                <div className="co-guest-banner-icon">💡</div>
+                                <div className="co-guest-banner-content">
+                                    <p className="co-guest-banner-title">Bạn đang mua với tư cách khách vãng lai</p>
+                                    <p className="co-guest-banner-desc">
+                                        <Link to="/login" state={{ from: '/checkout' }}>Đăng nhập</Link> hoặc{' '}
+                                        <Link to="/register">Đăng ký</Link> để theo dõi đơn hàng và nhận ưu đãi dành riêng.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
                         {/* A: Delivery method */}
                         <DeliveryMethodSelector
                             deliveryMethod={state.deliveryMethod}
@@ -647,19 +670,19 @@ const CheckoutPage = () => {
                                 addresses={savedAddresses}
                                 selectedAddressId={state.selectedAddressId}
                                 onSelectAddress={(id) => {
-                                dispatch({ type: 'SET_SELECTED_ADDRESS', payload: id });
-                                const addr = savedAddresses.find((a) => a.addressId === id);
-                                if (addr) {
-                                    if (addr.phone) {
-                                        dispatch({ type: 'SET_FORM_FIELD', field: 'customerPhone', value: addr.phone });
-                                        dispatch({ type: 'SET_ERROR', field: 'customerPhone', value: '' });
+                                    dispatch({ type: 'SET_SELECTED_ADDRESS', payload: id });
+                                    const addr = savedAddresses.find((a) => a.addressId === id);
+                                    if (addr) {
+                                        if (addr.phone) {
+                                            dispatch({ type: 'SET_FORM_FIELD', field: 'customerPhone', value: addr.phone });
+                                            dispatch({ type: 'SET_ERROR', field: 'customerPhone', value: '' });
+                                        }
+                                        if (addr.recipientName) {
+                                            dispatch({ type: 'SET_FORM_FIELD', field: 'customerName', value: addr.recipientName });
+                                            dispatch({ type: 'SET_ERROR', field: 'customerName', value: '' });
+                                        }
                                     }
-                                    if (addr.recipientName) {
-                                        dispatch({ type: 'SET_FORM_FIELD', field: 'customerName', value: addr.recipientName });
-                                        dispatch({ type: 'SET_ERROR', field: 'customerName', value: '' });
-                                    }
-                                }
-                            }}
+                                }}
                                 onUseOther={() => dispatch({ type: 'SET_SHOW_MANUAL_FORM', payload: true })}
                                 showManualForm={state.showManualForm}
                             />

@@ -23,6 +23,7 @@ import Payment from "./pages/Payment";
 import AdminRouter from "./pages/Admin/AdminRouter";
 import MyAccountPage from "./pages/MyAccount";
 import ProductDetailPage from "./pages/ProductDetail/ProductDetailPage";
+import OrderTrackingPage from "./pages/OrderTracking/OrderTrackingPage";
 import ProductManagementPage from "./pages/Admin/ProductManagement/ProductManagementPage";
 import AccountManagementPage from "./pages/Admin/AccountManagement/AccountManagementPage";
 import POSPage from "./pages/Admin/components/POS/POSPage";
@@ -44,11 +45,12 @@ function AppContent() {
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/purchase/:productId" element={<Purchase />} />
           <Route path="/products/:productId" element={<ProductDetailPage />} />
-          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/tra-cuu-don-hang" element={<OrderTrackingPage />} />
           <Route path="/account" element={<ProtectedRoute><MyAccountPage /></ProtectedRoute>} />
           <Route path="/admin/*" element={<ProtectedRoute requireAdmin><AdminRouter /></ProtectedRoute>} />
           <Route path="/admin/san-pham" element={<ProtectedRoute requireAdmin><ProductManagementPage /></ProtectedRoute>} />

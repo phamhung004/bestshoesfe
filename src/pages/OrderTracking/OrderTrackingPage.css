@@ -1,0 +1,569 @@
+/* ═══════════════════════════════════════════════════════
+   OrderTrackingPage.css — Guest Order Tracking
+   ═══════════════════════════════════════════════════════ */
+
+.ot-page {
+    background: #f9fafb;
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #111827;
+    padding-bottom: 64px;
+}
+
+.ot-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* Breadcrumb */
+.ot-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 0;
+    font-size: 14px;
+}
+
+.ot-breadcrumb a {
+    color: #6b7280;
+    text-decoration: none;
+    transition: color 200ms;
+}
+
+.ot-breadcrumb a:hover {
+    color: #6366f1;
+}
+
+.ot-breadcrumb-sep {
+    color: #d1d5db;
+}
+
+.ot-breadcrumb-current {
+    color: #111827;
+    font-weight: 500;
+}
+
+/* Title */
+.ot-title {
+    font-size: 30px;
+    font-weight: 900;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+}
+
+.ot-subtitle {
+    color: #6b7280;
+    font-size: 15px;
+    margin: 0 0 24px;
+}
+
+/* Search Card */
+.ot-search-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    padding: 28px;
+    margin-bottom: 24px;
+}
+
+.ot-search-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ot-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ot-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.ot-required {
+    color: #ef4444;
+}
+
+.ot-input {
+    padding: 12px 16px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #111827;
+    outline: none;
+    transition: border-color 150ms, box-shadow 150ms;
+}
+
+.ot-input::placeholder {
+    color: #9ca3af;
+}
+
+.ot-input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.ot-submit-btn {
+    padding: 14px 24px;
+    background: #4f46e5;
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 200ms;
+    margin-top: 4px;
+}
+
+.ot-submit-btn:hover:not(:disabled) {
+    background: #6366f1;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+}
+
+.ot-submit-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.ot-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: ot-spin 0.7s linear infinite;
+}
+
+@keyframes ot-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Error */
+.ot-error-box {
+    display: flex;
+    gap: 12px;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 16px;
+    animation: ot-fadeIn 200ms ease;
+}
+
+.ot-error-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.ot-error-text {
+    color: #991b1b;
+    font-weight: 600;
+    margin: 0 0 4px;
+    font-size: 14px;
+}
+
+.ot-error-hint {
+    color: #b91c1c;
+    font-size: 13px;
+    margin: 0;
+}
+
+@keyframes ot-fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Result */
+.ot-result {
+    animation: ot-fadeIn 300ms ease;
+}
+
+.ot-result-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.ot-result-order-number {
+    font-size: 22px;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.ot-result-date {
+    color: #6b7280;
+    font-size: 13px;
+    margin: 4px 0 0;
+}
+
+.ot-status-badge {
+    padding: 6px 16px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ot-status-active {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+}
+
+.ot-status-cancelled {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+/* Timeline */
+.ot-timeline-card,
+.ot-info-card,
+.ot-items-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    padding: 24px;
+    margin-bottom: 16px;
+}
+
+.ot-section-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 20px;
+    color: #111827;
+}
+
+.ot-timeline {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.ot-timeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+    min-width: 80px;
+}
+
+.ot-timeline-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    z-index: 1;
+    transition: all 300ms;
+}
+
+.ot-timeline-step.active .ot-timeline-dot {
+    background: #6366f1;
+    color: white;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+}
+
+.ot-timeline-step.cancelled .ot-timeline-dot {
+    background: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+}
+
+.ot-timeline-line {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    width: 100%;
+    height: 3px;
+    background: #e5e7eb;
+    z-index: 0;
+}
+
+.ot-timeline-step.active .ot-timeline-line {
+    background: #6366f1;
+}
+
+.ot-timeline-label {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #6b7280;
+    text-align: center;
+    font-weight: 500;
+}
+
+.ot-timeline-step.active .ot-timeline-label {
+    color: #4f46e5;
+    font-weight: 600;
+}
+
+/* Info Grid */
+.ot-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.ot-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ot-info-full {
+    grid-column: 1 / -1;
+}
+
+.ot-info-label {
+    font-size: 12px;
+    color: #9ca3af;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.ot-info-value {
+    font-size: 14px;
+    color: #111827;
+    font-weight: 500;
+}
+
+/* Items */
+.ot-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ot-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 12px;
+}
+
+.ot-item-img {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: #e5e7eb;
+    flex-shrink: 0;
+}
+
+.ot-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ot-item-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ot-item-meta {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 2px 0 0;
+}
+
+.ot-item-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Totals */
+.ot-totals {
+    border-top: 1px solid #e5e7eb;
+    margin-top: 16px;
+    padding-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ot-total-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.ot-total-row.ot-discount {
+    color: #16a34a;
+}
+
+.ot-total-row.ot-grand-total {
+    font-size: 16px;
+    font-weight: 800;
+    color: #111827;
+    padding-top: 8px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Actions */
+.ot-result-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.ot-btn-outline {
+    flex: 1;
+    padding: 12px 24px;
+    border: 1.5px solid #6366f1;
+    color: #6366f1;
+    background: white;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 200ms;
+}
+
+.ot-btn-outline:hover {
+    background: #eef2ff;
+}
+
+.ot-btn-secondary {
+    flex: 1;
+    padding: 12px 24px;
+    border: 1.5px solid #e5e7eb;
+    color: #6b7280;
+    background: white;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 200ms;
+}
+
+.ot-btn-secondary:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+/* Empty State */
+.ot-empty-state {
+    text-align: center;
+    padding: 48px 24px;
+}
+
+.ot-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+.ot-empty-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: #111827;
+}
+
+.ot-empty-desc {
+    color: #6b7280;
+    font-size: 14px;
+    margin: 0 0 24px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+}
+
+.ot-empty-tips {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 360px;
+    margin: 0 auto;
+}
+
+.ot-tip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    border-radius: 10px;
+    padding: 10px 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    font-size: 13px;
+    color: #374151;
+    text-align: left;
+}
+
+.ot-tip-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .ot-title {
+        font-size: 24px;
+    }
+
+    .ot-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ot-result-actions {
+        flex-direction: column;
+    }
+
+    .ot-result-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .ot-timeline-step {
+        min-width: 60px;
+    }
+}
