@@ -32,6 +32,12 @@ const apiCall = async (endpoint, options = {}) => {
         // If response body is not JSON, just use status
       }
 
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+
       const error = new Error(`HTTP error! status: ${response.status}`);
       error.response = {
         status: response.status,

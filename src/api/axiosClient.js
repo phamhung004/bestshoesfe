@@ -35,9 +35,14 @@ axiosClient.interceptors.response.use(
     const { status } = error.response;
 
     if (status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-      return Promise.reject(new Error('Phiên đăng nhập hết hạn.'));
+      // Don't redirect if the failing request is itself an auth endpoint (login/register)
+      if (!error.config?.url?.includes('/auth/')) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+      return Promise.reject(
+        new Error(error.response.data?.message ?? 'Phiên đăng nhập hết hạn.')
+      );
     }
 
     if (status === 404) {
