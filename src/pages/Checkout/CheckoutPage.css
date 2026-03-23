@@ -1406,6 +1406,22 @@
     animation: fadeSlideUp 400ms ease-out;
 }
 
+/* Payment confirmed banner (shown when bank transfer is confirmed) */
+.co-payment-confirmed-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #DCFCE7;
+    color: #15803D;
+    border: 1px solid #86EFAC;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    animation: co-fadeIn 0.4s ease;
+}
+
 .co-success-card {
     max-width: 720px;
     margin: 0 auto;
@@ -2349,4 +2365,287 @@
 .co-success-guest-register a:hover {
     color: #6d28d9;
     text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SePay Payment Section — Bank Transfer QR & Details
+   ═══════════════════════════════════════════════════════ */
+
+.co-sepay-section {
+    margin: 24px 0;
+    background: linear-gradient(135deg, #EEF2FF 0%, #F0F9FF 100%);
+    border: 2px solid #C7D2FE;
+    border-radius: 16px;
+    padding: 28px 24px;
+    animation: fadeSlideUp 400ms ease-out;
+}
+
+.co-sepay-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.co-sepay-icon {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.co-sepay-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: #1E40AF;
+    letter-spacing: -0.02em;
+}
+
+.co-sepay-subtitle {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: #6B7280;
+}
+
+/* QR Code */
+.co-sepay-qr-wrap {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.co-sepay-qr-img {
+    width: 240px;
+    height: 240px;
+    border-radius: 16px;
+    border: 3px solid white;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+    background: white;
+    object-fit: contain;
+}
+
+.co-sepay-qr-caption {
+    margin: 12px 0 0;
+    font-size: 13px;
+    color: #6B7280;
+    font-weight: 500;
+}
+
+/* Bank Details Grid */
+.co-sepay-bank-details {
+    background: white;
+    border-radius: 12px;
+    padding: 2px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.co-sepay-bank-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #F3F4F6;
+    gap: 12px;
+}
+
+.co-sepay-bank-row:last-child {
+    border-bottom: none;
+}
+
+.co-sepay-label {
+    font-size: 13px;
+    color: #6B7280;
+    font-weight: 500;
+    min-width: 100px;
+    flex-shrink: 0;
+}
+
+.co-sepay-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    word-break: break-all;
+}
+
+.co-sepay-amount {
+    color: #DC2626;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.co-sepay-content-row {
+    background: #FFFBEB;
+}
+
+.co-sepay-content-value {
+    color: #B45309;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+}
+
+.co-sepay-copy-btn {
+    background: #F3F4F6;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #6366F1;
+    font-weight: 600;
+    transition: all 200ms;
+    flex-shrink: 0;
+    line-height: 1.4;
+}
+
+.co-sepay-copy-btn:hover {
+    background: #EEF2FF;
+    border-color: #A5B4FC;
+}
+
+/* Auto Verification Notice */
+.co-sepay-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.co-sepay-notice-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    position: relative;
+    line-height: 1;
+}
+
+.co-sepay-pulse {
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(34, 197, 94, 0.2);
+    animation: sepayPulse 2s ease-out infinite;
+}
+
+@keyframes sepayPulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+.co-sepay-notice-text strong {
+    font-size: 14px;
+    color: #166534;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.co-sepay-notice-text p {
+    margin: 0;
+    font-size: 13px;
+    color: #15803D;
+    line-height: 1.5;
+}
+
+/* Warning Box */
+.co-sepay-warning {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #92400E;
+    line-height: 1.6;
+}
+
+.co-sepay-warning strong {
+    color: #78350F;
+}
+
+/* Highlight for bank info in payment selector */
+.co-pay-bank-highlight {
+    color: #B45309;
+    background: #FFFBEB;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+/* ─── Responsive SePay ────────────────────────────────── */
+@media (max-width: 768px) {
+    .co-sepay-section {
+        padding: 20px 16px;
+        margin: 16px 0;
+    }
+
+    .co-sepay-qr-img {
+        width: 200px;
+        height: 200px;
+    }
+
+    .co-sepay-title {
+        font-size: 17px;
+    }
+
+    .co-sepay-bank-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 10px 14px;
+    }
+
+    .co-sepay-value {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .co-sepay-qr-img {
+        width: 180px;
+        height: 180px;
+    }
+}
+
+/* ─── Pending Payment State ───────────────────────────────── */
+.co-pending-icon-wrap {
+    background: linear-gradient(135deg, #FEF3C7, #FDE68A) !important;
+    border-color: #FCD34D !important;
+}
+
+.co-pending-clock {
+    font-size: 48px;
+    line-height: 1;
+    animation: pendingPulse 2s ease-in-out infinite;
+}
+
+@keyframes pendingPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.15);
+        opacity: 0.8;
+    }
+}
+
+.co-pending-heading {
+    color: #B45309 !important;
+    font-size: 22px !important;
 }

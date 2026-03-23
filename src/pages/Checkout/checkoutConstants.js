@@ -38,7 +38,7 @@ export const PAYMENT_METHODS = [
         id: 'bank',
         icon: '🏦',
         label: 'Chuyển khoản ngân hàng',
-        desc: 'Chuyển khoản trực tiếp — xác nhận trong 30 phút',
+        desc: 'Chuyển khoản trực tiếp — xác nhận tự động qua SePay',
     },
     {
         id: 'momo',

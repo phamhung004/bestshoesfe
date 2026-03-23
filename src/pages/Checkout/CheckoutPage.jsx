@@ -563,6 +563,7 @@ const CheckoutPage = () => {
                 type: 'SET_ORDER_SUCCESS',
                 payload: {
                     orderNumber: orderResult.orderNumber,
+                    paymentReference: orderResult.paymentReference,
                     customerName: state.formData.customerName,
                     customerPhone: state.formData.customerPhone,
                     email: state.formData.email,
