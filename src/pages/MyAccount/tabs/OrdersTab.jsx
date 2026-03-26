@@ -252,6 +252,25 @@ const OrdersTab = ({ onOpenReturns }) => {
                                             )}
                                         </>
                                     )}
+                                    {order.status === 'Trả hàng/Hoàn tiền' && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <span style={{
+                                                fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 20,
+                                                background: myReturns.find(r => r.orderNumber === order.orderNumber)?.returnStatus === 'Hoàn tiền' ? '#dcfce7' : '#fef9c3',
+                                                color: myReturns.find(r => r.orderNumber === order.orderNumber)?.returnStatus === 'Hoàn tiền' ? '#16a34a' : '#d97706',
+                                                border: `1px solid ${myReturns.find(r => r.orderNumber === order.orderNumber)?.returnStatus === 'Hoàn tiền' ? '#bbf7d0' : '#fde68a'}`,
+                                            }}>
+                                                {myReturns.find(r => r.orderNumber === order.orderNumber)?.returnStatus === 'Hoàn tiền' ? '✅ Đã hoàn tiền' : '↩ Đang xử lý hoàn tiền'}
+                                            </span>
+                                            <button
+                                                className="acc-btn-ghost-sm"
+                                                onClick={() => onOpenReturns?.()}
+                                                style={{ fontSize: 12 }}
+                                            >
+                                                Xem yêu cầu →
+                                            </button>
+                                        </div>
+                                    )}
                                     {order.status === 'Chờ xác nhận' && (
                                         <button
                                             className="acc-btn-danger-sm"
