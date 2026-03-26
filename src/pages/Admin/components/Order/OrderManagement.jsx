@@ -122,7 +122,7 @@ const OrderManagement = () => {
             const allRes = await orderAPI.search({ pageNum: 0, pageSize: 1 });
             const allTotal = allRes?.data?.totalElements || 0;
 
-            const statuses = ['Chờ xác nhận', 'Đã xác nhận', 'Đang giao', 'Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'];
+            const statuses = ['Chờ xác nhận', 'Đã xác nhận', 'Đang đóng gói', 'Bàn giao ĐVVC', 'Đang giao', 'Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'];
             const counts = { 'Tất cả': allTotal };
 
             // Fetch counts per status in parallel

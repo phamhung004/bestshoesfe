@@ -33,3 +33,18 @@ export const getMyReturns = () =>
  */
 export const getReturnDetail = (returnCode) =>
     axiosClient.get(`/returns/${returnCode}`);
+
+/**
+ * Bug 7: Cancel a return request (only when status = "Chờ duyệt").
+ * @param {string} returnCode
+ */
+export const cancelReturnRequest = (returnCode) =>
+    axiosClient.delete(`/returns/${returnCode}`);
+
+/**
+ * Bug 4: Update the refund method for a return (admin).
+ * @param {number} returnId
+ * @param {string} refundMethod - "Tiền mặt" | "Chuyển khoản"
+ */
+export const updateReturnRefundMethod = (returnId, refundMethod) =>
+    axiosClient.patch(`/admin/returns/${returnId}/refund-method`, { refundMethod });

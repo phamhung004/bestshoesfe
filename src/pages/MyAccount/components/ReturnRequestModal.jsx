@@ -34,6 +34,11 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
     const uploadedUrls = imageFiles.filter(f => f.url).map(f => f.url);
     const anyUploading = imageFiles.some(f => f.uploading);
 
+    // Bug 6: banking info for bank transfer
+    const isBankTransfer = !['Tiền mặt', 'COD', 'cod', 'cash', 'Cash'].includes(order.paymentMethod);
+    const [bankAccount, setBankAccount] = useState('');
+    const [bankName, setBankName] = useState('');
+
     // Calculate days since delivery
     const daysSince = order.updatedAt
         ? Math.floor((Date.now() - new Date(order.updatedAt)) / 86400000)
@@ -118,6 +123,8 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
             if (!reason.trim()) { setError('Vui lòng chọn lý do trả hàng'); return; }
             if (uploadedUrls.length === 0) { setError('Vui lòng tải lên ít nhất 1 ảnh bằng chứng'); return; }
             if (anyUploading) { setError('Đang tải ảnh lên, vui lòng chờ...'); return; }
+            if (isBankTransfer && !bankAccount.trim()) { setError('Vui lòng nhập số tài khoản ngân hàng để nhận hoàn tiền'); return; }
+            if (isBankTransfer && !bankName.trim()) { setError('Vui lòng nhập tên ngân hàng'); return; }
         }
         setStep(s => s + 1);
     };
@@ -133,11 +140,13 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                 returnReasonCategory: REASON_TO_CATEGORY[reason] || 'OTHER',
                 description: description.trim() || undefined,
                 imageUrls: uploadedUrls,
+                bankAccount: isBankTransfer ? bankAccount.trim() : undefined,
+                bankName: isBankTransfer ? bankName.trim() : undefined,
             });
             onSuccess?.();
             onClose();
         } catch (err) {
-            setError(err?.message || 'Gửi yêu cầu thất bại. Vui lòng thử lại.');
+            setError(err?.response?.data?.message || err?.message || 'Gửi yêu cầu thất bại. Vui lòng thử lại.');
         } finally {
             setSubmitting(false);
         }
@@ -346,6 +355,38 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                                     Ảnh chụp rõ sản phẩm bị lỗi hoặc sai so với mô tả. Tối đa {MAX_RETURN_IMAGES} ảnh.
                                 </p>
                             </div>
+
+                            {/* Bug 6: Banking info (required for bank transfer orders) */}
+                            {isBankTransfer && (
+                                <div style={{ padding: '14px 16px', background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: 10 }}>
+                                    <div style={{ fontWeight: 700, fontSize: 14, color: '#0369a1', marginBottom: 12 }}>
+                                        🏦 Thông tin tài khoản nhận hoàn tiền <span style={{ color: '#ef4444' }}>*</span>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                        <div>
+                                            <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 4, display: 'block' }}>Số tài khoản *</label>
+                                            <input
+                                                type="text"
+                                                value={bankAccount}
+                                                onChange={e => setBankAccount(e.target.value)}
+                                                placeholder="VD: 0123456789"
+                                                style={{ width: '100%', padding: '8px 12px', border: '1.5px solid #bae6fd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 4, display: 'block' }}>Tên ngân hàng *</label>
+                                            <input
+                                                type="text"
+                                                value={bankName}
+                                                onChange={e => setBankName(e.target.value)}
+                                                placeholder="VD: Vietcombank, Techcombank..."
+                                                style={{ width: '100%', padding: '8px 12px', border: '1.5px solid #bae6fd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <p style={{ marginTop: 8, fontSize: 12, color: '#0369a1' }}>Hoàn tiền sᄩ được chuyển vào tài khoản trên sau khi đơn hàng được xác nhận hoàn. </p>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -377,12 +418,23 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <span style={{ color: '#6b7280' }}>Hình thức hoàn tiền</span>
                                     <span style={{ fontWeight: 600 }}>
-                                        {['Tiền mặt', 'COD'].includes(order.paymentMethod) ? 'Tiền mặt' : 'Chuyển khoản'}
+                                        {isBankTransfer ? 'Chuyển khoản' : 'Tiền mặt'}
                                     </span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid #e5e7eb' }}>
-                                    <span style={{ fontWeight: 700, fontSize: 15 }}>Dự kiến hoàn</span>
-                                    <span style={{ fontWeight: 700, color: '#16a34a', fontSize: 16 }}>{formatVND(totalRefund)}</span>
+                                {isBankTransfer && bankAccount && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ color: '#6b7280' }}>Tài khoản nhận</span>
+                                        <span style={{ fontWeight: 600, textAlign: 'right' }}>{bankAccount} — {bankName}</span>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid #e5e7eb', flexDirection: 'column', gap: 4 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <span style={{ fontWeight: 700, fontSize: 15 }}>Dự kiến hoàn (tạm tính)</span>
+                                        <span style={{ fontWeight: 700, color: '#16a34a', fontSize: 16 }}>{formatVND(totalRefund)}</span>
+                                    </div>
+                                    <div style={{ fontSize: 12, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 6, padding: '5px 8px' }}>
+                                        ⚠ Số tiền hoàn chính xác có thể thấp hơn nếu đơn hàng có dùng mã giảm giá. Admin sၥ xác nhận số chính xác sau.
+                                    </div>
                                 </div>
                             </div>
 

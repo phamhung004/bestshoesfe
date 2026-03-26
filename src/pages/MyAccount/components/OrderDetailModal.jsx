@@ -4,18 +4,21 @@ import { formatVND, formatDate } from '../mockAccountData';
 import ChangeAddressModal from './ChangeAddressModal';
 
 const STATUS_STEPS = {
-    'Chờ xác nhận': ['Đặt hàng', 'Xác nhận', 'Đang giao', 'Đã giao'],
-    'Đã xác nhận': ['Đặt hàng', 'Xác nhận', 'Đang giao', 'Đã giao'],
-    'Đang giao': ['Đặt hàng', 'Xác nhận', 'Đang giao', 'Đã giao'],
-    'Đã giao': ['Đặt hàng', 'Xác nhận', 'Đang giao', 'Đã giao'],
+    'Chờ xác nhận': ['Đặt hàng', 'Xác nhận', 'Đóng gói', 'Bàn giao ĐVVC', 'Đang giao', 'Đã giao'],
+    'Đã xác nhận': ['Đặt hàng', 'Xác nhận', 'Đóng gói', 'Bàn giao ĐVVC', 'Đang giao', 'Đã giao'],
+    'Đang đóng gói': ['Đặt hàng', 'Xác nhận', 'Đóng gói', 'Bàn giao ĐVVC', 'Đang giao', 'Đã giao'],
+    'Bàn giao ĐVVC': ['Đặt hàng', 'Xác nhận', 'Đóng gói', 'Bàn giao ĐVVC', 'Đang giao', 'Đã giao'],
+    'Đang giao': ['Đặt hàng', 'Xác nhận', 'Đóng gói', 'Bàn giao ĐVVC', 'Đang giao', 'Đã giao'],
+    'Đã giao': ['Đặt hàng', 'Xác nhận', 'Đóng gói', 'Bàn giao ĐVVC', 'Đang giao', 'Đã giao'],
     'Trả hàng/Hoàn tiền': ['Đặt hàng', 'Xác nhận', 'Đã giao', 'Trả hàng'],
     'Đã hủy': ['Đặt hàng', 'Đã hủy'],
 };
 
 const getStepIndex = (status) => {
     const map = {
-        'Chờ xác nhận': 0, 'Đã xác nhận': 1, 'Đang giao': 2,
-        'Đã giao': 3, 'Trả hàng/Hoàn tiền': 3, 'Đã hủy': 1,
+        'Chờ xác nhận': 0, 'Đã xác nhận': 1, 'Đang đóng gói': 2,
+        'Bàn giao ĐVVC': 3, 'Đang giao': 4,
+        'Đã giao': 5, 'Trả hàng/Hoàn tiền': 3, 'Đã hủy': 1,
     };
     return map[status] ?? 0;
 };
@@ -24,6 +27,8 @@ const StatusBadge = ({ status }) => {
     const map = {
         'Chờ xác nhận': 'acc-badge-yellow',
         'Đã xác nhận': 'acc-badge-blue',
+        'Đang đóng gói': 'acc-badge-orange',
+        'Bàn giao ĐVVC': 'acc-badge-cyan',
         'Đang giao': 'acc-badge-purple',
         'Đã giao': 'acc-badge-green',
         'Trả hàng/Hoàn tiền': 'acc-badge-orange',

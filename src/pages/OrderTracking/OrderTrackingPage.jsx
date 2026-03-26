@@ -5,11 +5,13 @@ import './OrderTrackingPage.css';
 
 /* ───── Status helpers ───── */
 const STATUS_STEPS = {
-    'Chờ xác nhận': ['Đặt hàng', 'Chờ xác nhận'],
-    'Đã xác nhận': ['Đặt hàng', 'Xác nhận', 'Đang giao'],
-    'Đang giao': ['Đặt hàng', 'Xác nhận', 'Đang giao'],
-    'Đã giao': ['Đặt hàng', 'Xác nhận', 'Đang giao', 'Đã giao'],
-    'Đã hủy': ['Đặt hàng', 'Đã hủy'],
+    'Chờ xác nhận':       ['Đặt hàng', 'Chờ xác nhận'],
+    'Đã xác nhận':        ['Đặt hàng', 'Xác nhận', 'Đang đóng gói'],
+    'Đang đóng gói':      ['Đặt hàng', 'Xác nhận', 'Đang đóng gói'],
+    'Bàn giao ĐVVC':      ['Đặt hàng', 'Xác nhận', 'Đóng gói', 'Bàn giao ĐVVC'],
+    'Đang giao':          ['Đặt hàng', 'Xác nhận', 'Đóng gói', 'Bàn giao ĐVVC', 'Đang giao'],
+    'Đã giao':            ['Đặt hàng', 'Xác nhận', 'Đóng gói', 'Bàn giao ĐVVC', 'Đang giao', 'Đã giao'],
+    'Đã hủy':             ['Đặt hàng', 'Đã hủy'],
     'Trả hàng/Hoàn tiền': ['Đặt hàng', 'Xác nhận', 'Đã giao', 'Trả hàng'],
 };
 

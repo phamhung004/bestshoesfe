@@ -187,9 +187,24 @@
 }
 
 /* Stock indicator */
+.pdp-stock-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
 .pdp-stock {
     font-size: 14px;
     font-weight: 500;
+}
+.pdp-stock-count-badge {
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid #bfdbfe;
 }
 
 /* Quantity selector */
@@ -228,14 +243,32 @@
 .pdp-qty-btn:hover:not(:disabled) { background: #e5e7eb; }
 .pdp-qty-btn:disabled { color: #d1d5db; cursor: not-allowed; }
 .pdp-qty-value {
-    width: 44px;
+    width: 52px;
     text-align: center;
     font-size: 15px;
     font-weight: 600;
     color: #111827;
     border-left: 1.5px solid #d1d5db;
     border-right: 1.5px solid #d1d5db;
+    border-top: none;
+    border-bottom: none;
+    background: transparent;
+    height: 36px;
     line-height: 36px;
+    padding: 0;
+    outline: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+.pdp-qty-value::-webkit-inner-spin-button,
+.pdp-qty-value::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.pdp-qty-max-hint {
+    font-size: 13px;
+    color: #9ca3af;
+    font-weight: 400;
 }
 
 /* CTA button */

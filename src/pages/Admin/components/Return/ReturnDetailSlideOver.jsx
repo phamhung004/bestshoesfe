@@ -3,6 +3,7 @@ import {
     RETURN_STATUS_CONFIG, REASON_CONFIG, REFUND_METHODS,
     formatVND, formatDateTime, getInitials,
 } from './mockReturns';
+import { updateReturnRefundMethod } from '../../../../api/returnApi';
 
 /**
  * ReturnDetailSlideOver — right drawer with full return detail,
@@ -21,6 +22,24 @@ const ReturnDetailSlideOver = ({
     const [autoSaved, setAutoSaved] = useState(false);
     const [lightboxImg, setLightboxImg] = useState(null);
     const [refundMethod, setRefundMethod] = useState(returnItem?.refund_method || '');
+    const [savingMethod, setSavingMethod] = useState(false);
+    const [methodSaved, setMethodSaved] = useState(false);
+
+    const handleRefundMethodChange = async (newMethod) => {
+        setRefundMethod(newMethod);
+        if (!returnItem?.return_id) return;
+        setSavingMethod(true);
+        setMethodSaved(false);
+        try {
+            await updateReturnRefundMethod(returnItem.return_id, newMethod);
+            setMethodSaved(true);
+            setTimeout(() => setMethodSaved(false), 2000);
+        } catch (err) {
+            console.error('Failed to save refund method:', err);
+        } finally {
+            setSavingMethod(false);
+        }
+    };
 
     if (!returnItem) return null;
 
@@ -209,19 +228,37 @@ const ReturnDetailSlideOver = ({
 
                         <div style={{ marginTop: 14 }}>
                             <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 6 }}>Phương thức hoàn tiền:</div>
-                            <select
-                                className="rm-method-select"
-                                value={refundMethod}
-                                onChange={e => setRefundMethod(e.target.value)}
-                            >
-                                {REFUND_METHODS.map(m => (
-                                    <option key={m.value} value={m.value}>{m.icon} {m.label}</option>
-                                ))}
-                            </select>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <select
+                                    className="rm-method-select"
+                                    value={refundMethod}
+                                    onChange={e => handleRefundMethodChange(e.target.value)}
+                                    disabled={savingMethod}
+                                >
+                                    {REFUND_METHODS.map(m => (
+                                        <option key={m.value} value={m.value}>{m.icon} {m.label}</option>
+                                    ))}
+                                </select>
+                                {savingMethod && <span style={{ fontSize: 12, color: '#6b7280' }}>Đang lưu...</span>}
+                                {methodSaved && <span style={{ fontSize: 12, color: '#16a34a' }}>✓ Đã lưu</span>}
+                            </div>
                             {refundMethod === 'Chuyển khoản' && (
-                                <div className="rm-bank-inputs">
-                                    <input placeholder="Số tài khoản" />
-                                    <input placeholder="Tên ngân hàng" />
+                                <div style={{ marginTop: 10, padding: '10px 12px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, fontSize: 13 }}>
+                                    <div style={{ fontWeight: 600, color: '#0369a1', marginBottom: 6 }}>📋 Thông tin tài khoản nhận hoàn tiền:</div>
+                                    {returnItem.bank_account ? (
+                                        <>
+                                            <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+                                                <span style={{ color: '#6b7280', minWidth: 80 }}>STK:</span>
+                                                <span style={{ fontWeight: 600, color: '#111827' }}>{returnItem.bank_account}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 8 }}>
+                                                <span style={{ color: '#6b7280', minWidth: 80 }}>Ngân hàng:</span>
+                                                <span style={{ fontWeight: 600, color: '#111827' }}>{returnItem.bank_name || '—'}</span>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div style={{ color: '#f59e0b', fontSize: 12 }}>⚠ Khách hàng chưa cung cấp thông tin tài khoản</div>
+                                    )}
                                 </div>
                             )}
                         </div>

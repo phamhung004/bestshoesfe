@@ -79,9 +79,9 @@ const ProductDetailPage = () => {
     // Stock indicator
     const stockIndicator = isInStock
         ? stockCount <= 5
-            ? { text: `⚠ Chỉ còn ${stockCount} sản phẩm`, color: '#d97706' }
-            : { text: '✓ Còn hàng', color: '#16a34a' }
-        : { text: '✗ Hết hàng', color: '#dc2626' };
+            ? { text: `⚠ Chỉ còn ${stockCount} sản phẩm`, color: '#d97706', showCount: false }
+            : { text: `✓ Còn hàng`, color: '#16a34a', showCount: true }
+        : { text: '✗ Hết hàng', color: '#dc2626', showCount: false };
 
     // Price info
     const basePrice = selectedVariant?.price ?? 0;
@@ -205,8 +205,15 @@ const ProductDetailPage = () => {
                     )}
 
                     {/* Stock indicator */}
-                    <div className="pdp-stock" style={{ color: stockIndicator.color }}>
-                        {stockIndicator.text}
+                    <div className="pdp-stock-wrapper">
+                        <div className="pdp-stock" style={{ color: stockIndicator.color }}>
+                            {stockIndicator.text}
+                        </div>
+                        {selectedVariant && isInStock && stockIndicator.showCount && (
+                            <div className="pdp-stock-count-badge">
+                                {stockCount} sản phẩm có sẵn
+                            </div>
+                        )}
                     </div>
 
                     {/* Quantity selector */}
@@ -220,7 +227,22 @@ const ProductDetailPage = () => {
                                     disabled={quantity <= 1}
                                     aria-label="Giảm số lượng"
                                 >−</button>
-                                <span className="pdp-qty-value">{quantity}</span>
+                                <input
+                                    className="pdp-qty-value"
+                                    type="number"
+                                    min={1}
+                                    max={stockCount}
+                                    value={quantity}
+                                    onChange={e => {
+                                        const val = parseInt(e.target.value, 10);
+                                        if (!isNaN(val)) setQuantity(Math.min(stockCount, Math.max(1, val)));
+                                    }}
+                                    onBlur={e => {
+                                        const val = parseInt(e.target.value, 10);
+                                        setQuantity(isNaN(val) || val < 1 ? 1 : Math.min(stockCount, val));
+                                    }}
+                                    aria-label="Số lượng"
+                                />
                                 <button
                                     className="pdp-qty-btn"
                                     onClick={() => setQuantity(q => Math.min(stockCount, q + 1))}
@@ -228,6 +250,7 @@ const ProductDetailPage = () => {
                                     aria-label="Tăng số lượng"
                                 >+</button>
                             </div>
+                            <span className="pdp-qty-max-hint">/ {stockCount}</span>
                         </div>
                     )}
 

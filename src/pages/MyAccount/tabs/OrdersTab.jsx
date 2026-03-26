@@ -7,12 +7,14 @@ import { RETURN_WINDOW_DAYS } from '../../../constants/returnConstants';
 import OrderDetailModal from '../components/OrderDetailModal';
 import ReturnRequestModal from '../components/ReturnRequestModal';
 
-const ALL_STATUSES = ['Tất cả', 'Chờ xác nhận', 'Đã xác nhận', 'Đang giao', 'Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'];
+const ALL_STATUSES = ['Tất cả', 'Chờ xác nhận', 'Đã xác nhận', 'Đang đóng gói', 'Bàn giao ĐVVC', 'Đang giao', 'Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'];
 
 const statusBadgeClass = (status) => {
     const map = {
         'Chờ xác nhận': 'acc-badge-yellow',
         'Đã xác nhận': 'acc-badge-blue',
+        'Đang đóng gói': 'acc-badge-orange',
+        'Bàn giao ĐVVC': 'acc-badge-cyan',
         'Đang giao': 'acc-badge-purple',
         'Đã giao': 'acc-badge-green',
         'Trả hàng/Hoàn tiền': 'acc-badge-orange',
@@ -214,6 +216,16 @@ const OrdersTab = ({ onOpenReturns }) => {
                                     Tổng: <strong>{formatVND(order.totalAmount)}</strong>
                                 </div>
                                 <div className="acc-order-actions">
+                                    {order.status === 'Đang đóng gói' && (
+                                        <span style={{ fontSize: 13, color: '#EA580C', fontWeight: 500 }}>
+                                            📦 Đang soạn hàng
+                                        </span>
+                                    )}
+                                    {order.status === 'Bàn giao ĐVVC' && (
+                                        <span style={{ fontSize: 13, color: '#0284C7', fontWeight: 500 }}>
+                                            🚚 Đã bàn giao cho shipper
+                                        </span>
+                                    )}
                                     {order.status === 'Đang giao' && (
                                         <button className="acc-btn-primary-sm"><Truck size={14} /> Theo dõi</button>
                                     )}

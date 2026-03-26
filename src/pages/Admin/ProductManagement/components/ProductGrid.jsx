@@ -128,6 +128,9 @@ const ProductGrid = ({
                 {product.name}
                 {isNew && <span className="pm-badge-new" style={{ marginLeft: 4 }}>MỚI</span>}
               </div>
+              {product.sku && (
+                <div className="pm-product-sku" style={{ marginTop: 2 }}>SKU: {product.sku}</div>
+              )}
 
               {/* Tag chips */}
               {(product.tags || []).length > 0 && (

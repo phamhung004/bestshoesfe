@@ -103,7 +103,25 @@ const CartItemCard = ({
                     >
                         −
                     </button>
-                    <div className="cart-qty-value">{item.quantity}</div>
+                    <input
+                        className="cart-qty-value"
+                        type="number"
+                        min={1}
+                        max={item.variant.stock}
+                        value={item.quantity}
+                        onChange={e => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val >= 1 && val <= item.variant.stock) {
+                                onQtyChange(item.cart_item_id, val);
+                            }
+                        }}
+                        onBlur={e => {
+                            const val = parseInt(e.target.value, 10);
+                            const clamped = isNaN(val) || val < 1 ? 1 : Math.min(item.variant.stock, val);
+                            onQtyChange(item.cart_item_id, clamped);
+                        }}
+                        aria-label="Số lượng"
+                    />
                     <button
                         className="cart-qty-btn plus"
                         onClick={() => onQtyChange(item.cart_item_id, item.quantity + 1)}

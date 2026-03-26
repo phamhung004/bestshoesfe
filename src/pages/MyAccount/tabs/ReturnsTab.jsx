@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Loader, RotateCcw, ChevronDown, ChevronUp, Package } from 'lucide-react';
 import { formatVND, formatDate } from '../mockAccountData';
 import { RETURN_STATUS_CONFIG } from '../../../constants/returnConstants';
-import { getMyReturns } from '../../../api/returnApi';
+import { getMyReturns, cancelReturnRequest } from '../../../api/returnApi';
 
 const ALL_STATUSES = ['Tất cả', 'Chờ duyệt', 'Đã duyệt', 'Đã nhận hàng', 'Hoàn tiền', 'Từ chối'];
 
@@ -52,8 +52,9 @@ const TimelineBar = ({ timeline }) => {
     );
 };
 
-const ReturnCard = ({ ret }) => {
+const ReturnCard = ({ ret, onCancelled }) => {
     const [expanded, setExpanded] = useState(false);
+    const [cancelling, setCancelling] = useState(false);
 
     return (
         <div style={{ border: '1.5px solid #e5e7eb', borderRadius: 12, overflow: 'hidden', background: '#fff' }}>
@@ -78,6 +79,30 @@ const ReturnCard = ({ ret }) => {
                         <div style={{ fontSize: 12, color: '#9ca3af' }}>Dự kiến hoàn</div>
                         <div style={{ fontWeight: 700, fontSize: 15, color: '#16a34a' }}>{formatVND(ret.totalAmount)}</div>
                     </div>
+                    {ret.returnStatus === 'Chờ duyệt' && (
+                        <button
+                            onClick={async () => {
+                                if (!window.confirm('Bạn có chắc muốn hủy yêu cầu trả hàng này?')) return;
+                                setCancelling(true);
+                                try {
+                                    await cancelReturnRequest(ret.returnCode);
+                                    onCancelled?.(ret.returnCode);
+                                } catch (err) {
+                                    alert(err?.response?.data?.message || 'Không thể hủy yêu cầu');
+                                } finally {
+                                    setCancelling(false);
+                                }
+                            }}
+                            disabled={cancelling}
+                            style={{
+                                padding: '5px 12px', fontSize: 12, borderRadius: 8, cursor: 'pointer',
+                                background: '#fff', border: '1.5px solid #fca5a5', color: '#dc2626',
+                                fontWeight: 600, opacity: cancelling ? 0.6 : 1,
+                            }}
+                        >
+                            {cancelling ? 'Đang hủy...' : 'Hủy yêu cầu'}
+                        </button>
+                    )}
                     <button
                         onClick={() => setExpanded(v => !v)}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', borderRadius: 8, fontSize: 13, fontWeight: 500 }}
@@ -190,6 +215,10 @@ const ReturnsTab = () => {
         return acc;
     }, {});
 
+    const handleCancelled = (returnCode) => {
+        setReturns(prev => prev.filter(r => r.returnCode !== returnCode));
+    };
+
     const filtered = activeStatus === 'Tất cả' ? returns : returns.filter(r => r.returnStatus === activeStatus);
 
     if (loading) {
@@ -235,7 +264,7 @@ const ReturnsTab = () => {
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {filtered.map(ret => (
-                        <ReturnCard key={ret.returnId || ret.returnCode} ret={ret} />
+                        <ReturnCard key={ret.returnId || ret.returnCode} ret={ret} onCancelled={handleCancelled} />
                     ))}
                 </div>
             )}

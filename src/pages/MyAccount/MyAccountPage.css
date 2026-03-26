@@ -732,6 +732,11 @@
     color: #991B1B;
 }
 
+.acc-badge-cyan {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
 .acc-pay-badge {
     display: inline-flex;
     align-items: center;

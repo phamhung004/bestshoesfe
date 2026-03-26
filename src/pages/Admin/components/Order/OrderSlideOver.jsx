@@ -31,6 +31,7 @@ const OrderSlideOver = ({
     isManager,
 }) => {
     const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+    const [pendingStatus, setPendingStatus] = useState(null);
     const [notes, setNotes] = useState('');
     const [saved, setSaved] = useState(false);
     const [confirmingPayment, setConfirmingPayment] = useState(false);
@@ -265,7 +266,7 @@ const OrderSlideOver = ({
     const timelineSteps = [
         'Đặt hàng',
         'Xác nhận',
-        'Đóng gói',
+        'Đang đóng gói',
         'Bàn giao ĐVVC',
         'Đang giao',
         'Đã giao',
@@ -275,6 +276,8 @@ const OrderSlideOver = ({
     const statusProgress = {
         'Chờ xác nhận': 0,
         'Đã xác nhận': 1,
+        'Đang đóng gói': 2,
+        'Bàn giao ĐVVC': 3,
         'Đang giao': 4,
         'Đã giao': 5,
         'Trả hàng/Hoàn tiền': 5,
@@ -336,7 +339,7 @@ const OrderSlideOver = ({
                                                 style={isNonCodUnpaid ? { opacity: 0.45, cursor: 'not-allowed' } : undefined}
                                                 onClick={() => {
                                                     if (isNonCodUnpaid) return;
-                                                    onStatusChange(order.order_id, s);
+                                                    setPendingStatus(s);
                                                     setStatusDropdownOpen(false);
                                                 }}
                                             >
@@ -512,6 +515,11 @@ const OrderSlideOver = ({
                                         />
                                         <div className="om-so-item-info" style={{ flex: 1 }}>
                                             <span className="om-so-item-name">{item.product?.name}</span>
+                                            {item.product?.sku && (
+                                                <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
+                                                    {item.product.sku}
+                                                </span>
+                                            )}
                                             <span className="om-so-item-variant">
                                                 Size: {item.size?.size_name} / Màu: {item.color?.color_name}
                                             </span>
@@ -595,6 +603,11 @@ const OrderSlideOver = ({
                                     />
                                     <div className="om-so-item-info">
                                         <span className="om-so-item-name">{item.product?.name}</span>
+                                        {item.product?.sku && (
+                                            <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
+                                                {item.product.sku}
+                                            </span>
+                                        )}
                                         <span className="om-so-item-variant">
                                             Size: {item.size?.size_name} / Màu: {item.color?.color_name}
                                         </span>
@@ -798,6 +811,43 @@ const OrderSlideOver = ({
                     )}
                 </div>
             </div>
+
+            {/* ── Confirm status change dialog ── */}
+            {pendingStatus && (
+                <div className="om-confirm-overlay" onClick={() => setPendingStatus(null)}>
+                    <div className="om-confirm-dialog" onClick={e => e.stopPropagation()}>
+                        <div className="om-confirm-icon">⚠️</div>
+                        <h4 className="om-confirm-title">Xác nhận thay đổi trạng thái</h4>
+                        <p className="om-confirm-desc">
+                            Bạn có chắc muốn chuyển đơn hàng{' '}
+                            <strong>#{order.order_number}</strong> sang trạng thái{' '}
+                            <span style={{ color: STATUS_CONFIG[pendingStatus]?.color, fontWeight: 700 }}>
+                                {pendingStatus}
+                            </span>?
+                        </p>
+                        <p className="om-confirm-warning">
+                            Hành động này <strong>không thể hoàn tác</strong>.
+                        </p>
+                        <div className="om-confirm-actions">
+                            <button
+                                className="om-btn om-btn-outline"
+                                onClick={() => setPendingStatus(null)}
+                            >
+                                Hủy bỏ
+                            </button>
+                            <button
+                                className="om-btn om-btn-primary"
+                                onClick={() => {
+                                    onStatusChange(order.order_id, pendingStatus);
+                                    setPendingStatus(null);
+                                }}
+                            >
+                                ✅ Xác nhận
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

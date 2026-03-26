@@ -40,12 +40,10 @@ export const REASON_TO_CATEGORY = {
     'Khác':               'OTHER',
 };
 
-// ── Refund methods ──────────────────────────────────────────────
+// ── Refund methods — must match backend mapPaymentToRefundMethod() ──────────────────────────────
 export const REFUND_METHODS = [
     { value: 'Tiền mặt', icon: '💵', label: 'Tiền mặt' },
     { value: 'Chuyển khoản', icon: '🏦', label: 'Chuyển khoản' },
-    { value: 'Ví điện tử', icon: '📱', label: 'Ví điện tử' },
-    { value: 'Hoàn vào thẻ', icon: '💳', label: 'Hoàn vào thẻ' },
 ];
 
 // ── Reject reason options ───────────────────────────────────────
