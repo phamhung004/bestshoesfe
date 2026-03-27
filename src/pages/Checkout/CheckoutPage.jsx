@@ -297,25 +297,31 @@ const CheckoutPage = () => {
         dispatch({ type: 'SET_COUPON_LOADING', payload: true });
         dispatch({ type: 'SET_COUPON_ERROR', payload: '' });
         try {
+            // axiosClient interceptor already unwraps response.data,
+            // so `res` = ApiResponse { status, message, data: { valid, code, ... } }
+            // The actual coupon payload is at res.data
             const res = await couponApi.validate(code.trim(), subtotal);
-            const data = res.data;
-            if (data.valid) {
+            const payload = res?.data ?? res; // res.data = { valid, code, discountAmount, ... }
+            console.log('[Coupon] validate response:', res, 'payload:', payload);
+            if (payload?.valid) {
                 dispatch({
                     type: 'SET_COUPON_STATE',
                     payload: {
-                        code: data.code,
-                        name: data.name,
-                        type: data.type,
-                        value: data.value,
-                        discountAmount: data.discountAmount || 0,
-                        endDate: data.coupon?.endDate || data.endDate || null,
-                        description: data.coupon?.description || data.description || '',
-                        minimumAmount: data.coupon?.minimumAmount || data.minimumAmount || 0,
-                        maximumDiscount: data.coupon?.maximumDiscount || data.maximumDiscount || null,
+                        code: payload.code,
+                        name: payload.name,
+                        type: payload.type,
+                        value: payload.value,
+                        discountAmount: payload.discountAmount || 0,
+                        endDate: payload.endDate || null,
+                        description: payload.description || '',
+                        minimumAmount: payload.minimumAmount || 0,
+                        maximumDiscount: payload.maximumDiscount || null,
+                        perCustomerLimit: payload.perCustomerLimit ?? null,
+                        customerRemainingUses: payload.customerRemainingUses ?? null,
                     },
                 });
             } else {
-                dispatch({ type: 'SET_COUPON_ERROR', payload: data.message || 'Mã giảm giá không hợp lệ hoặc đã hết hạn' });
+                dispatch({ type: 'SET_COUPON_ERROR', payload: payload?.reason || res?.message || payload?.message || 'Mã giảm giá không hợp lệ hoặc đã hết hạn' });
             }
         } catch (err) {
             dispatch({ type: 'SET_COUPON_ERROR', payload: err.message || 'Không thể áp dụng mã giảm giá' });
@@ -353,13 +359,14 @@ const CheckoutPage = () => {
         const revalidate = async () => {
             try {
                 const res = await couponApi.validate(state.couponState.code, subtotal);
-                const data = res.data;
-                if (data.valid) {
+                // axiosClient unwraps response.data → res = ApiResponse, res.data = payload
+                const payload = res?.data ?? res;
+                if (payload?.valid) {
                     dispatch({
                         type: 'SET_COUPON_STATE',
                         payload: {
                             ...state.couponState,
-                            discountAmount: data.discountAmount || 0,
+                            discountAmount: payload.discountAmount || 0,
                         },
                     });
                 } else {

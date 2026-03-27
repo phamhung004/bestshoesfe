@@ -243,7 +243,7 @@ const OrdersTab = ({ onOpenReturns }) => {
                                                 </button>
                                             )}
                                             {hasActiveReturn(order.orderNumber) && (
-                                                <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600, padding: '4px 8px', background: '#fffbeb', borderRadius: 6, border: '1px solid #fde68a' }}>
+                                                <span style={{ fontSize: 12, color: '#080808ff', fontWeight: 600, padding: '4px 8px', background: '#fffbeb', borderRadius: 6, border: '1px solid #fde68a' }}>
                                                     ⏳ Đang xử lý
                                                 </span>
                                             )}
