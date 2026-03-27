@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Copy, ChevronRight, ShoppingBag, Star, Truck, X, Package, Loader, RotateCcw } from 'lucide-react';
+import { Search, Copy, ChevronRight, ShoppingBag, Star, Truck, X, Package, Loader, RotateCcw, ChevronLeft } from 'lucide-react';
 import { formatVND, formatDate } from '../mockAccountData';
 import { getMyOrders, cancelOrder } from '../../../api/accountApi';
 import { getMyReturns } from '../../../api/returnApi';
@@ -35,6 +35,8 @@ const OrdersTab = ({ onOpenReturns }) => {
     const [myReturns, setMyReturns] = useState([]);
     const [toast, setToast] = useState(null);
     const [cancellingId, setCancellingId] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(5);
 
     const TERMINAL_RETURN_STATUSES = ['Hoàn tiền', 'Từ chối'];
 
@@ -88,6 +90,28 @@ const OrdersTab = ({ onOpenReturns }) => {
         if (search.trim()) result = result.filter(o => o.orderNumber.toLowerCase().includes(search.toLowerCase().trim()));
         return result;
     }, [orders, activeStatus, search]);
+
+    // Reset page on filter/search change
+    useEffect(() => { setCurrentPage(1); }, [activeStatus, search]);
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+    const paginatedOrders = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    const getPageNumbers = () => {
+        const pages = [];
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            if (currentPage > 3) pages.push('...');
+            const start = Math.max(2, currentPage - 1);
+            const end = Math.min(totalPages - 1, currentPage + 1);
+            for (let i = start; i <= end; i++) pages.push(i);
+            if (currentPage < totalPages - 2) pages.push('...');
+            pages.push(totalPages);
+        }
+        return pages;
+    };
 
     const handleCopy = (orderNum) => {
         navigator.clipboard.writeText(orderNum).catch(() => { });
@@ -162,7 +186,7 @@ const OrdersTab = ({ onOpenReturns }) => {
                 </div>
             ) : (
                 <div className="acc-orders-list">
-                    {filtered.map(order => (
+                    {paginatedOrders.map(order => (
                         <div key={order.orderId} className="acc-order-card">
                             {/* Header */}
                             <div className="acc-order-card-header">
@@ -287,6 +311,53 @@ const OrdersTab = ({ onOpenReturns }) => {
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* Pagination */}
+            {filtered.length > 0 && (
+                <div className="acc-pagination">
+                    <div className="acc-pagination-info">
+                        Hiển thị {Math.min((currentPage - 1) * itemsPerPage + 1, filtered.length)}–{Math.min(currentPage * itemsPerPage, filtered.length)} / {filtered.length} đơn hàng
+                        <select
+                            value={itemsPerPage}
+                            onChange={e => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                            className="acc-pagination-select"
+                        >
+                            {[5, 10, 20].map(n => <option key={n} value={n}>{n} / trang</option>)}
+                        </select>
+                    </div>
+                    {totalPages > 1 && (
+                        <div className="acc-pagination-buttons">
+                            <button
+                                className="acc-page-btn"
+                                disabled={currentPage <= 1}
+                                onClick={() => setCurrentPage(p => p - 1)}
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                            {getPageNumbers().map((p, i) =>
+                                p === '...' ? (
+                                    <span key={`e-${i}`} className="acc-page-ellipsis">…</span>
+                                ) : (
+                                    <button
+                                        key={p}
+                                        className={`acc-page-btn ${currentPage === p ? 'active' : ''}`}
+                                        onClick={() => setCurrentPage(p)}
+                                    >
+                                        {p}
+                                    </button>
+                                )
+                            )}
+                            <button
+                                className="acc-page-btn"
+                                disabled={currentPage >= totalPages}
+                                onClick={() => setCurrentPage(p => p + 1)}
+                            >
+                                <ChevronRight size={16} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 

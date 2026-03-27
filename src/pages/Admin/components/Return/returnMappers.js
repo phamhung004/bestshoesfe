@@ -74,6 +74,8 @@ export const normalizeReturn = (r) => {
         notes: r.notes,
         is_partial: r.isPartial ?? r.is_partial,
         item_count: r.itemCount ?? r.item_count,
+        bank_account: r.bankAccount ?? r.bank_account ?? null,
+        bank_name: r.bankName ?? r.bank_name ?? null,
         order_created_at: r.orderCreatedAt ?? r.order_created_at,
         created_at: r.createdAt ?? r.created_at,
         updated_at: r.updatedAt ?? r.updated_at,

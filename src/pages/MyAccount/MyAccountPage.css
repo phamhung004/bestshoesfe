@@ -2346,6 +2346,92 @@
 }
 
 /* ═══════════════════════════════════════════════════════
+   PAGINATION
+   ═══════════════════════════════════════════════════════ */
+.acc-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 0;
+    border-top: 1px solid var(--acc-gray-200);
+}
+
+.acc-pagination-info {
+    font-size: 13px;
+    color: var(--acc-gray-500);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.acc-pagination-select {
+    padding: 4px 8px;
+    border: 1.5px solid var(--acc-gray-200);
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: var(--acc-font);
+    color: var(--acc-gray-700);
+    background: white;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 150ms;
+}
+
+.acc-pagination-select:focus {
+    border-color: var(--acc-primary);
+}
+
+.acc-pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.acc-page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1.5px solid var(--acc-gray-200);
+    background: white;
+    color: var(--acc-gray-600);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--acc-font);
+    cursor: pointer;
+    padding: 0 6px;
+    transition: all 150ms;
+}
+
+.acc-page-btn:hover:not(:disabled):not(.active) {
+    background: var(--acc-gray-50);
+    border-color: var(--acc-gray-300);
+    color: var(--acc-gray-900);
+}
+
+.acc-page-btn.active {
+    background: var(--acc-primary-dark);
+    border-color: var(--acc-primary-dark);
+    color: white;
+    font-weight: 600;
+}
+
+.acc-page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.acc-page-ellipsis {
+    padding: 0 4px;
+    color: var(--acc-gray-400);
+    font-size: 14px;
+}
+
+/* ═══════════════════════════════════════════════════════
    MODALS
    ═══════════════════════════════════════════════════════ */
 .acc-modal-backdrop {

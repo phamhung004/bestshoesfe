@@ -4,6 +4,7 @@ import {
     formatVND, formatDateTime, getInitials,
 } from './mockReturns';
 import { updateReturnRefundMethod } from '../../../../api/returnApi';
+import { VIETNAM_BANKS, getVietQrUrl, findBankByName } from '../../../../constants/bankConstants';
 
 /**
  * ReturnDetailSlideOver — right drawer with full return detail,
@@ -21,9 +22,14 @@ const ReturnDetailSlideOver = ({
     const [notes, setNotes] = useState(returnItem?.notes || '');
     const [autoSaved, setAutoSaved] = useState(false);
     const [lightboxImg, setLightboxImg] = useState(null);
-    const [refundMethod, setRefundMethod] = useState(returnItem?.refund_method || '');
+    const [refundMethod, setRefundMethod] = useState(returnItem?.refund_method || returnItem?.refundMethod || '');
     const [savingMethod, setSavingMethod] = useState(false);
     const [methodSaved, setMethodSaved] = useState(false);
+    const [qrError, setQrError] = useState(false);
+
+    // Bank info — API may return snake_case or camelCase
+    const bankAccount = returnItem?.bank_account || returnItem?.bankAccount || null;
+    const bankName = returnItem?.bank_name || returnItem?.bankName || null;
 
     const handleRefundMethodChange = async (newMethod) => {
         setRefundMethod(newMethod);
@@ -242,19 +248,40 @@ const ReturnDetailSlideOver = ({
                                 {savingMethod && <span style={{ fontSize: 12, color: '#6b7280' }}>Đang lưu...</span>}
                                 {methodSaved && <span style={{ fontSize: 12, color: '#16a34a' }}>✓ Đã lưu</span>}
                             </div>
-                            {refundMethod === 'Chuyển khoản' && (
+                        {refundMethod === 'Chuyển khoản' && (
                                 <div style={{ marginTop: 10, padding: '10px 12px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, fontSize: 13 }}>
-                                    <div style={{ fontWeight: 600, color: '#0369a1', marginBottom: 6 }}>📋 Thông tin tài khoản nhận hoàn tiền:</div>
-                                    {returnItem.bank_account ? (
+                                    <div style={{ fontWeight: 600, color: '#0369a1', marginBottom: 8 }}>📋 Thông tin tài khoản nhận hoàn tiền:</div>
+                                    {bankAccount ? (
                                         <>
                                             <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                                                <span style={{ color: '#6b7280', minWidth: 80 }}>STK:</span>
-                                                <span style={{ fontWeight: 600, color: '#111827' }}>{returnItem.bank_account}</span>
+                                                <span style={{ color: '#6b7280', minWidth: 90 }}>STK:</span>
+                                                <span style={{ fontWeight: 600, color: '#111827' }}>{bankAccount}</span>
                                             </div>
-                                            <div style={{ display: 'flex', gap: 8 }}>
-                                                <span style={{ color: '#6b7280', minWidth: 80 }}>Ngân hàng:</span>
-                                                <span style={{ fontWeight: 600, color: '#111827' }}>{returnItem.bank_name || '—'}</span>
+                                            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                                                <span style={{ color: '#6b7280', minWidth: 90 }}>Ngân hàng:</span>
+                                                <span style={{ fontWeight: 600, color: '#111827' }}>{bankName || '—'}</span>
                                             </div>
+                                            {/* VietQR code */}
+                                            {(() => {
+                                                const bank = findBankByName(bankName);
+                                                if (!bank) return null;
+                                                const qrUrl = getVietQrUrl(bank.bin, bankAccount, Math.round(refundTotal), `Hoan tien ${returnItem?.return_code || ''}`);
+                                                return (
+                                                    <div style={{ textAlign: 'center' }}>
+                                                        {!qrError ? (
+                                                            <img
+                                                                src={qrUrl}
+                                                                alt="VietQR"
+                                                                onError={() => setQrError(true)}
+                                                                style={{ width: 180, height: 'auto', borderRadius: 8, border: '1px solid #bae6fd' }}
+                                                            />
+                                                        ) : (
+                                                            <div style={{ fontSize: 12, color: '#9ca3af' }}>Không tải được mã QR</div>
+                                                        )}
+                                                        <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>Quét QR để chuyển khoản hoàn tiền</div>
+                                                    </div>
+                                                );
+                                            })()}
                                         </>
                                     ) : (
                                         <div style={{ color: '#f59e0b', fontSize: 12 }}>⚠ Khách hàng chưa cung cấp thông tin tài khoản</div>

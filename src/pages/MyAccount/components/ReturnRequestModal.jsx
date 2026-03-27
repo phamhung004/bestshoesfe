@@ -2,12 +2,19 @@ import React, { useState, useRef } from 'react';
 import { X, Upload, Loader, AlertCircle } from 'lucide-react';
 import { formatVND } from '../mockAccountData';
 import { RETURN_REASONS, MAX_RETURN_IMAGES, RETURN_WINDOW_DAYS, REASON_TO_CATEGORY } from '../../../constants/returnConstants';
+import { VIETNAM_BANKS } from '../../../constants/bankConstants';
 import { uploadReturnImages, createReturnRequest } from '../../../api/returnApi';
 
 const STEPS = [
     { id: 1, label: 'Chọn sản phẩm' },
     { id: 2, label: 'Lý do & Ảnh' },
-    { id: 3, label: 'Xác nhận' },
+    { id: 3, label: 'Hoàn tiền' },
+    { id: 4, label: 'Xác nhận' },
+];
+
+const REFUND_METHODS = [
+    { value: 'Tiền mặt', label: 'Tiền mặt', icon: '💵', desc: 'Nhận tiền mặt khi trả hàng' },
+    { value: 'Chuyển khoản', label: 'Chuyển khoản', icon: '🏦', desc: 'Hoàn tiền qua tài khoản ngân hàng' },
 ];
 
 const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
@@ -30,12 +37,22 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
     const [error, setError] = useState('');
 
     const checkedItems = selectedItems.filter(i => i.selected);
-    const totalRefund = checkedItems.reduce((sum, i) => sum + (i.unitPrice || 0) * (i.returnQty || 1), 0);
     const uploadedUrls = imageFiles.filter(f => f.url).map(f => f.url);
     const anyUploading = imageFiles.some(f => f.uploading);
 
-    // Bug 6: banking info for bank transfer
-    const isBankTransfer = !['Tiền mặt', 'COD', 'cod', 'cash', 'Cash'].includes(order.paymentMethod);
+    // Coupon-aware refund calculation (matches backend paymentRatio logic)
+    const paymentRatio = (order.couponDiscountAmount && order.subtotal && order.subtotal > 0)
+        ? (order.subtotal - order.couponDiscountAmount) / order.subtotal
+        : 1;
+    const hasCoupon = paymentRatio < 1;
+    const totalRefundRaw = checkedItems.reduce((sum, i) => sum + (i.unitPrice || 0) * (i.returnQty || 1), 0);
+    const totalRefund = Math.floor(totalRefundRaw * paymentRatio);
+
+    // Refund method selection
+    const defaultRefundMethod = !['Tiền mặt', 'COD', 'cod', 'cash', 'Cash'].includes(order.paymentMethod)
+        ? 'Chuyển khoản' : 'Tiền mặt';
+    const [refundMethod, setRefundMethod] = useState(defaultRefundMethod);
+    const isBankTransfer = refundMethod === 'Chuyển khoản';
     const [bankAccount, setBankAccount] = useState('');
     const [bankName, setBankName] = useState('');
 
@@ -123,8 +140,11 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
             if (!reason.trim()) { setError('Vui lòng chọn lý do trả hàng'); return; }
             if (uploadedUrls.length === 0) { setError('Vui lòng tải lên ít nhất 1 ảnh bằng chứng'); return; }
             if (anyUploading) { setError('Đang tải ảnh lên, vui lòng chờ...'); return; }
+        }
+        if (step === 3) {
+            if (!refundMethod) { setError('Vui lòng chọn hình thức hoàn tiền'); return; }
             if (isBankTransfer && !bankAccount.trim()) { setError('Vui lòng nhập số tài khoản ngân hàng để nhận hoàn tiền'); return; }
-            if (isBankTransfer && !bankName.trim()) { setError('Vui lòng nhập tên ngân hàng'); return; }
+            if (isBankTransfer && !bankName) { setError('Vui lòng chọn ngân hàng'); return; }
         }
         setStep(s => s + 1);
     };
@@ -140,6 +160,7 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                 returnReasonCategory: REASON_TO_CATEGORY[reason] || 'OTHER',
                 description: description.trim() || undefined,
                 imageUrls: uploadedUrls,
+                refundMethod,
                 bankAccount: isBankTransfer ? bankAccount.trim() : undefined,
                 bankName: isBankTransfer ? bankName.trim() : undefined,
             });
@@ -157,7 +178,7 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
     // ── Render ──────────────────────────────────────────────────
     return (
         <div className="acc-modal-backdrop" onClick={handleBackdrop}>
-            <div className="acc-modal-card acc-modal-lg" style={{ maxWidth: 620 }}>
+            <div className="acc-modal-card acc-modal-lg" style={{ maxWidth: 640, overflow: 'hidden' }}>
                 {/* Header */}
                 <div className="acc-modal-header">
                     <div>
@@ -192,7 +213,7 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                 </div>
 
                 {/* Body */}
-                <div className="acc-modal-body" style={{ minHeight: 200, maxHeight: 420, overflowY: 'auto' }}>
+                <div className="acc-modal-body" style={{ minHeight: 200, maxHeight: 'calc(90vh - 180px)', overflowY: 'auto' }}>
 
                     {/* ── Step 1: Select items ── */}
                     {step === 1 && (
@@ -227,9 +248,20 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                                             </div>
                                         </div>
                                         <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                                            <div style={{ fontSize: 13, fontWeight: 600, color: '#111827', marginBottom: 4 }}>
-                                                {formatVND(item.unitPrice)}
-                                            </div>
+                                            {hasCoupon ? (
+                                                <div style={{ marginBottom: 4 }}>
+                                                    <div style={{ fontSize: 11, color: '#9ca3af', textDecoration: 'line-through' }}>
+                                                        {formatVND(item.unitPrice)}
+                                                    </div>
+                                                    <div style={{ fontSize: 13, fontWeight: 600, color: '#16a34a' }}>
+                                                        {formatVND(Math.floor(item.unitPrice * paymentRatio))}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div style={{ fontSize: 13, fontWeight: 600, color: '#111827', marginBottom: 4 }}>
+                                                    {formatVND(item.unitPrice)}
+                                                </div>
+                                            )}
                                             {item.selected && (
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
                                                     <button
@@ -250,10 +282,17 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                                 ))}
                             </div>
                             {checkedItems.length > 0 && (
-                                <div style={{ marginTop: 14, padding: '10px 14px', background: '#f3f4f6', borderRadius: 8, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <span>Tạm tính hoàn: <strong>{formatVND(totalRefund)}</strong></span>
-                                    {checkedItems.length < selectedItems.length && (
-                                        <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600 }}>⚠ Trả một phần</span>
+                                <div style={{ marginTop: 14, padding: '10px 14px', background: '#f3f4f6', borderRadius: 8, fontSize: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <span>Dự kiến hoàn: <strong style={{ color: '#16a34a' }}>{formatVND(totalRefund)}</strong></span>
+                                        {checkedItems.length < selectedItems.length && (
+                                            <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600 }}>⚠ Trả một phần</span>
+                                        )}
+                                    </div>
+                                    {hasCoupon && (
+                                        <div style={{ fontSize: 12, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 6, padding: '4px 8px' }}>
+                                            💡 Đơn hàng đã dùng mã giảm giá {order.couponCode ? `"${order.couponCode}"` : ''} (-{formatVND(order.couponDiscountAmount)}). Số tiền hoàn đã được điều chỉnh tương ứng.
+                                        </div>
                                     )}
                                 </div>
                             )}
@@ -355,8 +394,43 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                                     Ảnh chụp rõ sản phẩm bị lỗi hoặc sai so với mô tả. Tối đa {MAX_RETURN_IMAGES} ảnh.
                                 </p>
                             </div>
+                        </div>
+                    )}
 
-                            {/* Bug 6: Banking info (required for bank transfer orders) */}
+                    {/* ── Step 3: Refund Method ── */}
+                    {step === 3 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                            {/* Refund method selection */}
+                            <div>
+                                <label style={{ fontWeight: 600, fontSize: 14, marginBottom: 10, display: 'block' }}>
+                                    Hình thức hoàn tiền <span style={{ color: '#ef4444' }}>*</span>
+                                </label>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    {REFUND_METHODS.map(m => (
+                                        <label key={m.value} style={{
+                                            display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
+                                            borderRadius: 10, border: '1.5px solid', cursor: 'pointer',
+                                            borderColor: refundMethod === m.value ? '#111827' : '#e5e7eb',
+                                            background: refundMethod === m.value ? '#f9fafb' : '#fff',
+                                            transition: 'all .15s',
+                                        }}>
+                                            <input
+                                                type="radio" name="refundMethod" value={m.value}
+                                                checked={refundMethod === m.value}
+                                                onChange={() => setRefundMethod(m.value)}
+                                                style={{ accentColor: '#111827' }}
+                                            />
+                                            <span style={{ fontSize: 20 }}>{m.icon}</span>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: refundMethod === m.value ? 700 : 500, fontSize: 14, color: '#111827' }}>{m.label}</div>
+                                                <div style={{ fontSize: 12, color: '#9ca3af' }}>{m.desc}</div>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Banking info (required for bank transfer) */}
                             {isBankTransfer && (
                                 <div style={{ padding: '14px 16px', background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: 10 }}>
                                     <div style={{ fontWeight: 700, fontSize: 14, color: '#0369a1', marginBottom: 12 }}>
@@ -374,39 +448,57 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                                             />
                                         </div>
                                         <div>
-                                            <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 4, display: 'block' }}>Tên ngân hàng *</label>
-                                            <input
-                                                type="text"
+                                            <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 4, display: 'block' }}>Ngân hàng *</label>
+                                            <select
                                                 value={bankName}
                                                 onChange={e => setBankName(e.target.value)}
-                                                placeholder="VD: Vietcombank, Techcombank..."
-                                                style={{ width: '100%', padding: '8px 12px', border: '1.5px solid #bae6fd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
-                                            />
+                                                style={{ width: '100%', padding: '8px 12px', border: '1.5px solid #bae6fd', borderRadius: 8, fontSize: 14, boxSizing: 'border-box', outline: 'none', background: 'white', cursor: 'pointer' }}
+                                            >
+                                                <option value="">-- Chọn ngân hàng --</option>
+                                                {VIETNAM_BANKS.map(b => (
+                                                    <option key={b.bin} value={b.name}>{b.name}</option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </div>
-                                    <p style={{ marginTop: 8, fontSize: 12, color: '#0369a1' }}>Hoàn tiền sᄩ được chuyển vào tài khoản trên sau khi đơn hàng được xác nhận hoàn. </p>
+                                    <p style={{ marginTop: 8, fontSize: 12, color: '#0369a1' }}>Hoàn tiền sẽ được chuyển vào tài khoản trên sau khi đơn hàng được xác nhận hoàn.</p>
                                 </div>
                             )}
+
+                            {/* Refund summary */}
+                            <div style={{ padding: '12px 14px', background: '#f3f4f6', borderRadius: 8, fontSize: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span>Dự kiến hoàn tiền:</span>
+                                <span style={{ fontWeight: 700, color: '#16a34a', fontSize: 16 }}>{formatVND(totalRefund)}</span>
+                            </div>
                         </div>
                     )}
 
-                    {/* ── Step 3: Confirmation ── */}
-                    {step === 3 && (
+                    {/* ── Step 4: Confirmation ── */}
+                    {step === 4 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                             {/* Items summary */}
                             <div>
                                 <p style={{ fontWeight: 700, fontSize: 14, marginBottom: 10, color: '#374151' }}>Sản phẩm trả hàng</p>
-                                {checkedItems.map(item => (
-                                    <div key={item.orderItemId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6', fontSize: 14 }}>
-                                        <div>
-                                            <span style={{ fontWeight: 500, color: '#111827' }}>{item.productName}</span>
-                                            <span style={{ color: '#9ca3af', marginLeft: 8, fontSize: 12 }}>
-                                                {item.variant} × {item.returnQty}
-                                            </span>
+                                {checkedItems.map(item => {
+                                    const rawTotal = (item.unitPrice || 0) * (item.returnQty || 1);
+                                    const refundTotal = Math.floor(rawTotal * paymentRatio);
+                                    return (
+                                        <div key={item.orderItemId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f3f4f6', fontSize: 14 }}>
+                                            <div>
+                                                <span style={{ fontWeight: 500, color: '#111827' }}>{item.productName}</span>
+                                                <span style={{ color: '#9ca3af', marginLeft: 8, fontSize: 12 }}>
+                                                    {item.variant} × {item.returnQty}
+                                                </span>
+                                            </div>
+                                            <div style={{ textAlign: 'right' }}>
+                                                {hasCoupon && (
+                                                    <div style={{ fontSize: 11, color: '#9ca3af', textDecoration: 'line-through' }}>{formatVND(rawTotal)}</div>
+                                                )}
+                                                <span style={{ fontWeight: 600, color: hasCoupon ? '#16a34a' : '#111827' }}>{formatVND(refundTotal)}</span>
+                                            </div>
                                         </div>
-                                        <span style={{ fontWeight: 600 }}>{formatVND((item.unitPrice || 0) * (item.returnQty || 1))}</span>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             {/* Summary box */}
@@ -417,9 +509,7 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <span style={{ color: '#6b7280' }}>Hình thức hoàn tiền</span>
-                                    <span style={{ fontWeight: 600 }}>
-                                        {isBankTransfer ? 'Chuyển khoản' : 'Tiền mặt'}
-                                    </span>
+                                    <span style={{ fontWeight: 600 }}>{refundMethod}</span>
                                 </div>
                                 {isBankTransfer && bankAccount && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -427,14 +517,15 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                                         <span style={{ fontWeight: 600, textAlign: 'right' }}>{bankAccount} — {bankName}</span>
                                     </div>
                                 )}
-                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid #e5e7eb', flexDirection: 'column', gap: 4 }}>
+                                {hasCoupon && (
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ fontWeight: 700, fontSize: 15 }}>Dự kiến hoàn (tạm tính)</span>
-                                        <span style={{ fontWeight: 700, color: '#16a34a', fontSize: 16 }}>{formatVND(totalRefund)}</span>
+                                        <span style={{ color: '#6b7280' }}>Mã giảm giá đã dùng</span>
+                                        <span style={{ fontWeight: 600, color: '#d97706' }}>{order.couponCode || 'Có'} (-{formatVND(order.couponDiscountAmount)})</span>
                                     </div>
-                                    <div style={{ fontSize: 12, color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 6, padding: '5px 8px' }}>
-                                        ⚠ Số tiền hoàn chính xác có thể thấp hơn nếu đơn hàng có dùng mã giảm giá. Admin sၥ xác nhận số chính xác sau.
-                                    </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, borderTop: '1px solid #e5e7eb' }}>
+                                    <span style={{ fontWeight: 700, fontSize: 15 }}>Dự kiến hoàn tiền</span>
+                                    <span style={{ fontWeight: 700, color: '#16a34a', fontSize: 16 }}>{formatVND(totalRefund)}</span>
                                 </div>
                             </div>
 
@@ -473,7 +564,7 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                     >
                         {step === 1 ? 'Hủy' : '← Quay lại'}
                     </button>
-                    {step < 3 ? (
+                    {step < 4 ? (
                         <button className="acc-btn-primary" style={{ padding: '8px 24px', fontSize: 14 }} onClick={handleNext}>
                             Tiếp theo →
                         </button>

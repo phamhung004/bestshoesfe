@@ -177,7 +177,19 @@ const ReturnManagement = () => {
         try {
             const response = await returnAPI.getById(ret.return_id);
             if (response?.data) {
-                setSelectedReturnDetail(normalizeReturn(response.data));
+                const raw = response.data;
+                console.log('[ReturnDetail] raw API response:', {
+                    bankAccount: raw.bankAccount,
+                    bankName: raw.bankName,
+                    refundMethod: raw.refundMethod,
+                });
+                const normalized = normalizeReturn(raw);
+                console.log('[ReturnDetail] normalized:', {
+                    bank_account: normalized.bank_account,
+                    bank_name: normalized.bank_name,
+                    refund_method: normalized.refund_method,
+                });
+                setSelectedReturnDetail(normalized);
             }
         } catch (err) {
             console.error('Failed to fetch return detail:', err);
