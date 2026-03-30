@@ -25,12 +25,18 @@ const normColor = (c) => ({
 /** Generate variant combinations (additive — preserves existing) */
 const generateVariants = (sizes, colors, existing) => {
   const map = new Map(
-    existing.map((v) => [`${v.size}-${v.color.name}`, v])
+    existing.map((v) => {
+      const vSizeName = typeof v.size === 'object' ? v.size?.name : (v.sizeName || v.size);
+      const vColorName = v.color?.name || v.colorName || v.color;
+      return [`${vSizeName}-${vColorName}`, v];
+    })
   );
   return sizes.flatMap((size) =>
-    colors.map((color) =>
-      map.get(`${size.name}-${color.name}`) || {
-        id: `new-${Date.now()}-${Math.random().toString(36).slice(2)}-${size.name}-${color.name}`,
+    colors.map((color) => {
+      const vSizeName = size.name;
+      const vColorName = color.name;
+      return map.get(`${vSizeName}-${vColorName}`) || {
+        id: `new-${Date.now()}-${Math.random().toString(36).slice(2)}-${vSizeName}-${vColorName}`,
         size:    size.name,
         sizeId:  size.id,
         color,
@@ -41,8 +47,8 @@ const generateVariants = (sizes, colors, existing) => {
         weight: '',
         status: 'ACTIVE',
         images: [],
-      }
-    )
+      };
+    })
   );
 };
 

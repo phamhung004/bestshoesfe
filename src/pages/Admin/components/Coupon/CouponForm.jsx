@@ -32,8 +32,8 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
                 maximumDiscount: coupon.maximumDiscount || '',
                 usageLimit: coupon.usageLimit || '',
                 perCustomerLimit: coupon.perCustomerLimit != null ? String(coupon.perCustomerLimit) : '1',
-                startDate: coupon.startDate ? new Date(coupon.startDate).toISOString().slice(0, 16) : '',
-                endDate: coupon.endDate ? new Date(coupon.endDate).toISOString().slice(0, 16) : '',
+                startDate: coupon.startDate ? coupon.startDate.slice(0, 16) : '',
+                endDate: coupon.endDate ? coupon.endDate.slice(0, 16) : '',
                 status: coupon.status !== undefined ? coupon.status : true,
             });
         } else {
@@ -139,8 +139,8 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
                 maximumDiscount: formData.maximumDiscount ? parseFloat(formData.maximumDiscount) : null,
                 usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null,
                 perCustomerLimit: formData.perCustomerLimit ? parseInt(formData.perCustomerLimit) : null,
-                startDate: new Date(formData.startDate).toISOString(),
-                endDate: new Date(formData.endDate).toISOString(),
+                startDate: formData.startDate,
+                endDate: formData.endDate,
                 status: formData.status,
                 createdBy: createdBy,
             };

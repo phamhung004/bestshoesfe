@@ -19,8 +19,8 @@ const PromotionForm = ({ promotion, onSave, onCancel, isEditing = false }) => {
                 type: promotion.type || 'seasonal',
                 discountPercentage: promotion.discountPercentage || '',
                 discountAmount: promotion.discountAmount || '',
-                startDate: promotion.startDate ? new Date(promotion.startDate).toISOString().slice(0, 16) : '',
-                endDate: promotion.endDate ? new Date(promotion.endDate).toISOString().slice(0, 16) : '',
+                startDate: promotion.startDate ? promotion.startDate.slice(0, 16) : '',
+                endDate: promotion.endDate ? promotion.endDate.slice(0, 16) : '',
                 isActive: promotion.isActive !== undefined ? promotion.isActive : true,
             });
         } else {
@@ -75,8 +75,8 @@ const PromotionForm = ({ promotion, onSave, onCancel, isEditing = false }) => {
                 description: formData.description.trim(),
                 discountPercentage: formData.discountPercentage ? parseFloat(formData.discountPercentage) : null,
                 discountAmount: formData.discountAmount ? parseFloat(formData.discountAmount) : null,
-                startDate: new Date(formData.startDate).toISOString(),
-                endDate: new Date(formData.endDate).toISOString(),
+                startDate: formData.startDate,
+                endDate: formData.endDate,
             };
             let result;
             if (isEditing && promotion) {
