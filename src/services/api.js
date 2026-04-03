@@ -392,6 +392,9 @@ export const couponAPI = {
     method: 'PATCH',
   }),
 
+  // Get coupon usage history
+  getUsageHistory: (id) => apiCall(`/coupons/${id}/usage`),
+
   // Validate coupon
   validate: (code, customerId = null) => {
     const params = new URLSearchParams();

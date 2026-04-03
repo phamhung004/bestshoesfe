@@ -1,8 +1,9 @@
 import React from 'react';
 import {
     X, Pencil, Trash2, Eye, EyeOff, Copy,
-    FileText, Clock, Timer, Ticket, DollarSign,
+    FileText, Clock, Timer, Ticket, DollarSign, History,
 } from 'lucide-react';
+import CouponUsageHistory from './CouponUsageHistory';
 
 /* ── helpers ─────────────────────────────────────────────────────── */
 
@@ -169,6 +170,12 @@ const CouponSlideOver = ({
                                 {coupon.usageLimit ? `${coupon.usageLimit} lần` : 'Không giới hạn'}
                             </span>
                         </div>
+                        <div className="cm-so-info-row">
+                            <span className="cm-so-info-label">Giới hạn mỗi khách</span>
+                            <span className="cm-so-info-value">
+                                {coupon.perCustomerLimit ? `${coupon.perCustomerLimit} lần` : 'Không giới hạn'}
+                            </span>
+                        </div>
 
                         {coupon.usageLimit > 0 && (
                             <div className="cm-so-usage-progress">
@@ -215,6 +222,14 @@ const CouponSlideOver = ({
                                 {countdown}
                             </div>
                         )}
+                    </div>
+
+                    {/* Section 4: Lịch sử sử dụng */}
+                    <div className="cm-so-card">
+                        <h3><History size={14} style={{ marginRight: 6, verticalAlign: -2 }} />Lịch sử sử dụng
+                            <span className="cm-usage-count">({coupon.usedCount || 0})</span>
+                        </h3>
+                        <CouponUsageHistory couponId={coupon.couponId} />
                     </div>
                 </div>
 
