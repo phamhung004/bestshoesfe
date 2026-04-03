@@ -46,11 +46,9 @@ const ProductListItem = ({ product, onCardClick, onQuickAdd, pulseId }) => {
             <div className="pos-list-item-info">
                 <span className="pos-list-item-name">{product.name}</span>
                 <span className="pos-list-item-brand">{brandName}</span>
-                {product.sku && (
-                    <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
-                        {product.sku}
-                    </span>
-                )}
+                <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
+                    SKU: {product.sku || '—'}
+                </span>
             </div>
             <div className={`pos-list-item-price${hasPromo ? ' has-promo' : ''}`}>{priceRange}</div>
             <div className="pos-list-item-stock">

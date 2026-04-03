@@ -271,24 +271,6 @@ const TabBasicInfo = ({ data, onChange, errors = {}, categories = [], brands = [
         <div className="pm-form-section">
           <div className="pm-form-section-title">Thông tin bổ sung</div>
 
-          {/* Mã SKU sản phẩm */}
-          <div className="pm-field">
-            <label className="pm-label">
-              Mã sản phẩm (SKU) <span className="req">*</span>
-            </label>
-            <input
-              className={`pm-input ${errors.sku ? 'error' : ''}`}
-              placeholder="VD: NK-AM270-001"
-              maxLength={50}
-              value={data.sku || ''}
-              onChange={(e) => onChange('sku', e.target.value.toUpperCase())}
-            />
-            {errors.sku
-              ? <span className="pm-field-error">{errors.sku}</span>
-              : <span className="pm-field-hint">Mã định danh duy nhất cho sản phẩm (không trùng lặp)</span>
-            }
-          </div>
-
           <div className="pm-field">
             <label className="pm-label">Khối lượng (gram)</label>
             <input

@@ -77,7 +77,7 @@ const ProductFilterBar = ({
           <input
             type="text"
             className="pm-search-input"
-            placeholder="Tìm tên sản phẩm, mã SKU, thương hiệu..."
+            placeholder="Tìm tên sản phẩm, mã code, thương hiệu..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
           />

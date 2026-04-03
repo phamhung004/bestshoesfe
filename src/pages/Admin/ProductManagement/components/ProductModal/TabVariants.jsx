@@ -471,6 +471,7 @@ const TabVariants = ({ variants = [], onChange, errors = {}, sizes: sizeProp, co
             <table className="pm-variant-tbl">
               <thead>
                 <tr>
+                  <th>SKU</th>
                   <th>Size</th>
                   <th>Màu</th>
                   <th style={{ minWidth: 110 }}>Giá bán (₫)</th>
@@ -483,6 +484,11 @@ const TabVariants = ({ variants = [], onChange, errors = {}, sizes: sizeProp, co
               <tbody>
                 {variants.map((v) => (
                   <tr key={v.id}>
+                    <td>
+                      <span style={{ fontFamily: 'monospace', fontSize: 12 }}>
+                        {v.sku || v.variantSku || '—'}
+                      </span>
+                    </td>
                     <td>
                       <span style={{ fontWeight: 700, fontSize: 13 }}>{v.size}</span>
                     </td>

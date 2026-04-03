@@ -91,24 +91,18 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick, searchInp
 
             {/* Filter row */}
             <div className="pos-filter-row">
-                {/* Category pills */}
-                <div className="pos-category-tabs">
-                    <button
-                        className={`pos-cat-pill${!activeCat ? ' active' : ''}`}
-                        onClick={() => setActiveCat(null)}
-                    >
-                        Tất cả
-                    </button>
+                {/* Category dropdown */}
+                <select
+                    className="pos-brand-select"
+                    value={activeCat || ''}
+                    onChange={e => setActiveCat(e.target.value ? Number(e.target.value) : null)}
+                    aria-label="Lọc theo danh mục"
+                >
+                    <option value="">Tất cả danh mục</option>
                     {categories.map(c => (
-                        <button
-                            key={c.categoryId}
-                            className={`pos-cat-pill${activeCat === c.categoryId ? ' active' : ''}`}
-                            onClick={() => setActiveCat(activeCat === c.categoryId ? null : c.categoryId)}
-                        >
-                            {c.name}
-                        </button>
+                        <option key={c.categoryId} value={c.categoryId}>{c.name}</option>
                     ))}
-                </div>
+                </select>
 
                 <div className="pos-filter-sep" />
 
@@ -127,40 +121,33 @@ const ProductBrowser = ({ onAddToCart, pulseProductId, onProductClick, searchInp
 
                 <div className="pos-filter-sep" />
 
-                {/* Size chips */}
-                <div className="pos-size-chips">
-                    <button
-                        className={`pos-size-chip${!activeSize ? ' active' : ''}`}
-                        onClick={() => setActiveSize(null)}
-                    >
-                        Tất cả
-                    </button>
+                {/* Size dropdown */}
+                <select
+                    className="pos-brand-select"
+                    value={activeSize || ''}
+                    onChange={e => setActiveSize(e.target.value ? Number(e.target.value) : null)}
+                    aria-label="Lọc theo size"
+                >
+                    <option value="">Tất cả size</option>
                     {sizes.map(s => (
-                        <button
-                            key={s.sizeId}
-                            className={`pos-size-chip${activeSize === s.sizeId ? ' active' : ''}`}
-                            onClick={() => setActiveSize(activeSize === s.sizeId ? null : s.sizeId)}
-                        >
-                            {s.sizeName}
-                        </button>
+                        <option key={s.sizeId} value={s.sizeId}>{s.sizeName}</option>
                     ))}
-                </div>
+                </select>
 
                 <div className="pos-filter-sep" />
 
-                {/* Color dot filters */}
-                <div className="pos-color-dots">
+                {/* Color dropdown */}
+                <select
+                    className="pos-brand-select"
+                    value={activeColor || ''}
+                    onChange={e => setActiveColor(e.target.value ? Number(e.target.value) : null)}
+                    aria-label="Lọc theo màu"
+                >
+                    <option value="">Tất cả màu</option>
                     {Array.isArray(colors) && colors.map(c => (
-                        <button
-                            key={c.colorId}
-                            className={`pos-color-dot-filter${activeColor === c.colorId ? ' active' : ''}`}
-                            style={{ background: c.colorCode }}
-                            onClick={() => setActiveColor(activeColor === c.colorId ? null : c.colorId)}
-                            aria-label={`Lọc màu ${c.colorName}`}
-                            title={c.colorName}
-                        />
+                        <option key={c.colorId} value={c.colorId}>{c.colorName}</option>
                     ))}
-                </div>
+                </select>
 
                 {/* Clear filters button */}
                 {hasActiveFilters && (

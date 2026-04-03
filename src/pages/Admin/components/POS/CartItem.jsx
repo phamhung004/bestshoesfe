@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Tag, X, Minus, Plus } from 'lucide-react';
+import { Tag, X } from 'lucide-react';
 import { formatVND } from './posUtils';
 import { usePOS } from './POSContext';
 
@@ -49,20 +49,21 @@ const CartItem = ({ item, onUpdateQty, onRemove }) => {
             </div>
 
             <div className="pos-cart-item-qty">
-                <div className="pos-qty-stepper">
-                    <button
-                        className="pos-qty-btn"
-                        onClick={() => onUpdateQty(item.cartKey, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
-                        aria-label="Giảm số lượng"
-                    ><Minus size={14} /></button>
-                    <span className="pos-qty-value">{item.quantity}</span>
-                    <button
-                        className="pos-qty-btn"
-                        onClick={() => onUpdateQty(item.cartKey, item.quantity + 1)}
-                        aria-label="Tăng số lượng"
-                    ><Plus size={14} /></button>
-                </div>
+                <input
+                    type="number"
+                    min={1}
+                    max={item.stock || undefined}
+                    className="pos-qty-value"
+                    value={item.quantity}
+                    onChange={(e) => onUpdateQty(item.cartKey, e.target.value)}
+                    onBlur={(e) => {
+                        const val = Number(e.target.value);
+                        if (!val || val < 1) {
+                            onUpdateQty(item.cartKey, 1);
+                        }
+                    }}
+                    aria-label="Nhập số lượng"
+                />
             </div>
 
             <div className="pos-cart-item-total">

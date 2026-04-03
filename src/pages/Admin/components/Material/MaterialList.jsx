@@ -4,6 +4,16 @@ import { materialAPI } from "../../../../services/api";
 import { useToast } from "../../../../context/useToast";
 import "../Brand/BrandList.css";
 
+const normalizeStatus = (value) => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const v = value.trim().toLowerCase();
+    return v === "true" || v === "1" || v === "active" || v === "hoat_dong";
+  }
+  return false;
+};
+
 const MaterialList = ({ onEdit, onAdd, refreshTrigger }) => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -20,7 +30,13 @@ const MaterialList = ({ onEdit, onAdd, refreshTrigger }) => {
       // Backend returns: { status: 0, message: "...", data: { content: [...], ... } }
       const itemsList =
         response?.data?.content || response?.content || response || [];
-      setItems(Array.isArray(itemsList) ? itemsList : []);
+      const normalizedItems = Array.isArray(itemsList)
+        ? itemsList.map((it) => ({
+            ...it,
+            status: normalizeStatus(it?.status),
+          }))
+        : [];
+      setItems(normalizedItems);
       setError(null);
     } catch (err) {
       setError("Không thể tải chất liệu");

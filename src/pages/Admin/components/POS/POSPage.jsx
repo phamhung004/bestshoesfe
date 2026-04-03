@@ -8,6 +8,7 @@ import { POSProvider } from './POSContext';
 import { posAPI } from '../../../../services/api';
 import { useToast } from '../../../../context/ToastContext';
 import { formatVND } from './posUtils';
+import ConfirmDialog from '../../../../components/common/ConfirmDialog';
 import './POSPage.css';
 
 /**
@@ -44,6 +45,7 @@ const POSPage = () => {
     const [holdOrders, setHoldOrders] = useState([]);
     const [isSavingHold, setIsSavingHold] = useState(false);
     const [activeOrderId, setActiveOrderId] = useState(null); // null = new order
+    const [duplicateVariantWarning, setDuplicateVariantWarning] = useState(null);
 
     // Ref for search input (keyboard shortcut F1)
     const searchInputRef = useRef(null);
@@ -110,14 +112,30 @@ const POSPage = () => {
     }, [subtotal, appliedCoupon, cartItems.length, setAppliedCoupon, setDiscountAmount]);
 
     // ── Cart actions ────────────────────────────────────────────
-    const addToCart = useCallback((product, variant, qty = 1) => {
+    const performAddToCart = useCallback((product, variant, qty = 1) => {
         const cartKey = `${variant.variantId}`;
+        const requestedQty = Number(qty) || 1;
+
+        let didAdd = false;
+        let blockedByStock = false;
 
         setCartItems(prev => {
             const existing = prev.find(i => i.cartKey === cartKey);
+            const currentQty = existing ? existing.quantity : 0;
+            const safeStock = Number(variant.stock || 0);
+            const allowedToAdd = Math.max(0, safeStock - currentQty);
+            const finalAddQty = Math.min(requestedQty, allowedToAdd);
+
+            if (finalAddQty <= 0) {
+                blockedByStock = true;
+                return prev;
+            }
+
+            didAdd = true;
+
             if (existing) {
                 return prev.map(i =>
-                    i.cartKey === cartKey ? { ...i, quantity: i.quantity + qty } : i
+                    i.cartKey === cartKey ? { ...i, quantity: i.quantity + finalAddQty, stock: safeStock } : i
                 );
             }
             return [...prev, {
@@ -132,25 +150,62 @@ const POSPage = () => {
                 originalPrice: variant.price,
                 promotionName: variant.promotionName || null,
                 discountPercentage: variant.discountPercentage || null,
-                quantity: qty,
+                stock: safeStock,
+                quantity: finalAddQty,
             }];
         });
 
-        // Pulse animation on the product card
+        if (blockedByStock) {
+            showToast(`Không thể thêm quá tồn kho. Tồn hiện tại: ${variant.stock}.`, 'warning');
+            return false;
+        }
+
+        if (!didAdd) return false;
+
         setPulseProductId(product.productId);
         setTimeout(() => setPulseProductId(null), 600);
 
-        // Cart badge bounce
         setCartBounce(true);
         setTimeout(() => setCartBounce(false), 400);
-    }, []);
+        return true;
+    }, [showToast]);
+
+    const addToCart = useCallback((product, variant, qty = 1) => {
+        const duplicateInHold = holdOrders
+            .filter(h => h.orderId !== activeOrderId)
+            .find(h => Array.isArray(h.items) && h.items.some(it => Number(it.variantId) === Number(variant.variantId)));
+
+        if (duplicateInHold) {
+            const duplicatedItem = duplicateInHold.items.find(it => Number(it.variantId) === Number(variant.variantId));
+            setDuplicateVariantWarning({
+                orderLabel: duplicateInHold.customerName || duplicateInHold.orderNumber || duplicateInHold.orderId,
+                quantity: duplicatedItem?.quantity || 0,
+                pendingAdd: { product, variant, qty },
+            });
+            return;
+        }
+
+        performAddToCart(product, variant, qty);
+    }, [holdOrders, activeOrderId, performAddToCart]);
 
     const updateCartQty = useCallback((cartKey, newQty) => {
-        if (newQty < 1) return;
+        const parsedQty = Number(newQty);
+        if (!Number.isFinite(parsedQty) || parsedQty < 1) return;
+
         setCartItems(prev =>
-            prev.map(i => (i.cartKey === cartKey ? { ...i, quantity: newQty } : i))
+            prev.map(i => {
+                if (i.cartKey !== cartKey) return i;
+                const maxStock = Number.isFinite(Number(i.stock)) ? Number(i.stock) : null;
+                if (maxStock != null) {
+                    if (parsedQty > maxStock) {
+                        showToast(`Không thể vượt tồn kho (${maxStock}).`, 'warning');
+                        return { ...i, quantity: maxStock };
+                    }
+                }
+                return { ...i, quantity: parsedQty };
+            })
         );
-    }, []);
+    }, [showToast]);
 
     const removeCartItem = useCallback((cartKey) => {
         setCartItems(prev => prev.filter(i => i.cartKey !== cartKey));
@@ -313,6 +368,7 @@ const POSPage = () => {
             promotionName: item.promotionName || null,
             discountPercentage: null,
             quantity: item.quantity,
+            stock: item.stock ?? null,
         }));
         setCartItems(restoredItems);
 
@@ -577,6 +633,25 @@ const POSPage = () => {
                     onClose={handleNewOrder}
                 />
             )}
+
+            <ConfirmDialog
+                open={!!duplicateVariantWarning}
+                title="Sản phẩm đã có ở hóa đơn chờ khác"
+                message={duplicateVariantWarning
+                    ? `Sản phẩm này đã tồn tại ở hóa đơn chờ "${duplicateVariantWarning.orderLabel}" với số lượng ${duplicateVariantWarning.quantity}. Bạn muốn vẫn thêm vào đơn hiện tại hay hủy?`
+                    : ''}
+                confirmText="Vẫn thêm"
+                cancelText="Cancel"
+                variant="primary"
+                onConfirm={() => {
+                    const pending = duplicateVariantWarning?.pendingAdd;
+                    setDuplicateVariantWarning(null);
+                    if (pending) {
+                        performAddToCart(pending.product, pending.variant, pending.qty);
+                    }
+                }}
+                onCancel={() => setDuplicateVariantWarning(null)}
+            />
         </div>
         </POSProvider>
     );

@@ -349,6 +349,12 @@ const ProductDetailPage = () => {
 
                     {/* Meta tags */}
                     <div className="pdp-meta">
+                        {(product.code || product.productCode) && (
+                            <span>Mã sản phẩm: <strong>{product.code || product.productCode}</strong></span>
+                        )}
+                        {(selectedVariant?.sku || selectedVariant?.variantSku) && (
+                            <span>SKU biến thể: <strong>{selectedVariant?.sku || selectedVariant?.variantSku}</strong></span>
+                        )}
                         {product.categoryName && (
                             <span>Danh mục: <strong>{product.categoryName}</strong></span>
                         )}

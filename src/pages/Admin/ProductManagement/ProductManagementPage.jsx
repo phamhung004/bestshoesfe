@@ -231,9 +231,9 @@ const matchesFilters = (product, filters) => {
   if (search) {
     const q = search.toLowerCase();
     const inName  = product.name.toLowerCase().includes(q);
-    const inSku   = (product.sku || '').toLowerCase().includes(q);
+    const inCode  = (product.code || product.productCode || '').toLowerCase().includes(q);
     const inBrand = (product.brand?.name || '').toLowerCase().includes(q);
-    if (!inName && !inSku && !inBrand) return false;
+    if (!inName && !inCode && !inBrand) return false;
   }
 
   if (categoryId && String(product.category?.id) !== categoryId) return false;
@@ -539,7 +539,6 @@ const ProductManagementPage = () => {
       brandId:       basicInfo.brandId    ? Number(basicInfo.brandId)    : null,
       materialId:    basicInfo.materialId ? Number(basicInfo.materialId) : null,
       status:        basicInfo.status || 'ACTIVE',
-      sku:           basicInfo.sku?.trim() || '',
       tags:          basicInfo.tags || [],
       slug:          basicInfo.slug || slugify(basicInfo.name),
       seoTitle:      basicInfo.seoTitle || '',

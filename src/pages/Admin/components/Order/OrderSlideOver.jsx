@@ -515,11 +515,9 @@ const OrderSlideOver = ({
                                         />
                                         <div className="om-so-item-info" style={{ flex: 1 }}>
                                             <span className="om-so-item-name">{item.product?.name}</span>
-                                            {item.product?.sku && (
-                                                <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
-                                                    {item.product.sku}
-                                                </span>
-                                            )}
+                                            <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
+                                                SKU: {item.product?.sku || item.sku || item.variantSku || '—'}
+                                            </span>
                                             <span className="om-so-item-variant">
                                                 Size: {item.size?.size_name} / Màu: {item.color?.color_name}
                                             </span>
@@ -603,11 +601,12 @@ const OrderSlideOver = ({
                                     />
                                     <div className="om-so-item-info">
                                         <span className="om-so-item-name">{item.product?.name}</span>
-                                        {item.product?.sku && (
-                                            <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
-                                                {item.product.sku}
-                                            </span>
-                                        )}
+                                        <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
+                                            Code: {item.product?.code || item.product?.productCode || '—'}
+                                        </span>
+                                        <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
+                                            SKU: {item.product?.sku || item.sku || item.variantSku || '—'}
+                                        </span>
                                         <span className="om-so-item-variant">
                                             Size: {item.size?.size_name} / Màu: {item.color?.color_name}
                                         </span>

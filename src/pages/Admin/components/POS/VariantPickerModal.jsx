@@ -49,7 +49,9 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
 
     const handleAdd = () => {
         if (!selectedVariant || selectedVariant.stock <= 0) return;
-        onAddToCart(product, selectedVariant, quantity);
+        const safeQty = Number(quantity) || 1;
+        const finalQty = Math.min(Math.max(1, safeQty), selectedVariant.stock);
+        onAddToCart(product, selectedVariant, finalQty);
         onClose();
     };
 
@@ -62,6 +64,9 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
                     <div>
                         <div className="pos-modal-title">{product.name}</div>
                         <div className="pos-modal-brand">{getBrandName(product.brandId)}</div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
+                            SKU: {product.sku || '—'}
+                        </div>
                     </div>
                     <button className="pos-modal-close" onClick={onClose} aria-label="Đóng">×</button>
                 </div>
@@ -111,6 +116,9 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
                     {/* Selected variant info */}
                     {selectedVariant && (
                         <div className="pos-modal-variant-info">
+                            <div style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace', marginBottom: 4 }}>
+                                SKU: {selectedVariant.sku || selectedVariant.variantSku || '—'}
+                            </div>
                             {selectedVariant.promotionPrice != null ? (
                                 <>
                                     <span className="pos-modal-variant-price promo">
@@ -139,15 +147,26 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
                         </div>
                     )}
 
-                    {/* Quantity stepper */}
+                    {/* Quantity input */}
                     {selectedVariant && selectedVariant.stock > 0 && (
                         <div className="pos-modal-qty">
                             <div className="pos-modal-label" style={{ marginBottom: 0 }}>Số lượng</div>
-                            <div className="pos-qty-stepper">
-                                <button className="pos-qty-btn" onClick={() => setQuantity(q => Math.max(1, q - 1))} disabled={quantity <= 1}>−</button>
-                                <span className="pos-qty-value">{quantity}</span>
-                                <button className="pos-qty-btn" onClick={() => setQuantity(q => Math.min(selectedVariant.stock, q + 1))} disabled={quantity >= selectedVariant.stock}>+</button>
-                            </div>
+                            <input
+                                type="number"
+                                min={1}
+                                max={selectedVariant.stock}
+                                className="pos-qty-value"
+                                value={quantity}
+                                onChange={(e) => {
+                                    const raw = Number(e.target.value);
+                                    if (!Number.isFinite(raw)) {
+                                        setQuantity(1);
+                                        return;
+                                    }
+                                    const clamped = Math.min(selectedVariant.stock, Math.max(1, raw));
+                                    setQuantity(clamped);
+                                }}
+                            />
                         </div>
                     )}
                 </div>

@@ -7,9 +7,10 @@
 .pos-page-root {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 80px);
+    min-height: calc(100vh - 80px);
+    height: auto;
     margin: -24px;
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* ── Hold Order Tab Bar ───────────────────────────────────── */
@@ -201,7 +202,7 @@
     display: flex;
     gap: 0;
     flex: 1;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .pos-left-panel {
@@ -218,8 +219,8 @@
     display: flex;
     flex-direction: column;
     background: #fff;
-    overflow: hidden;
-    height: 100%;
+    overflow: visible;
+    height: auto;
 }
 
 /* ── Wait time badge in header ────────────────────────────── */
@@ -471,7 +472,7 @@
 
 .pos-product-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 14px;
 }
 
@@ -938,14 +939,21 @@
 }
 
 .pos-qty-value {
-    width: 48px;
+    width: 64px;
     text-align: center;
     font-size: 14px;
     font-weight: 600;
     color: var(--gray-900);
-    border: none;
+    border: 1px solid var(--gray-200);
     outline: none;
-    background: transparent;
+    background: #fff;
+    border-radius: 8px;
+    height: 36px;
+}
+
+.pos-qty-value:focus {
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 2px var(--primary-100);
 }
 
 .pos-modal-footer {
@@ -1613,8 +1621,8 @@
 
 /* ── Right Panel: Cart items ─────────────────────────────── */
 .pos-cart-items {
-    flex: 1;
-    overflow-y: auto;
+    flex: 0 0 auto;
+    overflow: visible;
     padding: 10px 20px;
 }
 
@@ -2776,7 +2784,7 @@
     }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
     .pos-page-root {
         height: auto;
         min-height: 100vh;

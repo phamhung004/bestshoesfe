@@ -223,7 +223,7 @@ const ProductTable = ({
                   )}
                 </td>
 
-                {/* Name / SKU */}
+                {/* Name / Code */}
                 <td>
                   <div>
                     <span className="pm-product-name">
@@ -237,7 +237,7 @@ const ProductTable = ({
                         ) : null
                       )}
                     </span>
-                    <div className="pm-product-sku">SKU: {product.sku}</div>
+                    <div className="pm-product-sku">Code: {product.code || product.productCode || '—'}</div>
                     {/* Color dots */}
                     {visibleColors.length > 0 && (
                       <div className="pm-color-dots">

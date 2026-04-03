@@ -15,6 +15,7 @@ import PaymentMethodSelector from './components/PaymentMethodSelector';
 import OrderNoteInput from './components/OrderNoteInput';
 import OrderReviewPanel from './components/OrderReviewPanel';
 import OrderSuccessState from './components/OrderSuccessState';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
 import {
     getItemSubtotal,
     formatAddress,
@@ -216,6 +217,7 @@ const CheckoutPage = () => {
     const [state, dispatch] = useReducer(checkoutReducer, user, createInitialState);
     const formRef = useRef(null);
     const [savedAddresses, setSavedAddresses] = useState([]);
+    const [showConfirmOrder, setShowConfirmOrder] = useState(false);
 
     // Redirect to cart if empty (and not in success state)
     useEffect(() => {
@@ -500,12 +502,11 @@ const CheckoutPage = () => {
     };
 
     // ── Submit ──────────────────────────────────────────
-    const handleSubmit = useCallback(async () => {
+    const handleSubmit = useCallback(() => {
         const errors = validateAll();
         const errorFields = Object.keys(errors).filter((f) => errors[f]);
 
         if (errorFields.length > 0) {
-            // Scroll to first error
             const firstEl = document.querySelector(`.co-form-input.error, .co-form-select.error`);
             if (firstEl) {
                 firstEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -513,6 +514,10 @@ const CheckoutPage = () => {
             return;
         }
 
+        setShowConfirmOrder(true);
+    }, [state]);
+
+    const submitOrder = useCallback(async () => {
         // Start submitting
         dispatch({ type: 'SET_SUBMITTING', payload: true });
 
@@ -810,6 +815,21 @@ const CheckoutPage = () => {
             {state.toast && (
                 <div className="co-toast">{state.toast}</div>
             )}
+
+            <ConfirmDialog
+                open={showConfirmOrder}
+                title="Xác nhận đặt hàng"
+                message="Bạn có chắc chắn muốn đặt đơn hàng này không?"
+                confirmText="Đặt hàng"
+                cancelText="Hủy"
+                variant="primary"
+                loading={state.isSubmitting}
+                onCancel={() => setShowConfirmOrder(false)}
+                onConfirm={async () => {
+                    setShowConfirmOrder(false);
+                    await submitOrder();
+                }}
+            />
         </div>
     );
 };

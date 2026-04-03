@@ -1,0 +1,97 @@
+.cf-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
+}
+
+.cf-dialog {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(2, 6, 23, 0.22);
+  border: 1px solid #e2e8f0;
+  padding: 20px;
+  animation: cf-pop 0.18s ease-out;
+}
+
+@keyframes cf-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.cf-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cf-message {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.cf-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cf-btn {
+  height: 38px;
+  min-width: 96px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 14px;
+}
+
+.cf-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cf-btn-ghost {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.cf-btn-ghost:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.cf-btn-primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.cf-btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.cf-btn-danger {
+  background: #dc2626;
+  color: #fff;
+}
+
+.cf-btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}

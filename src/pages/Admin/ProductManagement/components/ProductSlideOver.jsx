@@ -36,7 +36,7 @@ const ProductSlideOver = ({ product, onClose, onEdit }) => {
     { label: 'Danh mục',     value: product.category?.name || '—' },
     { label: 'Thương hiệu',  value: product.brand?.name    || '—' },
     { label: 'Chất liệu',   value: product.material?.name  || '—' },
-    { label: 'SKU',          value: product.sku             || '—' },
+    { label: 'Code',         value: product.code || product.productCode || '—' },
     {
       label: 'Ngày tạo',
       value: product.createdAt
@@ -63,7 +63,7 @@ const ProductSlideOver = ({ product, onClose, onEdit }) => {
               <span style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>{product.name}</span>
               <StatusBadge status={product.status} />
             </div>
-            <span style={{ fontSize: 12, color: '#94a3b8', fontFamily: 'monospace' }}>SKU: {product.sku}</span>
+            <span style={{ fontSize: 12, color: '#94a3b8', fontFamily: 'monospace' }}>Code: {product.code || product.productCode || '—'}</span>
           </div>
           <button className="pm-btn-icon" onClick={onClose} type="button" title="Đóng">
             <X size={18} />
@@ -140,6 +140,7 @@ const ProductSlideOver = ({ product, onClose, onEdit }) => {
                 <table className="pm-variant-table-sm">
                   <thead>
                     <tr>
+                      <th>SKU</th>
                       <th>Size</th>
                       <th>Màu</th>
                       <th>Giá bán</th>
@@ -149,6 +150,9 @@ const ProductSlideOver = ({ product, onClose, onEdit }) => {
                   <tbody>
                     {product.variants.map((v) => (
                       <tr key={v.id}>
+                        <td>
+                          <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{v.sku || v.variantSku || '—'}</span>
+                        </td>
                         <td>
                           <span style={{ fontWeight: 600 }}>{v.size}</span>
                         </td>

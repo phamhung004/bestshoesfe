@@ -3,6 +3,7 @@ import { X, Check, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react
 import TabBasicInfo from './TabBasicInfo';
 import TabVariants from './TabVariants';
 import TabImages from './TabImages';
+import ConfirmDialog from '../../../../../components/common/ConfirmDialog';
 import { slugify } from '../../mockProducts';
 
 const TABS = [
@@ -25,7 +26,6 @@ const emptyBasicInfo = {
   seoDescription: '',
   weight: '',
   launchDate: '',
-  sku: '',
 };
 
 /**
@@ -47,6 +47,7 @@ const ProductModal = ({ mode, product, categories = [], brands = [], materials =
   const [completedTabs, setCompletedTabs] = useState(new Set());
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+  const [showConfirmSave, setShowConfirmSave] = useState(false);
 
   // Tab 1 — Basic info form state
   const [basicInfo, setBasicInfo] = useState(() => {
@@ -65,7 +66,6 @@ const ProductModal = ({ mode, product, categories = [], brands = [], materials =
         seoDescription:  product.seoDescription || '',
         weight:          product.weight || '',
         launchDate:      product.launchDate || '',
-        sku:             product.sku || '',
       };
     }
     return { ...emptyBasicInfo };
@@ -112,7 +112,6 @@ const ProductModal = ({ mode, product, categories = [], brands = [], materials =
     else if (basicInfo.name.trim().length < 3) errs.name = 'Tên quá ngắn (tối thiểu 3 ký tự)';
     if (!basicInfo.categoryId) errs.categoryId = 'Vui lòng chọn danh mục';
     if (!basicInfo.brandId)    errs.brandId    = 'Vui lòng chọn thương hiệu';
-    if (!basicInfo.sku?.trim()) errs.sku = 'Mã sản phẩm (SKU) là bắt buộc';
     return errs;
   };
 
@@ -148,16 +147,7 @@ const ProductModal = ({ mode, product, categories = [], brands = [], materials =
     setErrors({});
   };
 
-  const handleSave = async () => {
-    const errs0 = validateTab0();
-    const errs1 = validateTab1();
-    const allErrs = { ...errs0, ...errs1 };
-    if (Object.keys(allErrs).length > 0) {
-      setErrors(allErrs);
-      setActiveTab(Object.keys(errs0).length > 0 ? 0 : 1);
-      return;
-    }
-
+  const submitSave = async () => {
     setSaving(true);
     setSaveError(null);
     try {
@@ -185,6 +175,19 @@ const ProductModal = ({ mode, product, categories = [], brands = [], materials =
     }
   };
 
+  const handleSave = async () => {
+    const errs0 = validateTab0();
+    const errs1 = validateTab1();
+    const allErrs = { ...errs0, ...errs1 };
+    if (Object.keys(allErrs).length > 0) {
+      setErrors(allErrs);
+      setActiveTab(Object.keys(errs0).length > 0 ? 0 : 1);
+      return;
+    }
+
+    setShowConfirmSave(true);
+  };
+
   /* ── Escape key ───────────────────────────────────────────── */
   useEffect(() => {
     const fn = (e) => { if (e.key === 'Escape') onCancel(); };
@@ -193,7 +196,7 @@ const ProductModal = ({ mode, product, categories = [], brands = [], materials =
   }, []);
 
   /* ── Error count per tab ──────────────────────────────────── */
-  const tab0Errors = ['name', 'categoryId', 'brandId', 'sku'].filter((k) => errors[k]).length;
+  const tab0Errors = ['name', 'categoryId', 'brandId'].filter((k) => errors[k]).length;
   const tab1Errors = ['variants'].filter((k) => errors[k]).length;
 
   return (
@@ -344,6 +347,25 @@ const ProductModal = ({ mode, product, categories = [], brands = [], materials =
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showConfirmSave}
+        title={mode === 'add' ? 'Xác nhận thêm sản phẩm' : 'Xác nhận lưu thay đổi'}
+        message={
+          mode === 'add'
+            ? 'Bạn có chắc chắn muốn thêm sản phẩm này không?'
+            : 'Bạn có chắc chắn muốn lưu các thay đổi của sản phẩm này không?'
+        }
+        confirmText={mode === 'add' ? 'Thêm sản phẩm' : 'Lưu thay đổi'}
+        cancelText="Hủy"
+        variant={mode === 'add' ? 'primary' : 'primary'}
+        loading={saving}
+        onCancel={() => setShowConfirmSave(false)}
+        onConfirm={async () => {
+          setShowConfirmSave(false);
+          await submitSave();
+        }}
+      />
 
       <style>{`
         @keyframes pm-spin {

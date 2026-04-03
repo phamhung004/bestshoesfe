@@ -153,6 +153,8 @@ const PromotionVariantList = ({ promotionId, promotion, onAddVariants }) => {
                         <tr>
                             <th style={{ width: 50 }}>Ảnh</th>
                             <th>Sản phẩm</th>
+                            <th>Code</th>
+                            <th>SKU</th>
                             <th>Size</th>
                             <th>Màu</th>
                             <th>Giá gốc</th>
@@ -166,7 +168,7 @@ const PromotionVariantList = ({ promotionId, promotion, onAddVariants }) => {
                     <tbody>
                         {filtered.length === 0 ? (
                             <tr>
-                                <td colSpan="10" style={{ textAlign: 'center', padding: 30, color: 'var(--gray-400)' }}>
+                                <td colSpan="12" style={{ textAlign: 'center', padding: 30, color: 'var(--gray-400)' }}>
                                     {variants.length === 0 ? 'Chưa có sản phẩm nào' : 'Không tìm thấy sản phẩm phù hợp'}
                                 </td>
                             </tr>
@@ -190,6 +192,8 @@ const PromotionVariantList = ({ promotionId, promotion, onAddVariants }) => {
                                         )}
                                     </td>
                                     <td style={{ fontWeight: 500 }}>{v.productName}</td>
+                                    <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{v.productCode || v.code || '—'}</td>
+                                    <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{v.sku || v.variantSku || '—'}</td>
                                     <td>{v.sizeName}</td>
                                     <td>
                                         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
