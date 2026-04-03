@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { formatVND, getItemPrice, getItemSubtotal } from '../mockCartData';
 
 const CartItemCard = ({
@@ -53,7 +54,11 @@ const CartItemCard = ({
                 {/* Details */}
                 <div className="cart-item-details">
                     <div className="cart-item-brand">{brandName}</div>
-                    <h3 className="cart-item-name">{item.product.name}</h3>
+                    <h3 className="cart-item-name">
+                        <Link to={`/products/${item.product.product_id}`} className="cart-item-name-link">
+                            {item.product.name}
+                        </Link>
+                    </h3>
                     <div className="cart-item-variant-row">
                         <span
                             className="cart-item-color-dot"

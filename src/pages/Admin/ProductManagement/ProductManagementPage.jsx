@@ -799,6 +799,8 @@ const ProductManagementPage = () => {
           colors={state.colors}
           onSave={handleSaveProduct}
           onCancel={() => dispatch({ type: 'CLOSE_MODAL' })}
+          onSizeCreated={(saved) => dispatch({ type: 'SET_LOOKUP_DATA', key: 'sizes', data: [...state.sizes, saved] })}
+          onColorCreated={(saved) => dispatch({ type: 'SET_LOOKUP_DATA', key: 'colors', data: [...state.colors, saved] })}
         />
       )}
 

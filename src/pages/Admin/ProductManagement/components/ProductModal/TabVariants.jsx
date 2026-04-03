@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Zap, Trash2, Plus } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Zap, Trash2, Plus, X, Loader2 } from 'lucide-react';
 import { MOCK_SIZES, MOCK_COLORS } from '../../mockProducts';
 import { formatPrice } from '../../../../../utils/formatPrice';
+import { sizeAPI, colorAPI } from '../../../../../services/api';
 
 /** Normalise a size object from either mock or API format */
 const normSize = (s) =>
@@ -71,16 +72,33 @@ const MarginBadge = ({ price, costPrice }) => {
  * TabVariants
  *
  * Props:
- *   variants  Variant[]
- *   onChange  (variants) => void
- *   errors    { variants? }
- *   sizes     Size[]   from API (optional, falls back to MOCK_SIZES)
- *   colors    Color[]  from API (optional, falls back to MOCK_COLORS)
+ *   variants        Variant[]
+ *   onChange        (variants) => void
+ *   errors          { variants? }
+ *   sizes           Size[]   from API (optional, falls back to MOCK_SIZES)
+ *   colors          Color[]  from API (optional, falls back to MOCK_COLORS)
+ *   onSizeCreated   (size)  => void  — notify parent when a new size is saved to DB
+ *   onColorCreated  (color) => void  — notify parent when a new color is saved to DB
  */
-const TabVariants = ({ variants = [], onChange, errors = {}, sizes: sizeProp, colors: colorProp }) => {
+const TabVariants = ({ variants = [], onChange, errors = {}, sizes: sizeProp, colors: colorProp, onSizeCreated, onColorCreated }) => {
   // Normalise sizes and colors — prefer real API data, fall back to mock
-  const allSizes  = (sizeProp  && sizeProp.length  ? sizeProp  : MOCK_SIZES ).map(normSize);
-  const allColors = (colorProp && colorProp.length ? colorProp : MOCK_COLORS).map(normColor);
+  const [allSizes,  setAllSizes]  = useState(() => (sizeProp  && sizeProp.length  ? sizeProp  : MOCK_SIZES ).map(normSize));
+  const [allColors, setAllColors] = useState(() => (colorProp && colorProp.length ? colorProp : MOCK_COLORS).map(normColor));
+
+  // Quick-add size state
+  const [showAddSize,    setShowAddSize]    = useState(false);
+  const [newSizeName,    setNewSizeName]    = useState('');
+  const [addingSizeLoading, setAddingSizeLoading] = useState(false);
+  const [sizeAddError,   setSizeAddError]   = useState('');
+  const sizeInputRef = useRef(null);
+
+  // Quick-add color state
+  const [showAddColor,      setShowAddColor]      = useState(false);
+  const [newColorName,      setNewColorName]      = useState('');
+  const [newColorCode,      setNewColorCode]      = useState('#000000');
+  const [addingColorLoading, setAddingColorLoading] = useState(false);
+  const [colorAddError,     setColorAddError]     = useState('');
+  const colorNameInputRef = useRef(null);
 
   const [selectedSizes, setSelectedSizes] = useState(
     () => {
@@ -99,6 +117,59 @@ const TabVariants = ({ variants = [], onChange, errors = {}, sizes: sizeProp, co
   const [bulkPrice, setBulkPrice] = useState('');
   const [bulkCost,  setBulkCost]  = useState('');
   const [bulkStock, setBulkStock] = useState('');
+
+  const handleAddSize = async () => {
+    const name = newSizeName.trim();
+    if (!name) return;
+    if (allSizes.some((s) => s.name.toLowerCase() === name.toLowerCase())) {
+      setNewSizeName('');
+      setShowAddSize(false);
+      return;
+    }
+    setAddingSizeLoading(true);
+    setSizeAddError('');
+    try {
+      const res = await sizeAPI.create({ sizeName: name, status: true });
+      const saved = res?.data ?? res;
+      const newSize = normSize(saved);
+      setAllSizes((prev) => [...prev, newSize]);
+      setSelectedSizes((prev) => [...prev, newSize]);
+      setNewSizeName('');
+      setShowAddSize(false);
+      if (onSizeCreated) onSizeCreated(saved);
+    } catch (err) {
+      setSizeAddError(err?.response?.data?.message || 'Không thể thêm size. Vui lòng thử lại.');
+    } finally {
+      setAddingSizeLoading(false);
+    }
+  };
+
+  const handleAddColor = async () => {
+    const name = newColorName.trim();
+    if (!name) return;
+    if (allColors.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
+      setNewColorName('');
+      setShowAddColor(false);
+      return;
+    }
+    setAddingColorLoading(true);
+    setColorAddError('');
+    try {
+      const res = await colorAPI.create({ colorName: name, colorCode: newColorCode, status: true });
+      const saved = res?.data ?? res;
+      const newColor = normColor(saved);
+      setAllColors((prev) => [...prev, newColor]);
+      setSelectedColors((prev) => [...prev, newColor]);
+      setNewColorName('');
+      setNewColorCode('#000000');
+      setShowAddColor(false);
+      if (onColorCreated) onColorCreated(saved);
+    } catch (err) {
+      setColorAddError(err?.response?.data?.message || 'Không thể thêm màu. Vui lòng thử lại.');
+    } finally {
+      setAddingColorLoading(false);
+    }
+  };
 
   const toggleSize = (size) => {
     setSelectedSizes((prev) =>
@@ -206,6 +277,47 @@ const TabVariants = ({ variants = [], onChange, errors = {}, sizes: sizeProp, co
             </button>
           ))}
         </div>
+
+        {/* Quick-add size */}
+        {showAddSize ? (
+          <div>
+            <div className="pm-quick-add-row">
+              <input
+                ref={sizeInputRef}
+                className="pm-quick-add-input"
+                placeholder="Tên size (vd: 46)"
+                value={newSizeName}
+                disabled={addingSizeLoading}
+                onChange={(e) => { setNewSizeName(e.target.value); setSizeAddError(''); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); handleAddSize(); }
+                  if (e.key === 'Escape') { setShowAddSize(false); setNewSizeName(''); setSizeAddError(''); }
+                }}
+                autoFocus
+              />
+              <button
+                type="button"
+                className="pm-quick-add-confirm"
+                onClick={handleAddSize}
+                disabled={addingSizeLoading || !newSizeName.trim()}
+              >
+                {addingSizeLoading ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : 'Thêm'}
+              </button>
+              <button type="button" className="pm-quick-add-cancel" disabled={addingSizeLoading} onClick={() => { setShowAddSize(false); setNewSizeName(''); setSizeAddError(''); }}>
+                <X size={13} />
+              </button>
+            </div>
+            {sizeAddError && <div className="pm-quick-add-error">{sizeAddError}</div>}
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="pm-quick-add-trigger"
+            onClick={() => { setShowAddSize(true); setTimeout(() => sizeInputRef.current?.focus(), 50); }}
+          >
+            <Plus size={12} /> Thêm size mới
+          </button>
+        )}
       </div>
 
       {/* Step 2 — Colors */}
@@ -237,6 +349,55 @@ const TabVariants = ({ variants = [], onChange, errors = {}, sizes: sizeProp, co
             );
           })}
         </div>
+
+        {/* Quick-add color */}
+        {showAddColor ? (
+          <div>
+            <div className="pm-quick-add-row">
+              <input
+                type="color"
+                className="pm-quick-add-color-picker"
+                value={newColorCode}
+                disabled={addingColorLoading}
+                onChange={(e) => setNewColorCode(e.target.value)}
+                title="Chọn màu"
+              />
+              <input
+                ref={colorNameInputRef}
+                className="pm-quick-add-input"
+                placeholder="Tên màu (vd: Nâu đất)"
+                value={newColorName}
+                disabled={addingColorLoading}
+                onChange={(e) => { setNewColorName(e.target.value); setColorAddError(''); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); handleAddColor(); }
+                  if (e.key === 'Escape') { setShowAddColor(false); setNewColorName(''); setNewColorCode('#000000'); setColorAddError(''); }
+                }}
+                autoFocus
+              />
+              <button
+                type="button"
+                className="pm-quick-add-confirm"
+                onClick={handleAddColor}
+                disabled={addingColorLoading || !newColorName.trim()}
+              >
+                {addingColorLoading ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : 'Thêm'}
+              </button>
+              <button type="button" className="pm-quick-add-cancel" disabled={addingColorLoading} onClick={() => { setShowAddColor(false); setNewColorName(''); setNewColorCode('#000000'); setColorAddError(''); }}>
+                <X size={13} />
+              </button>
+            </div>
+            {colorAddError && <div className="pm-quick-add-error">{colorAddError}</div>}
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="pm-quick-add-trigger"
+            onClick={() => { setShowAddColor(true); setTimeout(() => colorNameInputRef.current?.focus(), 50); }}
+          >
+            <Plus size={12} /> Thêm màu mới
+          </button>
+        )}
         {selectedColors.length > 0 && (
           <div style={{ marginTop: 8, fontSize: 12, color: '#64748b' }}>
             Đã chọn: {selectedColors.map((c) => c.name).join(', ')}

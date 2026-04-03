@@ -42,7 +42,7 @@ const emptyBasicInfo = {
  *   onSave     async ({ basicInfo, variants, variantImages, existingProduct }) => void
  *   onCancel   () => void
  */
-const ProductModal = ({ mode, product, categories = [], brands = [], materials = [], sizes = [], colors = [], onSave, onCancel }) => {
+const ProductModal = ({ mode, product, categories = [], brands = [], materials = [], sizes = [], colors = [], onSave, onCancel, onSizeCreated, onColorCreated }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [completedTabs, setCompletedTabs] = useState(new Set());
   const [saving, setSaving] = useState(false);
@@ -257,6 +257,8 @@ const ProductModal = ({ mode, product, categories = [], brands = [], materials =
               errors={errors}
               sizes={sizes}
               colors={colors}
+              onSizeCreated={onSizeCreated}
+              onColorCreated={onColorCreated}
             />
           )}
           {activeTab === 2 && (

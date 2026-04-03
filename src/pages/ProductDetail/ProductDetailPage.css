@@ -270,6 +270,27 @@
     color: #9ca3af;
     font-weight: 400;
 }
+.pdp-qty-incart-hint {
+    font-size: 12px;
+    color: #6366f1;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Cart validation error */
+.pdp-cart-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #dc2626;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
 
 /* CTA button */
 .pdp-add-btn {

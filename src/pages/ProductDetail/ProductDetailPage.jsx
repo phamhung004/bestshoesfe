@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProductDetail } from '../../hooks/useProductDetail';
 import { useCart } from '../../context/CartContext';
@@ -12,9 +12,10 @@ import './ProductDetailPage.css';
 const ProductDetailPage = () => {
     const { productId } = useParams();
     const navigate = useNavigate();
-    const { addToCart } = useCart();
+    const { addToCart, cartItems } = useCart();
     const [addingToCart, setAddingToCart] = useState(false);
     const [quantity, setQuantity] = useState(1);
+    const [cartError, setCartError] = useState('');
 
     const {
         product,
@@ -40,10 +41,21 @@ const ProductDetailPage = () => {
         return () => { document.title = 'BestShoes'; };
     }, [product]);
 
-    // Reset quantity when variant changes so qty never exceeds new stock
+    // Reset quantity and error when variant changes
     useEffect(() => {
         setQuantity(1);
+        setCartError('');
     }, [selectedVariant?.variantId]);
+
+    // How many of this variant the user already has in the cart
+    const cartQty = useMemo(() => {
+        if (!selectedVariant) return 0;
+        const found = cartItems.find(item => item.variant?.variant_id === selectedVariant.variantId);
+        return found ? found.quantity : 0;
+    }, [cartItems, selectedVariant]);
+
+    // Maximum additional quantity the user can add
+    const maxCanAdd = Math.max(0, stockCount - cartQty);
 
     if (loading) return <ProductDetailSkeleton />;
 
@@ -223,7 +235,7 @@ const ProductDetailPage = () => {
                             <div className="pdp-qty-stepper">
                                 <button
                                     className="pdp-qty-btn"
-                                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                                    onClick={() => { setQuantity(q => Math.max(1, q - 1)); setCartError(''); }}
                                     disabled={quantity <= 1}
                                     aria-label="Giảm số lượng"
                                 >−</button>
@@ -231,45 +243,89 @@ const ProductDetailPage = () => {
                                     className="pdp-qty-value"
                                     type="number"
                                     min={1}
-                                    max={stockCount}
+                                    max={maxCanAdd || stockCount}
                                     value={quantity}
                                     onChange={e => {
                                         const val = parseInt(e.target.value, 10);
-                                        if (!isNaN(val)) setQuantity(Math.min(stockCount, Math.max(1, val)));
+                                        if (!isNaN(val)) {
+                                            const clamped = Math.min(maxCanAdd || stockCount, Math.max(1, val));
+                                            setQuantity(clamped);
+                                            if (val > (maxCanAdd || stockCount)) {
+                                                setCartError(cartQty > 0
+                                                    ? `Bạn đã có ${cartQty} sản phẩm trong giỏ. Chỉ còn ${maxCanAdd} sản phẩm có thể thêm.`
+                                                    : `Số lượng tối đa là ${stockCount}.`);
+                                            } else {
+                                                setCartError('');
+                                            }
+                                        }
                                     }}
                                     onBlur={e => {
                                         const val = parseInt(e.target.value, 10);
-                                        setQuantity(isNaN(val) || val < 1 ? 1 : Math.min(stockCount, val));
+                                        const max = maxCanAdd || stockCount;
+                                        setQuantity(isNaN(val) || val < 1 ? 1 : Math.min(max, val));
                                     }}
                                     aria-label="Số lượng"
                                 />
                                 <button
                                     className="pdp-qty-btn"
-                                    onClick={() => setQuantity(q => Math.min(stockCount, q + 1))}
-                                    disabled={quantity >= stockCount}
+                                    onClick={() => {
+                                        const max = maxCanAdd || stockCount;
+                                        if (quantity >= max) {
+                                            setCartError(cartQty > 0
+                                                ? `Bạn đã có ${cartQty} sản phẩm trong giỏ. Chỉ còn ${maxCanAdd} sản phẩm có thể thêm.`
+                                                : `Số lượng tối đa là ${stockCount}.`);
+                                            return;
+                                        }
+                                        setQuantity(q => Math.min(max, q + 1));
+                                        setCartError('');
+                                    }}
+                                    disabled={quantity >= (maxCanAdd || stockCount)}
                                     aria-label="Tăng số lượng"
                                 >+</button>
                             </div>
                             <span className="pdp-qty-max-hint">/ {stockCount}</span>
+                            {cartQty > 0 && (
+                                <span className="pdp-qty-incart-hint">(đã có {cartQty} trong giỏ)</span>
+                            )}
                         </div>
                     )}
 
                     {/* CTA */}
+                    {cartError && (
+                        <div className="pdp-cart-error">
+                            ⚠ {cartError}
+                        </div>
+                    )}
                     <button
-                        className={`pdp-add-btn ${(!selectedVariant || !isInStock || addingToCart) ? 'disabled' : ''}`}
-                        disabled={!selectedVariant || !isInStock || addingToCart}
+                        className={`pdp-add-btn ${(!selectedVariant || !isInStock || addingToCart || maxCanAdd === 0) ? 'disabled' : ''}`}
+                        disabled={!selectedVariant || !isInStock || addingToCart || maxCanAdd === 0}
                         onClick={async () => {
                             if (!selectedVariant || !isInStock || addingToCart) return;
+                            // Final stock guard
+                            if (quantity < 1) {
+                                setCartError('Số lượng phải ít nhất là 1.');
+                                return;
+                            }
+                            if (quantity > maxCanAdd) {
+                                const msg = cartQty > 0
+                                    ? `Bạn đã có ${cartQty} sản phẩm trong giỏ. Chỉ còn ${maxCanAdd} sản phẩm có thể thêm.`
+                                    : `Số lượng vượt quá tồn kho (tối đa ${stockCount}).`;
+                                setCartError(msg);
+                                setQuantity(Math.max(1, maxCanAdd));
+                                return;
+                            }
+                            setCartError('');
                             setAddingToCart(true);
-                            await addToCart(selectedVariant.variantId, quantity);
+                            const ok = await addToCart(selectedVariant.variantId, quantity);
                             setAddingToCart(false);
+                            if (ok) setQuantity(1);
                         }}
                     >
                         {addingToCart
                             ? 'Đang thêm...'
                             : !selectedVariant
                                 ? 'Vui lòng chọn màu & size'
-                                : !isInStock
+                                : !isInStock || maxCanAdd === 0
                                     ? 'Hết hàng'
                                     : 'Thêm vào giỏ hàng'}
                     </button>
