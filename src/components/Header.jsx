@@ -77,6 +77,7 @@ function Header() {
     { id: 'About', label: 'Giới thiệu', href: '/#about' },
     { id: 'Catalog', label: 'Sản phẩm', href: '/catalog' },
     { id: 'Sale', label: 'Khuyến mãi', href: '/#sale' },
+    { id: 'AiChat', label: '✨ Tư vấn AI', href: '/tu-van' },
     { id: 'Contact', label: 'Liên hệ', href: '/#contact' }
   ]
 

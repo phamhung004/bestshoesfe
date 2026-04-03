@@ -30,10 +30,13 @@ import POSPage from "./pages/Admin/components/POS/POSPage";
 import CheckoutPage from "./pages/Checkout";
 import OrderManagement from "./pages/Admin/components/Order/OrderManagement";
 import PromotionList from "./pages/Admin/components/PromotionList";
+import TuVanPage from "./pages/TuVanPage";
+import ChatWidget from "./components/AiChat";
 
 function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const hideChatWidget = isAdminRoute || location.pathname === '/tu-van';
 
   return (
     <div className="min-h-screen bg-white">
@@ -58,10 +61,12 @@ function AppContent() {
           <Route path="/admin/tai-quay" element={<ProtectedRoute requireAdmin><POSPage /></ProtectedRoute>} />
           <Route path="/admin/don-hang" element={<ProtectedRoute requireAdmin><OrderManagement /></ProtectedRoute>} />
           <Route path="/admin/dot-giam-gia" element={<ProtectedRoute requireAdmin><PromotionList /></ProtectedRoute>} />
+          <Route path="/tu-van" element={<TuVanPage />} />
 
         </Routes>
       </div>
       {!isAdminRoute && <Footer />}
+      {!hideChatWidget && <ChatWidget />}
     </div>
   );
 }
