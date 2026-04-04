@@ -8,6 +8,7 @@ import MaterialDetail from "./components/Material/MaterialDetail";
 import ProductDetail from "./components/Product/ProductDetail";
 import ProductManagementPage from "./ProductManagement/ProductManagementPage";
 import AccountManagementPage from "./AccountManagement/AccountManagementPage";
+import ReviewManagementPage from "./ReviewManagement/ReviewManagementPage";
 
 const AdminRouter = () => {
   return (
@@ -21,6 +22,8 @@ const AdminRouter = () => {
       <Route path="/san-pham" element={<ProductManagementPage />} />
       <Route path="/products" element={<ProductManagementPage />} />
       <Route path="/tai-khoan" element={<AccountManagementPage />} />
+      <Route path="/reviews" element={<ReviewManagementPage />} />
+      <Route path="/danh-gia" element={<ReviewManagementPage />} />
     </Routes>
   );
 };

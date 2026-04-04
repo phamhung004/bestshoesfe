@@ -3,12 +3,12 @@ import { X, Image } from 'lucide-react';
 import StarSelector from './StarSelector';
 
 const WriteReviewModal = ({ product, onClose, onSubmit }) => {
-    const [rating, setRating] = useState(0);
-    const [title, setTitle] = useState('');
-    const [content, setContent] = useState('');
-    const [qualityRating, setQualityRating] = useState(0);
-    const [sizeRating, setSizeRating] = useState(0);
-    const [deliveryRating, setDeliveryRating] = useState(0);
+    const [rating, setRating] = useState(product.rating || 0);
+    const [title, setTitle] = useState(product.title || '');
+    const [content, setContent] = useState(product.content || '');
+    const [qualityRating, setQualityRating] = useState(product.qualityRating || 0);
+    const [sizeRating, setSizeRating] = useState(product.sizeRating || 0);
+    const [deliveryRating, setDeliveryRating] = useState(product.deliveryRating || 0);
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
 
@@ -41,7 +41,7 @@ const WriteReviewModal = ({ product, onClose, onSubmit }) => {
         <div className="acc-modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
             <div className="acc-modal-card acc-modal-md">
                 <div className="acc-modal-header">
-                    <h3 className="acc-modal-title">Viết đánh giá</h3>
+                    <h3 className="acc-modal-title">{product.isEdit ? 'Chỉnh sửa đánh giá' : 'Viết đánh giá'}</h3>
                     <button className="acc-modal-close" onClick={onClose}><X size={20} /></button>
                 </div>
 
@@ -118,7 +118,7 @@ const WriteReviewModal = ({ product, onClose, onSubmit }) => {
                 <div className="acc-modal-footer">
                     <button className="acc-btn-ghost" onClick={onClose}>Hủy</button>
                     <button className="acc-btn-primary" onClick={handleSubmit} disabled={submitting}>
-                        {submitting ? <><span className="acc-spinner" /> Đang gửi...</> : 'Gửi đánh giá'}
+                        {submitting ? <><span className="acc-spinner" /> Đang gửi...</> : product.isEdit ? 'Cập nhật' : 'Gửi đánh giá'}
                     </button>
                 </div>
             </div>

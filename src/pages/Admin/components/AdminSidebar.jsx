@@ -179,6 +179,13 @@ const menuStructure = [
     roles: ALL_ROLES,
   },
   {
+    id: 'reviews',
+    label: 'Đánh giá',
+    icon: Icons.Tag,
+    type: 'single',
+    roles: ADMIN_MANAGER,
+  },
+  {
     id: 'in-store-sales',
     label: 'Bán hàng tại quầy',
     icon: Icons.POS,

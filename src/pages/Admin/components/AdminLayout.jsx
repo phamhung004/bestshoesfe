@@ -40,6 +40,9 @@ const AdminLayout = ({ activeSection, title, subtitle, children }) => {
       case 'analytics':
         navigate('/admin/analytics');
         break;
+      case 'reviews':
+        navigate('/admin/danh-gia');
+        break;
       default:
         // All other sections live inside AdminDashboard SPA
         navigate('/admin');
