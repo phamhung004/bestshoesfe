@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Loader } from 'lucide-react';
 import { formatDate } from '../mockAccountData';
-import { getMyReviews, getPendingReviews, createReview, deleteReview } from '../../../api/accountApi';
+import { getMyReviews, getPendingReviews, createReview, updateReview, deleteReview } from '../../../api/accountApi';
 import WriteReviewModal from '../components/WriteReviewModal';
 import StarSelector from '../components/StarSelector';
 
@@ -40,18 +40,31 @@ const ReviewsTab = () => {
 
     const handleWriteReview = async (pendingItem, data) => {
         try {
-            await createReview({
-                orderItemId: pendingItem.pendingId,
-                rating: data.rating,
-                title: data.title || null,
-                content: data.content,
-                qualityRating: data.qualityRating || null,
-                sizeRating: data.sizeRating || null,
-                deliveryRating: data.deliveryRating || null,
-            });
+            if (pendingItem.isEdit) {
+                await updateReview(pendingItem.reviewId, {
+                    orderItemId: pendingItem.orderItemId || pendingItem.pendingId,
+                    rating: data.rating,
+                    title: data.title || null,
+                    content: data.content,
+                    qualityRating: data.qualityRating || null,
+                    sizeRating: data.sizeRating || null,
+                    deliveryRating: data.deliveryRating || null,
+                });
+                showToast('✓ Cập nhật đánh giá thành công!');
+            } else {
+                await createReview({
+                    orderItemId: pendingItem.pendingId,
+                    rating: data.rating,
+                    title: data.title || null,
+                    content: data.content,
+                    qualityRating: data.qualityRating || null,
+                    sizeRating: data.sizeRating || null,
+                    deliveryRating: data.deliveryRating || null,
+                });
+                showToast('✓ Đánh giá đã được gửi thành công!');
+            }
             await fetchReviews();
             setActiveSubTab('written');
-            showToast('✓ Đánh giá đã được gửi thành công!');
         } catch (err) {
             showToast('✗ ' + (err.response?.data?.message || 'Gửi đánh giá thất bại'));
         }
@@ -125,7 +138,19 @@ const ReviewsTab = () => {
                                     {review.title && <div className="acc-review-title">{review.title}</div>}
                                     <p className="acc-review-content">{review.content}</p>
                                     <div className="acc-review-actions">
-                                        <button className="acc-review-edit-btn">Chỉnh sửa</button>
+                                        <button className="acc-review-edit-btn" onClick={() => setWriteModal({
+                                            isEdit: true,
+                                            reviewId: review.reviewId,
+                                            productName: review.productName,
+                                            variant: review.variant,
+                                            thumbColor: review.thumbColor,
+                                            rating: review.rating,
+                                            title: review.title,
+                                            content: review.content,
+                                            qualityRating: review.qualityRating,
+                                            sizeRating: review.sizeRating,
+                                            deliveryRating: review.deliveryRating,
+                                        })}>Chỉnh sửa</button>
                                         <button className="acc-review-delete-btn" onClick={() => handleDeleteReview(review.reviewId)}>Xóa</button>
                                     </div>
                                     {review.shopReply && (

@@ -6,6 +6,7 @@ import { formatVND } from '../../utils/formatPrice';
 import ProductDetailSkeleton from '../../components/common/ProductDetailSkeleton';
 import ErrorState from '../../components/common/ErrorState';
 import CatalogProductCard from '../Catalog2/components/CatalogProductCard';
+import ProductReviewsSection from './components/ProductReviewsSection';
 import './ProductDetailPage.css';
 
 
@@ -358,6 +359,9 @@ const ProductDetailPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* ── Product Reviews ───────────────────────────── */}
+            <ProductReviewsSection productId={Number(productId)} />
 
             {/* ── Related products ──────────────────────────── */}
             {relatedProducts.length > 0 && (
