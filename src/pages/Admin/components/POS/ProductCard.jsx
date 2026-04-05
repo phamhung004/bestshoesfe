@@ -52,10 +52,10 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
             {totalStock === 0 && <span className="pos-card-stock-badge empty">Hết hàng</span>}
             <img
                 className="pos-card-img"
-                src={product.imageUrl || '/placeholder-shoe.png'}
+                src={product.imageUrl || '/images/product-placeholder.svg'}
                 alt={product.name}
                 loading="lazy"
-                onError={(e) => { e.target.onerror = null; e.target.src = '/placeholder-shoe.png'; }}
+                onError={(e) => { e.target.onerror = null; e.target.src = '/images/product-placeholder.svg'; }}
             />
             <div className="pos-card-body">
                 <div className="pos-card-name">{product.name}</div>

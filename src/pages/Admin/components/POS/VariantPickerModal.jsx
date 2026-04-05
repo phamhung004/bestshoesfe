@@ -33,7 +33,7 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
             const colorVariant = activeVariants.find(v => v.colorId === selectedColor && v.imageUrl);
             if (colorVariant) return colorVariant.imageUrl;
         }
-        return product.imageUrl || '/placeholder-shoe.png';
+        return product.imageUrl || '/images/product-placeholder.svg';
     }, [selectedVariant, selectedColor, activeVariants, product.imageUrl]);
 
     // Check if a size+color combination exists
@@ -60,7 +60,7 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
             <div className="pos-modal" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="pos-modal-header">
-                    <img className="pos-modal-thumb" src={displayedImage} alt={product.name} onError={(e) => { e.target.onerror = null; e.target.src = '/placeholder-shoe.png'; }} />
+                    <img className="pos-modal-thumb" src={displayedImage} alt={product.name} onError={(e) => { e.target.onerror = null; e.target.src = '/images/product-placeholder.svg'; }} />
                     <div>
                         <div className="pos-modal-title">{product.name}</div>
                         <div className="pos-modal-brand">{getBrandName(product.brandId)}</div>

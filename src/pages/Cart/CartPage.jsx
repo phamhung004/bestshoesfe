@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import CheckoutStepIndicator from './components/CheckoutStepIndicator';
@@ -30,9 +30,17 @@ const CartPage = () => {
         setCartItems(apiCartItems);
     }, [apiCartItems]);
 
-    // Calculate totals
+    // Calculate totals (all items)
     const subtotal = cartItems.reduce((sum, item) => sum + getItemSubtotal(item), 0);
     const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+    // Selected items for checkout
+    const selectedCartItems = useMemo(
+        () => cartItems.filter(item => selectedItems.includes(item.cart_item_id)),
+        [cartItems, selectedItems]
+    );
+    const selectedSubtotal = selectedCartItems.reduce((sum, item) => sum + getItemSubtotal(item), 0);
+    const selectedItemCount = selectedCartItems.reduce((sum, item) => sum + item.quantity, 0);
 
     // Quantity change
     const handleQtyChange = useCallback((cartItemId, newQty) => {
@@ -268,11 +276,13 @@ const CartPage = () => {
                         {/* Right Panel — Order Summary */}
                         <div className="cart-right-panel">
                             <OrderSummary
-                                subtotal={subtotal}
-                                itemCount={itemCount}
+                                subtotal={selectedSubtotal}
+                                itemCount={selectedItemCount}
                                 couponState={couponState}
                                 onApplyCoupon={handleApplyCoupon}
                                 onRemoveCoupon={handleRemoveCoupon}
+                                selectedCount={selectedItems.length}
+                                selectedItems={selectedCartItems}
                             />
                         </div>
                     </div>

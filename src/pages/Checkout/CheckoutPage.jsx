@@ -1,5 +1,5 @@
-import React, { useReducer, useCallback, useRef, useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useReducer, useCallback, useRef, useState, useEffect, useMemo } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { orderApi } from '../../api/orderApi';
@@ -153,7 +153,7 @@ function checkoutReducer(state, action) {
 const phoneRegex = /^(0|\+84)(3|5|7|8|9)\d{8}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function validateField(field, value, state) {
+function validateField(field, value) {
     switch (field) {
         case 'customerName':
             if (!value || value.trim().length < 2)
@@ -210,9 +210,22 @@ function validateField(field, value, state) {
 
 // ─── COMPONENT ─────────────────────────────────────────
 const CheckoutPage = () => {
-    const { cartItems, clearCart } = useCart();
+    const { cartItems, clearCart, removeItem, fetchCart } = useCart();
     const { user, isAuthenticated } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const selectedCartItemIds = useMemo(
+        () => Array.isArray(location.state?.selectedCartItemIds)
+            ? location.state.selectedCartItemIds
+            : null,
+        [location.state]
+    );
+
+    const checkoutItems = useMemo(() => {
+        if (!selectedCartItemIds || selectedCartItemIds.length === 0) return cartItems;
+        return cartItems.filter(item => selectedCartItemIds.includes(item.cart_item_id));
+    }, [cartItems, selectedCartItemIds]);
 
     const [state, dispatch] = useReducer(checkoutReducer, user, createInitialState);
     const formRef = useRef(null);
@@ -221,10 +234,10 @@ const CheckoutPage = () => {
 
     // Redirect to cart if empty (and not in success state)
     useEffect(() => {
-        if (!state.orderSuccess && cartItems.length === 0) {
+        if (!state.orderSuccess && checkoutItems.length === 0) {
             navigate('/cart');
         }
-    }, [cartItems, state.orderSuccess, navigate]);
+    }, [checkoutItems, state.orderSuccess, navigate]);
 
     // Fetch saved addresses on mount
     useEffect(() => {
@@ -254,7 +267,7 @@ const CheckoutPage = () => {
     const isLoggedIn = isAuthenticated;
 
     // ── Calculations ────────────────────────────────────
-    const subtotal = cartItems.reduce((sum, item) => sum + getItemSubtotal(item), 0);
+    const subtotal = checkoutItems.reduce((sum, item) => sum + getItemSubtotal(item), 0);
     const shippingCost = state.deliveryMethod === 'In-store' ? 0 : (state.shippingFee?.total || 0);
     const discountAmount = state.couponState?.discountAmount || 0;
     const total = subtotal + shippingCost - discountAmount;
@@ -263,7 +276,7 @@ const CheckoutPage = () => {
     const handleFormChange = useCallback((field, value) => {
         dispatch({ type: 'SET_FORM_FIELD', field, value });
         // Clear error on change
-        const error = validateField(field, value, state);
+        const error = validateField(field, value);
         dispatch({ type: 'SET_ERROR', field, value: error });
     }, [state]);
 
@@ -344,7 +357,7 @@ const CheckoutPage = () => {
         prevSubtotalRef.current = subtotal;
 
         // If cart is empty, auto-remove
-        if (cartItems.length === 0 || subtotal === 0) {
+        if (checkoutItems.length === 0 || subtotal === 0) {
             dispatch({ type: 'CLEAR_COUPON' });
             return;
         }
@@ -381,7 +394,7 @@ const CheckoutPage = () => {
 
         const timer = setTimeout(revalidate, 300);
         return () => clearTimeout(timer);
-    }, [subtotal, state.couponState, cartItems.length]);
+    }, [subtotal, state.couponState, checkoutItems.length]);
 
     // ── Get selected address ────────────────────────────
     const selectedAddress = savedAddresses.find(
@@ -421,7 +434,7 @@ const CheckoutPage = () => {
         }
 
         // Calculate total weight from cart items (grams)
-        const totalWeight = cartItems.reduce((sum, item) => {
+        const totalWeight = checkoutItems.reduce((sum, item) => {
             const w = item.variant?.weight || 500; // default 500g per pair
             return sum + w * item.quantity;
         }, 0);
@@ -453,7 +466,7 @@ const CheckoutPage = () => {
         selectedAddress?.ghnWardCode,
         state.formData.districtCode,
         state.formData.wardCode,
-        cartItems,
+        checkoutItems,
     ]);
     // ── Full validation ─────────────────────────────────
     const validateAll = () => {
@@ -462,14 +475,14 @@ const CheckoutPage = () => {
 
         // Recipient fields — always required
         ['customerName', 'customerPhone'].forEach((f) => {
-            const err = validateField(f, state.formData[f], state);
+            const err = validateField(f, state.formData[f]);
             if (err) newErrors[f] = err;
             touched[f] = true;
         });
 
         // Email — optional but validate format if filled
         if (state.formData.email) {
-            const emailErr = validateField('email', state.formData.email, state);
+            const emailErr = validateField('email', state.formData.email);
             if (emailErr) newErrors['email'] = emailErr;
             touched['email'] = true;
         }
@@ -477,7 +490,7 @@ const CheckoutPage = () => {
         // Address fields — required if Online delivery AND (guest OR manual form OR no saved address)
         if (state.deliveryMethod === 'Online' && (!isLoggedIn || state.showManualForm || !state.selectedAddressId)) {
             ['province', 'district', 'ward', 'street'].forEach((f) => {
-                const err = validateField(f, state.formData[f], state);
+                const err = validateField(f, state.formData[f]);
                 if (err) newErrors[f] = err;
                 touched[f] = true;
             });
@@ -486,7 +499,7 @@ const CheckoutPage = () => {
         // Card fields — only if card payment
         if (state.paymentMethod === 'card') {
             ['cardNumber', 'cardExpiry', 'cardCvv', 'cardName'].forEach((f) => {
-                const err = validateField(f, state.cardForm[f], state);
+                const err = validateField(f, state.cardForm[f]);
                 if (err) newErrors[f] = err;
                 touched[f] = true;
             });
@@ -565,29 +578,46 @@ const CheckoutPage = () => {
                 ].filter(Boolean).join(', ');
             }
 
-            // Save cart items before clearing (for success page display)
-            const savedItems = [...cartItems];
+            // Save checkout items before cart mutations (for success page display)
+            const savedItems = [...checkoutItems];
 
-            // Cart is cleared by backend — refresh frontend state
-            await clearCart();
+            // If user checked out selected items only: remove just selected items from cart.
+            // Otherwise keep old behavior (clear all).
+            if (selectedCartItemIds && selectedCartItemIds.length > 0) {
+                await Promise.all(selectedCartItemIds.map((id) => removeItem(id)));
+                await fetchCart();
+            } else {
+                await clearCart();
+            }
 
             dispatch({
                 type: 'SET_ORDER_SUCCESS',
                 payload: {
+                    ...orderResult,
                     orderNumber: orderResult.orderNumber,
                     paymentReference: orderResult.paymentReference,
-                    customerName: state.formData.customerName,
-                    customerPhone: state.formData.customerPhone,
-                    email: state.formData.email,
-                    address: addressStr,
-                    deliveryMethod: state.deliveryMethod,
+                    customerName: orderResult.customerName || state.formData.customerName,
+                    customerPhone: orderResult.customerPhone || state.formData.customerPhone,
+                    email: orderResult.email || state.formData.email,
+                    address: orderResult.shippingAddress
+                        ? [
+                            orderResult.shippingAddress,
+                            orderResult.shippingWard,
+                            orderResult.shippingDistrict,
+                            orderResult.shippingProvince,
+                        ].filter(Boolean).join(', ')
+                        : addressStr,
+                    deliveryMethod: orderResult.orderType || state.deliveryMethod,
                     deliveryTime: state.deliveryTime,
-                    paymentMethod: state.paymentMethod,
+                    paymentMethod: orderResult.paymentMethod || state.paymentMethod,
                     subtotal: orderResult.subtotal,
+                    netProductAmount: orderResult.netProductAmount,
                     shippingCost: orderResult.shippingCost,
                     couponDiscountAmount: orderResult.couponDiscountAmount,
                     totalAmount: orderResult.totalAmount,
-                    items: savedItems,
+                    items: Array.isArray(orderResult.items) && orderResult.items.length > 0
+                        ? orderResult.items
+                        : savedItems,
                 },
             });
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -612,7 +642,7 @@ const CheckoutPage = () => {
             dispatch({ type: 'SET_SUBMITTING', payload: false });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state, selectedAddress, clearCart, cartItems]);
+    }, [state, selectedAddress, clearCart, checkoutItems, selectedCartItemIds, removeItem, fetchCart]);
 
     // ── RENDER SUCCESS STATE ────────────────────────────
     if (state.orderSuccess) {
@@ -790,7 +820,7 @@ const CheckoutPage = () => {
                     {/* ── RIGHT PANEL ── */}
                     <div className="checkout-right-panel">
                         <OrderReviewPanel
-                            items={cartItems}
+                            items={checkoutItems}
                             coupon={state.couponState}
                             subtotal={subtotal}
                             shippingCost={shippingCost}

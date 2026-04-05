@@ -4,7 +4,8 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
-import { productAPI } from '../../../services/api';
+import { productAPI, orderAPI, returnAPI } from '../../../services/api';
+import { adminCustomerAPI, adminEmployeeAPI } from '../AccountManagement/accountApi';
 import './DashboardOverview.css';
 
 // Custom Tooltip Component
@@ -183,8 +184,12 @@ const DashboardOverview = () => {
   const [brandData, setBrandData] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [activeProductCount, setActiveProductCount] = useState(null);
+  const [orderKpi, setOrderKpi] = useState(null);
+  const [returnKpi, setReturnKpi] = useState(null);
+  const [customerKpi, setCustomerKpi] = useState(null);
+  const [employeeKpi, setEmployeeKpi] = useState(null);
 
-  // Fetch real product count
+  // Fetch real product count + KPI blocks
   useEffect(() => {
     productAPI.countActive()
       .then((res) => {
@@ -192,6 +197,18 @@ const DashboardOverview = () => {
         if (typeof count === 'number') setActiveProductCount(count);
       })
       .catch(() => {/* keep null – falls back to mock in stats */});
+
+    Promise.allSettled([
+      orderAPI.getKpi(),
+      returnAPI.getKpi(),
+      adminCustomerAPI.getKpis(),
+      adminEmployeeAPI.getKpis(),
+    ]).then(([orderRes, returnRes, customerRes, employeeRes]) => {
+      if (orderRes.status === 'fulfilled') setOrderKpi(orderRes.value?.data ?? orderRes.value ?? null);
+      if (returnRes.status === 'fulfilled') setReturnKpi(returnRes.value?.data ?? returnRes.value ?? null);
+      if (customerRes.status === 'fulfilled') setCustomerKpi(customerRes.value?.data ?? customerRes.value ?? null);
+      if (employeeRes.status === 'fulfilled') setEmployeeKpi(employeeRes.value?.data ?? employeeRes.value ?? null);
+    });
   }, []);
 
   // Initialize data
@@ -209,29 +226,40 @@ const DashboardOverview = () => {
 
   // Calculate summary stats
   const stats = useMemo(() => {
-    const totalRevenue = revenueData.reduce((sum, item) => sum + item.revenue, 0);
-    const totalOrders = revenueData.reduce((sum, item) => sum + item.orders, 0);
-    const totalVisitors = revenueData.reduce((sum, item) => sum + item.visitors, 0);
-    const previousRevenue = totalRevenue * (0.85 + Math.random() * 0.1);
-    const revenueChange = ((totalRevenue - previousRevenue) / previousRevenue * 100);
-    const orderChange = 12 + Math.random() * 8;
+    const totalRevenue = Number(orderKpi?.todayRevenue ?? revenueData.reduce((sum, item) => sum + item.revenue, 0));
+    const totalOrders = Number(orderKpi?.todayOrders ?? revenueData.reduce((sum, item) => sum + item.orders, 0));
+    const revenueChange = Number(orderKpi?.revenueDelta ?? 0);
+    const orderChange = Number(orderKpi?.ordersDelta ?? 0);
+
     const productCount = activeProductCount ?? 0;
-    const productChange = 5 + Math.random() * 3;
-    const userCount = 1847;
-    const userChange = 18 + Math.random() * 5;
+    const productChange = 0;
+
+    const userCount = Number(customerKpi?.totalCustomers ?? 0);
+    const userChange = userCount > 0
+      ? Number((((customerKpi?.newCustomersThisMonth ?? 0) / userCount) * 100).toFixed(1))
+      : 0;
+
+    const pendingCount = Number(orderKpi?.pendingCount ?? 0);
+    const cancelledCount = Number(orderKpi?.cancelledCount ?? 0);
+    const returnRate = Number(returnKpi?.returnRate ?? 0);
 
     return {
       totalRevenue,
       totalOrders,
-      totalVisitors,
       revenueChange,
       orderChange,
       productCount,
       productChange,
       userCount,
       userChange,
+      pendingCount,
+      cancelledCount,
+      returnRate,
+      customerKpi,
+      employeeKpi,
+      returnKpi,
     };
-  }, [revenueData, activeProductCount]);
+  }, [revenueData, activeProductCount, orderKpi, customerKpi, employeeKpi, returnKpi]);
 
   if (loading) {
     return (
@@ -268,39 +296,39 @@ const DashboardOverview = () => {
       {/* Stat Cards */}
       <div className="stats-grid animate-fade-in">
         <StatCard
-          title="Tổng doanh thu"
+          title="Doanh thu hôm nay (chưa gồm ship)"
           value={stats.totalRevenue}
           change={stats.revenueChange}
-          changeLabel="so với kỳ trước"
+          changeLabel="Theo KPI đơn hàng"
           icon="💰"
           type="revenue"
           formatter={formatCurrency}
         />
         <StatCard
-          title="Tổng đơn hàng"
+          title="Đơn hàng hôm nay"
           value={stats.totalOrders}
           change={stats.orderChange}
-          changeLabel="so với kỳ trước"
+          changeLabel={`Chờ xác nhận: ${stats.pendingCount}`}
           icon="📦"
           type="orders"
           formatter={formatNumber}
         />
         <StatCard
-          title="Sản phẩm"
-          value={stats.productCount}
-          change={stats.productChange}
-          changeLabel="sản phẩm mới tháng này"
-          icon="👟"
-          type="products"
+          title="Tổng khách hàng"
+          value={stats.userCount}
+          change={stats.userChange}
+          changeLabel={`Active: ${stats.customerKpi?.activeCustomers ?? 0} • Locked: ${stats.customerKpi?.lockedCustomers ?? 0}`}
+          icon="👥"
+          type="users"
           formatter={formatNumber}
         />
         <StatCard
-          title="Khách hàng"
-          value={stats.userCount}
-          change={stats.userChange}
-          changeLabel="khách hàng mới tháng này"
-          icon="👥"
-          type="users"
+          title="Tổng nhân viên"
+          value={stats.employeeKpi?.totalEmployees ?? 0}
+          change={0}
+          changeLabel={`Admin: ${stats.employeeKpi?.adminCount ?? 0} • Manager: ${stats.employeeKpi?.managerCount ?? 0} • Staff: ${stats.employeeKpi?.staffCount ?? 0}`}
+          icon="🧑‍💼"
+          type="products"
           formatter={formatNumber}
         />
       </div>
@@ -479,24 +507,24 @@ const DashboardOverview = () => {
         <div className="alerts-grid">
           <AlertCard
             type="warning"
-            icon="⚠️"
-            title="Sắp hết hàng"
-            message="5 sản phẩm đang có nguy cơ hết hàng trong 7 ngày tới"
-            time="5 phút trước"
+            icon="↩️"
+            title="KPI Trả hàng"
+            message={`Yêu cầu trả hôm nay: ${stats.returnKpi?.todayReturnRequests ?? 0} • Tỷ lệ trả: ${stats.returnRate}%`}
+            time="Dữ liệu realtime"
           />
           <AlertCard
             type="danger"
             icon="📦"
-            title="Đơn hàng chưa xử lý"
-            message="3 đơn hàng đang chờ xử lý từ 2 giờ trước"
-            time="15 phút trước"
+            title="Đơn hàng chờ xử lý"
+            message={`Đơn chờ xác nhận: ${stats.pendingCount} • Đã hủy: ${stats.cancelledCount}`}
+            time="Dữ liệu realtime"
           />
           <AlertCard
             type="success"
-            icon="📈"
-            title="Doanh thu tăng mạnh"
-            message="Doanh thu tăng 18.5% so với tuần trước"
-            time="1 giờ trước"
+            icon="👥"
+            title="KPI Tài khoản"
+            message={`Khách active: ${stats.customerKpi?.activeCustomers ?? 0} • NV active: ${stats.employeeKpi?.activeEmployees ?? 0}`}
+            time="Dữ liệu realtime"
           />
         </div>
       </div>

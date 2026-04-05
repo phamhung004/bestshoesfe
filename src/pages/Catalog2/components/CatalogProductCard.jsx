@@ -16,6 +16,16 @@ const CatalogProductCard = ({ product, viewMode, onQuickView, onAddToCart, wishl
     const navigate = useNavigate();
     const [activeColorCode, setActiveColorCode] = useState(null);
 
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+    const API_ORIGIN = API_BASE.replace(/\/api(?:\/v\d+)?$/i, '');
+
+    const resolveImageUrl = (url) => {
+        if (!url) return '/images/product-placeholder.svg';
+        if (/^https?:\/\//i.test(url)) return url;
+        if (url.startsWith('/')) return `${API_ORIGIN}${url}`;
+        return `${API_ORIGIN}/${url}`;
+    };
+
     const {
         productId,
         name = '',
@@ -65,9 +75,13 @@ const CatalogProductCard = ({ product, viewMode, onQuickView, onAddToCart, wishl
                 {primaryImageUrl ? (
                     <img
                         className="catalog-card-img primary"
-                        src={primaryImageUrl}
+                        src={resolveImageUrl(primaryImageUrl)}
                         alt={name}
                         loading="lazy"
+                        onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = '/images/product-placeholder.svg';
+                        }}
                     />
                 ) : (
                     <div

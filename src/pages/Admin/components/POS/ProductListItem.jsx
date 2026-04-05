@@ -38,10 +38,10 @@ const ProductListItem = ({ product, onCardClick, onQuickAdd, pulseId }) => {
         >
             <img
                 className="pos-list-item-img"
-                src={product.imageUrl || '/placeholder-shoe.png'}
+                src={product.imageUrl || '/images/product-placeholder.svg'}
                 alt={product.name}
                 loading="lazy"
-                onError={(e) => { e.target.onerror = null; e.target.src = '/placeholder-shoe.png'; }}
+                onError={(e) => { e.target.onerror = null; e.target.src = '/images/product-placeholder.svg'; }}
             />
             <div className="pos-list-item-info">
                 <span className="pos-list-item-name">{product.name}</span>

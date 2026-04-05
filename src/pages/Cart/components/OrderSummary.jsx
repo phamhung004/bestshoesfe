@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { formatVND, COUPONS, FREESHIP_THRESHOLD } from '../mockCartData';
 
-const OrderSummary = ({ subtotal, itemCount, couponState, onApplyCoupon, onRemoveCoupon }) => {
+const OrderSummary = ({
+    subtotal,
+    itemCount,
+    couponState,
+    onApplyCoupon,
+    onRemoveCoupon,
+    selectedCount = 0,
+    selectedItems = [],
+}) => {
+    const navigate = useNavigate();
     const [couponOpen, setCouponOpen] = useState(false);
     const [couponCode, setCouponCode] = useState('');
     const [couponLoading, setCouponLoading] = useState(false);
@@ -67,6 +76,15 @@ const OrderSummary = ({ subtotal, itemCount, couponState, onApplyCoupon, onRemov
     };
 
     const suggestedCoupons = ['SALE10', 'GIAM50K', 'VIP20'];
+
+    const handleCheckoutSelected = () => {
+        if (selectedCount === 0) return;
+        navigate('/checkout', {
+            state: {
+                selectedCartItemIds: selectedItems.map(i => i.cart_item_id),
+            },
+        });
+    };
 
     return (
         <div className="cart-summary-card">
@@ -165,11 +183,18 @@ const OrderSummary = ({ subtotal, itemCount, couponState, onApplyCoupon, onRemov
             </div>
 
             {/* Checkout Button */}
-            <Link to="/checkout" className="cart-checkout-link">
-                <button className="cart-checkout-btn">
-                    Tiến hành thanh toán →
+            <div className="cart-checkout-link">
+                <button
+                    className="cart-checkout-btn"
+                    onClick={handleCheckoutSelected}
+                    disabled={selectedCount === 0}
+                    title={selectedCount === 0 ? 'Vui lòng chọn ít nhất 1 sản phẩm để thanh toán' : 'Thanh toán sản phẩm đã chọn'}
+                >
+                    {selectedCount === 0
+                        ? 'Chọn sản phẩm để thanh toán'
+                        : `Thanh toán ${selectedCount} sản phẩm đã chọn →`}
                 </button>
-            </Link>
+            </div>
             <div className="cart-checkout-secure">🔒 Thanh toán an toàn & bảo mật</div>
 
             {/* Payment Icons */}

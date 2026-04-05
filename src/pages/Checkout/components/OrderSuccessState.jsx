@@ -39,7 +39,8 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
     const [copiedField, setCopiedField] = useState('');
     const [isPaid, setIsPaid] = useState(false);
 
-    const isBankTransfer = orderData?.paymentMethod === 'bank';
+    const normalizePaymentMethod = (value) => String(value || '').toLowerCase();
+    const isBankTransfer = normalizePaymentMethod(orderData?.paymentMethod) === 'bank';
 
     // ── Payment status polling (bank transfer only) ────────
     const pollIntervalRef = useRef(null);
@@ -101,6 +102,17 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
         bank: 'Chuyển khoản ngân hàng (SePay)',
         momo: 'Ví MoMo',
         card: 'Thẻ tín dụng / Ghi nợ',
+    };
+
+    const getOrderItemDisplay = (item) => {
+        const imageUrl = item?.product?.imageUrl || item?.image_url || '/images/product-placeholder.svg';
+        const productName = item?.product?.name || item?.productName || 'Sản phẩm';
+        const sizeName = item?.size?.sizeName || item?.variant?.size_name || item?.sizeName || '—';
+        const colorName = item?.color?.colorName || item?.variant?.color_name || item?.colorName || '—';
+        const qty = Number(item?.quantity || 0);
+        const lineTotal = Number(item?.totalPrice ?? item?.netItemAmount ?? getItemSubtotal(item) ?? 0);
+
+        return { imageUrl, productName, sizeName, colorName, qty, lineTotal };
     };
 
     const deliveryLabel = orderData.deliveryMethod === 'Online'
@@ -244,22 +256,32 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                             {/* Order summary */}
                             <div className="co-success-summary">
                                 <div className="co-success-info-grid">
+                                    <span className="co-success-info-label">Mã đơn hàng:</span>
+                                    <span className="co-success-info-value">{orderData.orderNumber}</span>
+
+
                                     <span className="co-success-info-label">Người nhận:</span>
                                     <span className="co-success-info-value">{orderData.customerName}</span>
 
                                     <span className="co-success-info-label">Điện thoại:</span>
                                     <span className="co-success-info-value">{orderData.customerPhone}</span>
 
+                                    <span className="co-success-info-label">Email:</span>
+                                    <span className="co-success-info-value">{orderData.email || '—'}</span>
+
                                     {orderData.address && (
                                         <>
-                                            <span className="co-success-info-label">Địa chỉ:</span>
+                                            <span className="co-success-info-label">Địa chỉ giao hàng:</span>
                                             <span className="co-success-info-value">{orderData.address}</span>
                                         </>
                                     )}
 
+                                    <span className="co-success-info-label">Trạng thái đơn:</span>
+                                    <span className="co-success-info-value">{orderData.status || 'Chờ xác nhận'}</span>
+
                                     <span className="co-success-info-label">Trạng thái TT:</span>
                                     <span className="co-success-info-value" style={{ color: '#B45309', fontWeight: 700 }}>
-                                        ⏳ Chờ thanh toán
+                                        {orderData.paymentStatus || '⏳ Chờ thanh toán'}
                                     </span>
 
                                     <span className="co-success-info-label">Dự kiến giao:</span>
@@ -271,23 +293,23 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                                 <div className="co-success-divider" />
 
                                 <div className="co-success-items">
-                                    {items.map((item) => {
-                                        const subtotal = getItemSubtotal(item);
+                                    {items.map((item, idx) => {
+                                        const d = getOrderItemDisplay(item);
                                         return (
-                                            <div key={item.cart_item_id} className="co-success-item">
+                                            <div key={item.orderItemId || item.cart_item_id || idx} className="co-success-item">
                                                 <img
-                                                    src={item.image_url}
-                                                    alt={item.product.name}
+                                                    src={d.imageUrl}
+                                                    alt={d.productName}
                                                     className="co-success-item-img"
                                                 />
                                                 <div className="co-success-item-info">
-                                                    <p className="co-success-item-name">{item.product.name}</p>
+                                                    <p className="co-success-item-name">{d.productName}</p>
                                                     <p className="co-success-item-meta">
-                                                        Size {item.variant.size_name} · {item.variant.color_name} · ×{item.quantity}
+                                                        Size {d.sizeName} · {d.colorName} · ×{d.qty}
                                                     </p>
                                                 </div>
                                                 <span className="co-success-item-price">
-                                                    {formatVND(subtotal)}
+                                                    {formatVND(d.lineTotal)}
                                                 </span>
                                             </div>
                                         );
@@ -297,8 +319,20 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                                 <div className="co-success-divider" />
 
                                 <div className="co-success-total-row">
+                                    <span className="co-success-total-label">Tạm tính:</span>
+                                    <span className="co-success-total-value">{formatVND(orderData.subtotal || 0)}</span>
+                                </div>
+                                <div className="co-success-total-row">
+                                    <span className="co-success-total-label">Giảm giá mã ({orderData.couponCode || '—'}):</span>
+                                    <span className="co-success-total-value">-{formatVND(orderData.couponDiscountAmount || 0)}</span>
+                                </div>
+                                <div className="co-success-total-row">
+                                    <span className="co-success-total-label">Phí vận chuyển:</span>
+                                    <span className="co-success-total-value">{formatVND(orderData.shippingCost || 0)}</span>
+                                </div>
+                                <div className="co-success-total-row">
                                     <span className="co-success-total-label">TỔNG CỘNG:</span>
-                                    <span className="co-success-total-value">{formatVND(total)}</span>
+                                    <span className="co-success-total-value">{formatVND(orderData.totalAmount || total || 0)}</span>
                                 </div>
                             </div>
 
@@ -396,15 +430,22 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                             {/* Order summary */}
                             <div className="co-success-summary">
                                 <div className="co-success-info-grid">
+                                    <span className="co-success-info-label">Mã đơn hàng:</span>
+                                    <span className="co-success-info-value">{orderData.orderNumber}</span>
+
+
                                     <span className="co-success-info-label">Người nhận:</span>
                                     <span className="co-success-info-value">{orderData.customerName}</span>
 
                                     <span className="co-success-info-label">Điện thoại:</span>
                                     <span className="co-success-info-value">{orderData.customerPhone}</span>
 
+                                    <span className="co-success-info-label">Email:</span>
+                                    <span className="co-success-info-value">{orderData.email || '—'}</span>
+
                                     {orderData.address && (
                                         <>
-                                            <span className="co-success-info-label">Địa chỉ:</span>
+                                            <span className="co-success-info-label">Địa chỉ giao hàng:</span>
                                             <span className="co-success-info-value">{orderData.address}</span>
                                         </>
                                     )}
@@ -414,8 +455,14 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
 
                                     <span className="co-success-info-label">Thanh toán:</span>
                                     <span className="co-success-info-value">
-                                        {paymentLabel[orderData.paymentMethod] || 'COD'}
+                                        {paymentLabel[normalizePaymentMethod(orderData.paymentMethod)] || 'COD'}
                                     </span>
+
+                                    <span className="co-success-info-label">Trạng thái đơn:</span>
+                                    <span className="co-success-info-value">{orderData.status || 'Chờ xác nhận'}</span>
+
+                                    <span className="co-success-info-label">Trạng thái TT:</span>
+                                    <span className="co-success-info-value">{orderData.paymentStatus || 'Chờ thanh toán'}</span>
 
                                     <span className="co-success-info-label">Dự kiến giao:</span>
                                     <span className="co-success-info-value">
@@ -426,23 +473,23 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                                 <div className="co-success-divider" />
 
                                 <div className="co-success-items">
-                                    {items.map((item) => {
-                                        const subtotal = getItemSubtotal(item);
+                                    {items.map((item, idx) => {
+                                        const d = getOrderItemDisplay(item);
                                         return (
-                                            <div key={item.cart_item_id} className="co-success-item">
+                                            <div key={item.orderItemId || item.cart_item_id || idx} className="co-success-item">
                                                 <img
-                                                    src={item.image_url}
-                                                    alt={item.product.name}
+                                                    src={d.imageUrl}
+                                                    alt={d.productName}
                                                     className="co-success-item-img"
                                                 />
                                                 <div className="co-success-item-info">
-                                                    <p className="co-success-item-name">{item.product.name}</p>
+                                                    <p className="co-success-item-name">{d.productName}</p>
                                                     <p className="co-success-item-meta">
-                                                        Size {item.variant.size_name} · {item.variant.color_name} · ×{item.quantity}
+                                                        Size {d.sizeName} · {d.colorName} · ×{d.qty}
                                                     </p>
                                                 </div>
                                                 <span className="co-success-item-price">
-                                                    {formatVND(subtotal)}
+                                                    {formatVND(d.lineTotal)}
                                                 </span>
                                             </div>
                                         );
@@ -452,8 +499,20 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                                 <div className="co-success-divider" />
 
                                 <div className="co-success-total-row">
+                                    <span className="co-success-total-label">Tạm tính:</span>
+                                    <span className="co-success-total-value">{formatVND(orderData.subtotal || 0)}</span>
+                                </div>
+                                <div className="co-success-total-row">
+                                    <span className="co-success-total-label">Giảm giá mã ({orderData.couponCode || '—'}):</span>
+                                    <span className="co-success-total-value">-{formatVND(orderData.couponDiscountAmount || 0)}</span>
+                                </div>
+                                <div className="co-success-total-row">
+                                    <span className="co-success-total-label">Phí vận chuyển:</span>
+                                    <span className="co-success-total-value">{formatVND(orderData.shippingCost || 0)}</span>
+                                </div>
+                                <div className="co-success-total-row">
                                     <span className="co-success-total-label">TỔNG CỘNG:</span>
-                                    <span className="co-success-total-value">{formatVND(total)}</span>
+                                    <span className="co-success-total-value">{formatVND(orderData.totalAmount || total || 0)}</span>
                                 </div>
                             </div>
 
