@@ -39,95 +39,29 @@ const formatNumber = (value) => {
   return new Intl.NumberFormat('vi-VN').format(value);
 };
 
-// Generate mock data for charts
-const generateRevenueData = () => {
-  const data = [];
-  const today = new Date();
+const PIE_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#8B5CF6', '#6B7280', '#06B6D4', '#EF4444'];
 
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-
-    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-    const baseRevenue = isWeekend ? 8000000 + Math.random() * 5000000 : 5000000 + Math.random() * 4000000;
-
-    data.push({
-      date: date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }),
-      revenue: Math.floor(baseRevenue),
-      orders: Math.floor(baseRevenue / (150000 + Math.random() * 50000)),
-      visitors: Math.floor(500 + Math.random() * 1500),
-    });
-  }
-
-  return data;
+const mapRangeFromUI = (range) => {
+  if (range === '7d' || range === '30d' || range === '90d') return range;
+  return '30d';
 };
 
-const generateCategoryData = () => [
-  { name: 'Chạy bộ', value: 35, revenue: 125000000, color: '#6366F1' },
-  { name: 'Thường ngày', value: 28, revenue: 100000000, color: '#10B981' },
-  { name: 'Bóng rổ', value: 18, revenue: 65000000, color: '#F59E0B' },
-  { name: 'Tập luyện', value: 12, revenue: 42000000, color: '#8B5CF6' },
-  { name: 'Khác', value: 7, revenue: 25000000, color: '#6B7280' },
-];
+const formatDateLabel = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+};
 
-const generateBrandData = () => [
-  { name: 'Nike', revenue: 85000000, units: 425, growth: 15.2 },
-  { name: 'Adidas', revenue: 62000000, units: 310, growth: 8.5 },
-  { name: 'New Balance', revenue: 45000000, units: 225, growth: 22.3 },
-  { name: 'Puma', revenue: 28000000, units: 140, growth: -3.2 },
-  { name: 'Converse', revenue: 22000000, units: 110, growth: 5.8 },
-];
-
-const generateRecentOrders = () => [
-  {
-    id: 'ORD-001',
-    customer: { name: 'Nguyễn Văn A', email: 'nguyenvana@email.com', avatar: 'NA' },
-    product: { name: 'Nike Air Max 90', image: null, variant: 'Size 42' },
-    total: 4500000,
-    status: 'delivered',
-    date: '2024-01-15 14:30',
-  },
-  {
-    id: 'ORD-002',
-    customer: { name: 'Trần Thị B', email: 'tranthib@email.com', avatar: 'TB' },
-    product: { name: 'Adidas Ultraboost 22', image: null, variant: 'Size 40' },
-    total: 5800000,
-    status: 'processing',
-    date: '2024-01-15 13:45',
-  },
-  {
-    id: 'ORD-003',
-    customer: { name: 'Lê Hoàng C', email: 'lehoangc@email.com', avatar: 'LC' },
-    product: { name: 'New Balance 574', image: null, variant: 'Size 43' },
-    total: 3200000,
-    status: 'shipped',
-    date: '2024-01-15 12:20',
-  },
-  {
-    id: 'ORD-004',
-    customer: { name: 'Phạm Minh D', email: 'phamminhd@email.com', avatar: 'PD' },
-    product: { name: 'Puma Suede Classic', image: null, variant: 'Size 41' },
-    total: 2800000,
-    status: 'pending',
-    date: '2024-01-15 11:15',
-  },
-  {
-    id: 'ORD-005',
-    customer: { name: 'Hoàng Thu E', email: 'hoangthue@email.com', avatar: 'HE' },
-    product: { name: 'Converse Chuck 70', image: null, variant: 'Size 39' },
-    total: 2500000,
-    status: 'delivered',
-    date: '2024-01-15 10:30',
-  },
-  {
-    id: 'ORD-006',
-    customer: { name: 'Đặng Quốc F', email: 'dangquocf@email.com', avatar: 'DF' },
-    product: { name: 'Nike Air Force 1', image: null, variant: 'Size 44' },
-    total: 3800000,
-    status: 'cancelled',
-    date: '2024-01-15 09:45',
-  },
-];
+const normalizeOrderStatus = (status) => {
+  const s = String(status || '').toLowerCase();
+  if (s.includes('hủy') || s.includes('cancel')) return { key: 'cancelled', icon: '❌', label: 'Đã hủy' };
+  if (s.includes('hoàn') || s.includes('delivered') || s.includes('đã giao')) return { key: 'delivered', icon: '✅', label: 'Hoàn thành' };
+  if (s.includes('xử lý') || s.includes('confirm')) return { key: 'processing', icon: '⚙️', label: 'Đang xử lý' };
+  if (s.includes('chờ')) return { key: 'pending', icon: '⏳', label: 'Chờ xử lý' };
+  if (s.includes('giao') || s.includes('ship')) return { key: 'shipped', icon: '🚚', label: 'Đang giao' };
+  return { key: 'pending', icon: '⏳', label: status || 'Chờ xử lý' };
+};
 
 // Stat Card Component
 const StatCard = ({ title, value, change, changeLabel, icon, type, formatter }) => {
@@ -179,49 +113,141 @@ const AlertCard = ({ type, icon, title, message, time }) => {
 const DashboardOverview = () => {
   const [timeRange, setTimeRange] = useState('30d');
   const [loading, setLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState('');
   const [revenueData, setRevenueData] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
   const [brandData, setBrandData] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [lowStock, setLowStock] = useState({ threshold: 10, totalLowStockVariants: 0, items: [] });
   const [activeProductCount, setActiveProductCount] = useState(null);
   const [orderKpi, setOrderKpi] = useState(null);
   const [returnKpi, setReturnKpi] = useState(null);
   const [customerKpi, setCustomerKpi] = useState(null);
   const [employeeKpi, setEmployeeKpi] = useState(null);
 
-  // Fetch real product count + KPI blocks
+  // Fetch dashboard data
   useEffect(() => {
-    productAPI.countActive()
-      .then((res) => {
-        const count = res?.data ?? res;
-        if (typeof count === 'number') setActiveProductCount(count);
-      })
-      .catch(() => {/* keep null – falls back to mock in stats */});
+    let cancelled = false;
+    const range = mapRangeFromUI(timeRange);
 
-    Promise.allSettled([
-      orderAPI.getKpi(),
-      returnAPI.getKpi(),
-      adminCustomerAPI.getKpis(),
-      adminEmployeeAPI.getKpis(),
-    ]).then(([orderRes, returnRes, customerRes, employeeRes]) => {
+    const load = async () => {
+      setLoading(true);
+      setDashboardError('');
+
+      const results = await Promise.allSettled([
+        productAPI.countActive(),
+        orderAPI.getKpi(),
+        returnAPI.getKpi(),
+        adminCustomerAPI.getKpis(),
+        adminEmployeeAPI.getKpis(),
+        orderAPI.getKpiTimeseries(range, 'net'),
+        orderAPI.getRevenueByCategory(range, 8),
+        orderAPI.getRevenueByBrand(range, 10),
+        orderAPI.getRecent({ page: 0, size: 10 }),
+        productAPI.getLowStockKpi(10, 5),
+      ]);
+
+      if (cancelled) return;
+
+      const [
+        activeCountRes,
+        orderRes,
+        returnRes,
+        customerRes,
+        employeeRes,
+        timeseriesRes,
+        byCategoryRes,
+        byBrandRes,
+        recentRes,
+        lowStockRes,
+      ] = results;
+
+      if (activeCountRes.status === 'fulfilled') {
+        const count = activeCountRes.value?.data ?? activeCountRes.value;
+        if (typeof count === 'number') setActiveProductCount(count);
+      }
+
       if (orderRes.status === 'fulfilled') setOrderKpi(orderRes.value?.data ?? orderRes.value ?? null);
       if (returnRes.status === 'fulfilled') setReturnKpi(returnRes.value?.data ?? returnRes.value ?? null);
       if (customerRes.status === 'fulfilled') setCustomerKpi(customerRes.value?.data ?? customerRes.value ?? null);
       if (employeeRes.status === 'fulfilled') setEmployeeKpi(employeeRes.value?.data ?? employeeRes.value ?? null);
-    });
-  }, []);
 
-  // Initialize data
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setRevenueData(generateRevenueData());
-      setCategoryData(generateCategoryData());
-      setBrandData(generateBrandData());
-      setRecentOrders(generateRecentOrders());
+      if (timeseriesRes.status === 'fulfilled') {
+        const ts = timeseriesRes.value?.data ?? timeseriesRes.value ?? {};
+        const points = Array.isArray(ts.points) ? ts.points : [];
+        setRevenueData(points.map(p => ({
+          date: formatDateLabel(p.date),
+          revenue: Number(p.revenue || 0),
+          orders: Number(p.orders || 0),
+        })));
+      } else {
+        setRevenueData([]);
+      }
+
+      if (byCategoryRes.status === 'fulfilled') {
+        const data = byCategoryRes.value?.data ?? byCategoryRes.value ?? {};
+        const items = Array.isArray(data.items) ? data.items : [];
+        setCategoryData(items.map((it, idx) => ({
+          name: it.categoryName,
+          value: Number(it.ratioPercent || 0),
+          revenue: Number(it.revenue || 0),
+          color: PIE_COLORS[idx % PIE_COLORS.length],
+        })));
+      } else {
+        setCategoryData([]);
+      }
+
+      if (byBrandRes.status === 'fulfilled') {
+        const data = byBrandRes.value?.data ?? byBrandRes.value ?? {};
+        const items = Array.isArray(data.items) ? data.items : [];
+        setBrandData(items.map((it) => ({
+          name: it.brandName,
+          revenue: Number(it.revenue || 0),
+          units: Number(it.unitsSold || 0),
+        })));
+      } else {
+        setBrandData([]);
+      }
+
+      if (recentRes.status === 'fulfilled') {
+        const data = recentRes.value?.data ?? recentRes.value ?? {};
+        const content = Array.isArray(data.content) ? data.content : [];
+        setRecentOrders(content.map((o) => ({
+          id: o.orderNumber,
+          customer: {
+            name: o.customerName || 'Khách hàng',
+            email: o.customerEmail || o.customerPhone || '—',
+            avatar: (o.customerName || 'KH').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase(),
+          },
+          product: {
+            name: o.firstItem?.productName || o.productName || '—',
+            image: o.firstItem?.imageUrl || o.imageUrl || null,
+            variant: `Size ${o.firstItem?.sizeName || o.sizeName || '—'} • ${o.firstItem?.colorName || o.colorName || '—'}`,
+          },
+          total: Number(o.totalAmount || 0),
+          status: normalizeOrderStatus(o.orderStatus),
+          date: o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : '—',
+        })));
+      } else {
+        setRecentOrders([]);
+      }
+
+      if (lowStockRes.status === 'fulfilled') {
+        setLowStock(lowStockRes.value?.data ?? lowStockRes.value ?? { threshold: 10, totalLowStockVariants: 0, items: [] });
+      } else {
+        setLowStock({ threshold: 10, totalLowStockVariants: 0, items: [] });
+      }
+
+      const allRejected = results.every(r => r.status === 'rejected');
+      if (allRejected) {
+        setDashboardError('Không thể tải dữ liệu dashboard từ máy chủ.');
+      }
+
       setLoading(false);
-    }, 500);
+    };
 
-    return () => clearTimeout(timer);
+    load();
+    return () => { cancelled = true; };
   }, [timeRange]);
 
   // Calculate summary stats
@@ -358,7 +384,7 @@ const DashboardOverview = () => {
           <QuickActionCard
             icon="⚠️"
             title="Cảnh báo tồn kho"
-            description="5 sản phẩm sắp hết hàng"
+            description={`${lowStock.totalLowStockVariants || 0} biến thể dưới ngưỡng ${lowStock.threshold || 10}`}
             onClick={() => {}}
           />
         </div>
@@ -521,9 +547,9 @@ const DashboardOverview = () => {
           />
           <AlertCard
             type="success"
-            icon="👥"
-            title="KPI Tài khoản"
-            message={`Khách active: ${stats.customerKpi?.activeCustomers ?? 0} • NV active: ${stats.employeeKpi?.activeEmployees ?? 0}`}
+            icon="⚠️"
+            title="Tồn kho thấp"
+            message={`Biến thể sắp hết: ${lowStock.totalLowStockVariants ?? 0}${lowStock.items?.[0] ? ` • Nổi bật: ${lowStock.items[0].productName} (${lowStock.items[0].stock})` : ''}`}
             time="Dữ liệu realtime"
           />
         </div>
@@ -565,7 +591,19 @@ const DashboardOverview = () => {
                   <td>
                     <div className="product-cell">
                       <div className="product-image">
-                        <span>👟</span>
+                        {order.product.image ? (
+                          <img
+                            src={order.product.image}
+                            alt={order.product.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = e.currentTarget.nextSibling;
+                              if (fallback) fallback.style.display = 'inline';
+                            }}
+                          />
+                        ) : null}
+                        <span style={{ display: order.product.image ? 'none' : 'inline' }}>👟</span>
                       </div>
                       <div className="product-info">
                         <h4>{order.product.name}</h4>
@@ -577,17 +615,8 @@ const DashboardOverview = () => {
                     <span className="order-total">{formatCurrency(order.total)}</span>
                   </td>
                   <td>
-                    <span className={`status-badge ${order.status}`}>
-                      {order.status === 'pending' && '⏳'}
-                      {order.status === 'processing' && '⚙️'}
-                      {order.status === 'shipped' && '🚚'}
-                      {order.status === 'delivered' && '✅'}
-                      {order.status === 'cancelled' && '❌'}
-                      {order.status === 'pending' && 'Chờ xử lý'}
-                      {order.status === 'processing' && 'Đang xử lý'}
-                      {order.status === 'shipped' && 'Đã giao hàng'}
-                      {order.status === 'delivered' && 'Hoàn thành'}
-                      {order.status === 'cancelled' && 'Đã hủy'}
+                    <span className={`status-badge ${order.status?.key || 'pending'}`}>
+                      {order.status?.icon} {order.status?.label}
                     </span>
                   </td>
                   <td>

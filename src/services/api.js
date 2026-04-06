@@ -246,6 +246,10 @@ export const productAPI = {
 
   // Count total active products (for dashboard KPI)
   countActive: () => apiCall('/products/count-active'),
+
+  // Low stock KPI
+  getLowStockKpi: (threshold = 10, limit = 5) =>
+    apiCall(`/admin/products/kpi/low-stock?threshold=${encodeURIComponent(threshold)}&limit=${encodeURIComponent(limit)}`),
 };
 
 // Product Variant API functions
@@ -726,6 +730,27 @@ export const orderAPI = {
 
   // Get KPI dashboard data
   getKpi: () => apiCall('/admin/orders/kpi'),
+
+  // KPI time-series by day
+  getKpiTimeseries: (range = '30d', metric = 'net') =>
+    apiCall(`/admin/orders/kpi/timeseries?range=${encodeURIComponent(range)}&metric=${encodeURIComponent(metric)}`),
+
+  // Revenue by category
+  getRevenueByCategory: (range = '30d', limit = 8) =>
+    apiCall(`/admin/orders/kpi/by-category?range=${encodeURIComponent(range)}&limit=${encodeURIComponent(limit)}`),
+
+  // Revenue by brand
+  getRevenueByBrand: (range = '30d', limit = 10) =>
+    apiCall(`/admin/orders/kpi/by-brand?range=${encodeURIComponent(range)}&limit=${encodeURIComponent(limit)}`),
+
+  // Recent orders
+  getRecent: ({ page = 0, size = 10, status } = {}) => {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    params.append('size', Math.min(size, 50));
+    if (status) params.append('status', status);
+    return apiCall(`/admin/orders/recent?${params.toString()}`);
+  },
 
   // Export orders as CSV
   exportCsv: (params = {}) => apiCall('/admin/orders/export-csv', {
