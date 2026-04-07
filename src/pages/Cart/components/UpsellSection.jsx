@@ -1,12 +1,13 @@
 import React, { useRef, useState, useEffect } from 'react';
 import CatalogProductCard from '../../Catalog2/components/CatalogProductCard';
 import { UPSELL_PRODUCTS } from '../mockCartData';
+import { useWishlist } from '../../../context/WishlistContext';
 
 const UpsellSection = () => {
     const scrollRef = useRef(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
-    const [wishlist, setWishlist] = useState([]);
+    const { wishlistArray, toggleWishlist } = useWishlist();
 
     const checkScroll = () => {
         const el = scrollRef.current;
@@ -29,14 +30,6 @@ const UpsellSection = () => {
         if (!el) return;
         const scrollAmount = 260;
         el.scrollBy({ left: direction === 'next' ? scrollAmount : -scrollAmount, behavior: 'smooth' });
-    };
-
-    const handleToggleWishlist = (productId) => {
-        setWishlist(prev =>
-            prev.includes(productId)
-                ? prev.filter(id => id !== productId)
-                : [...prev, productId]
-        );
     };
 
     return (
@@ -66,8 +59,8 @@ const UpsellSection = () => {
                                 viewMode="grid"
                                 onQuickView={() => { }}
                                 onAddToCart={() => { }}
-                                wishlist={wishlist}
-                                onToggleWishlist={handleToggleWishlist}
+                                wishlist={wishlistArray}
+                                onToggleWishlist={toggleWishlist}
                             />
                         ))}
                     </div>

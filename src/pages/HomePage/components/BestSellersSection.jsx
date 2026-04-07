@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useScrollReveal } from '../hooks';
 import CatalogProductCard from '../../Catalog2/components/CatalogProductCard';
 import { ProductCardSkeleton } from './SkeletonLoaders';
+import { useWishlist } from '../../../context/WishlistContext';
 
 /**
  * Best Sellers Section — shows popular products with brand filter tabs.
@@ -25,7 +26,7 @@ export default function BestSellersSection({ products = [], brands = [], loading
 
   const [activeTab, setActiveTab] = useState(null);
   const [fading, setFading] = useState(false);
-  const [wishlist, setWishlist] = useState([]);
+  const { wishlistArray, toggleWishlist } = useWishlist();
 
   const filteredProducts = activeTab
     ? products.filter(p => p.brandName === activeTab)
@@ -37,12 +38,6 @@ export default function BestSellersSection({ products = [], brands = [], loading
       setActiveTab(brandName);
       setFading(false);
     }, 150);
-  }, []);
-
-  const handleToggleWishlist = useCallback((id) => {
-    setWishlist(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
   }, []);
 
   const ref = useScrollReveal();
@@ -83,8 +78,8 @@ export default function BestSellersSection({ products = [], brands = [], loading
                 viewMode="grid"
                 onQuickView={() => {}}
                 onAddToCart={() => {}}
-                wishlist={wishlist}
-                onToggleWishlist={handleToggleWishlist}
+                wishlist={wishlistArray}
+                onToggleWishlist={toggleWishlist}
               />
             ))}
           </div>

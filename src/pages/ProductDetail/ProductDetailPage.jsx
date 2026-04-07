@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProductDetail } from '../../hooks/useProductDetail';
 import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
 import { formatVND } from '../../utils/formatPrice';
 import ProductDetailSkeleton from '../../components/common/ProductDetailSkeleton';
 import ErrorState from '../../components/common/ErrorState';
@@ -14,6 +15,7 @@ const ProductDetailPage = () => {
     const { productId } = useParams();
     const navigate = useNavigate();
     const { addToCart, cartItems } = useCart();
+    const { wishlistArray, toggleWishlist, isWished } = useWishlist();
     const [addingToCart, setAddingToCart] = useState(false);
     const [quantity, setQuantity] = useState(1);
     const [cartError, setCartError] = useState('');
@@ -291,12 +293,13 @@ const ProductDetailPage = () => {
                         </div>
                     )}
 
-                    {/* CTA */}
+                    {/* CTA Buttons */}
                     {cartError && (
                         <div className="pdp-cart-error">
                             ⚠ {cartError}
                         </div>
                     )}
+                    <div className="pdp-cta-row">
                     <button
                         className={`pdp-add-btn ${(!selectedVariant || !isInStock || addingToCart || maxCanAdd === 0) ? 'disabled' : ''}`}
                         disabled={!selectedVariant || !isInStock || addingToCart || maxCanAdd === 0}
@@ -330,6 +333,16 @@ const ProductDetailPage = () => {
                                     ? 'Hết hàng'
                                     : 'Thêm vào giỏ hàng'}
                     </button>
+
+                    <button
+                        className={`pdp-wishlist-btn${isWished(product?.productId) ? ' active' : ''}`}
+                        onClick={() => toggleWishlist(product?.productId)}
+                        aria-label={isWished(product?.productId) ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
+                        title={isWished(product?.productId) ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
+                    >
+                        {isWished(product?.productId) ? '❤' : '♡'}
+                    </button>
+                    </div>
 
                     {/* Highlights */}
                     {product.highlights?.length > 0 && (
@@ -379,7 +392,8 @@ const ProductDetailPage = () => {
                                 key={rp.productId}
                                 product={rp}
                                 viewMode="grid-4"
-                                wishlist={[]}
+                                wishlist={wishlistArray}
+                                onToggleWishlist={toggleWishlist}
                             />
                         ))}
                     </div>

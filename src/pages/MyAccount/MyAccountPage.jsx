@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import AccountSidebar from './AccountSidebar';
 import OverviewTab from './tabs/OverviewTab';
 import OrdersTab from './tabs/OrdersTab';
@@ -8,6 +8,7 @@ import AddressTab from './tabs/AddressTab';
 import PasswordTab from './tabs/PasswordTab';
 import ReviewsTab from './tabs/ReviewsTab';
 import ReturnsTab from './tabs/ReturnsTab';
+import WishlistTab from './tabs/WishlistTab';
 import { getProfile } from '../../api/accountApi';
 import './MyAccountPage.css';
 
@@ -15,6 +16,7 @@ const TAB_HASHES = {
     overview: 'overview',
     orders: 'orders',
     returns: 'returns',
+    wishlist: 'wishlist',
     profile: 'profile',
     addresses: 'addresses',
     password: 'password',
@@ -25,22 +27,31 @@ const TAB_TITLES = {
     overview: 'Tổng quan',
     orders: 'Đơn hàng',
     returns: 'Trả hàng',
+    wishlist: 'Yêu thích',
     profile: 'Thông tin cá nhân',
     addresses: 'Địa chỉ',
     password: 'Đổi mật khẩu',
     reviews: 'Đánh giá',
 };
 
-const getInitialTab = () => {
-    const hash = window.location.hash.replace('#', '');
-    return Object.keys(TAB_HASHES).includes(hash) ? hash : 'overview';
-};
-
 const MyAccountPage = () => {
-    const [activeTab, setActiveTab] = useState(getInitialTab);
+    const location = useLocation();
+    const [activeTab, setActiveTab] = useState(() => {
+        const hash = location.hash.replace('#', '');
+        return Object.keys(TAB_HASHES).includes(hash) ? hash : 'overview';
+    });
     const [customer, setCustomer] = useState(null);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // React to hash changes (e.g. navigating from header wishlist icon)
+    useEffect(() => {
+        const hash = location.hash.replace('#', '');
+        if (Object.keys(TAB_HASHES).includes(hash) && hash !== activeTab) {
+            setActiveTab(hash);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.hash]);
 
     const fetchProfile = useCallback(async () => {
         try {
@@ -129,8 +140,9 @@ const MyAccountPage = () => {
                     {/* Main Content */}
                     <main className="acc-main-content">
                         {activeTab === 'overview' && <OverviewTab onTabChange={handleTabChange} customer={customer} stats={stats} />}
-                        {activeTab === 'orders' && <OrdersTab onOpenReturns={() => handleTabChange('returns')} />}
+                        {activeTab === 'orders' && <OrdersTab onOpenReturns={() => handleTabChange('returns')} onOpenReviews={() => handleTabChange('reviews')} />}
                         {activeTab === 'returns' && <ReturnsTab />}
+                        {activeTab === 'wishlist' && <WishlistTab />}
                         {activeTab === 'profile' && <ProfileTab customer={customer} stats={stats} onNameChange={handleNameChange} onProfileUpdate={fetchProfile} />}
                         {activeTab === 'addresses' && <AddressTab />}
                         {activeTab === 'password' && <PasswordTab />}

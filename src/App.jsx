@@ -10,6 +10,7 @@ import Toast from "./components/Toast";
 import { ToastProvider } from "./context/ToastContext";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import HomePage from "./pages/HomePage/HomePage";
 import Catalog from "./pages/Catalog2/CatalogPage";
@@ -77,7 +78,9 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <Router>
-            <AppContent />
+            <WishlistProvider>
+              <AppContent />
+            </WishlistProvider>
           </Router>
         </CartProvider>
       </AuthProvider>
