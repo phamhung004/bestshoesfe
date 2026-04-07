@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Copy, ChevronRight, ShoppingBag, Star, Truck, X, Package, Loader, RotateCcw, ChevronLeft } from 'lucide-react';
 import { formatVND, formatDate } from '../mockAccountData';
-import { getMyOrders, cancelOrder } from '../../../api/accountApi';
+import { getMyOrders, cancelOrder, createReview } from '../../../api/accountApi';
 import { getMyReturns } from '../../../api/returnApi';
 import { RETURN_WINDOW_DAYS } from '../../../constants/returnConstants';
 import OrderDetailModal from '../components/OrderDetailModal';
 import ReturnRequestModal from '../components/ReturnRequestModal';
+import WriteReviewModal from '../components/WriteReviewModal';
 
 const ALL_STATUSES = ['Tất cả', 'Chờ xác nhận', 'Đã xác nhận', 'Đang đóng gói', 'Bàn giao ĐVVC', 'Đang giao', 'Đã giao', 'Trả hàng/Hoàn tiền', 'Đã hủy'];
 
@@ -25,13 +26,14 @@ const statusBadgeClass = (status) => {
 
 const payBadgeClass = (status) => status === 'Đã thanh toán' ? 'acc-pay-badge acc-pay-paid' : 'acc-pay-badge acc-pay-unpaid';
 
-const OrdersTab = ({ onOpenReturns }) => {
+const OrdersTab = ({ onOpenReturns, onOpenReviews }) => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeStatus, setActiveStatus] = useState('Tất cả');
     const [search, setSearch] = useState('');
     const [detailOrder, setDetailOrder] = useState(null);
     const [returnOrder, setReturnOrder] = useState(null);
+    const [reviewItem, setReviewItem] = useState(null);
     const [myReturns, setMyReturns] = useState([]);
     const [toast, setToast] = useState(null);
     const [cancellingId, setCancellingId] = useState(null);
@@ -116,6 +118,39 @@ const OrdersTab = ({ onOpenReturns }) => {
     const handleCopy = (orderNum) => {
         navigator.clipboard.writeText(orderNum).catch(() => { });
         showToast(`Đã sao chép ${orderNum}`);
+    };
+
+    const handleOpenReview = (order) => {
+        if (!order.items || order.items.length === 0) return;
+        const firstItem = order.items[0];
+        setReviewItem({
+            pendingId: firstItem.orderItemId,
+            productName: firstItem.productName,
+            variant: firstItem.variant,
+            thumbColor: firstItem.thumbColor,
+            imageUrl: firstItem.imageUrl,
+            isEdit: false,
+            _totalItems: order.items.length,
+        });
+    };
+
+    const handleSubmitReview = async (data) => {
+        await createReview({
+            orderItemId: reviewItem.pendingId,
+            rating: data.rating,
+            title: data.title || null,
+            content: data.content,
+            qualityRating: data.qualityRating || null,
+            sizeRating: data.sizeRating || null,
+            deliveryRating: data.deliveryRating || null,
+        });
+        const remaining = (reviewItem._totalItems || 1) - 1;
+        if (remaining > 0) {
+            showToast(`Đánh giá đã gửi! Còn ${remaining} sản phẩm — xem trong tab Đánh giá.`, 'success');
+            onOpenReviews?.();
+        } else {
+            showToast('Đánh giá đã được gửi thành công!', 'success');
+        }
     };
 
     const handleCancel = async (orderNumber) => {
@@ -219,7 +254,19 @@ const OrdersTab = ({ onOpenReturns }) => {
                                                 </div>
                                             )}
                                             <div className="acc-order-item-detail">
-                                                <span className="acc-order-item-name">{item.productName}</span>
+                                                {item.productId ? (
+                                                    <a
+                                                        href={`/products/${item.productId}`}
+                                                        className="acc-order-item-name"
+                                                        style={{ textDecoration: 'none', color: 'inherit' }}
+                                                        onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                                                        onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+                                                    >
+                                                        {item.productName}
+                                                    </a>
+                                                ) : (
+                                                    <span className="acc-order-item-name">{item.productName}</span>
+                                                )}
                                                 <span className="acc-order-item-variant">{item.variant}</span>
                                             </div>
                                         </div>
@@ -255,7 +302,7 @@ const OrdersTab = ({ onOpenReturns }) => {
                                     )}
                                     {order.status === 'Đã giao' && (
                                         <>
-                                            <button className="acc-btn-outline-sm"><Star size={14} /> Đánh giá</button>
+                                            <button className="acc-btn-outline-sm" onClick={() => handleOpenReview(order)}><Star size={14} /> Đánh giá</button>
                                             <button className="acc-btn-primary-sm"><ShoppingBag size={14} /> Mua lại</button>
                                             {isWithinReturnWindow(order) && !hasActiveReturn(order.orderNumber) && (
                                                 <button
@@ -373,6 +420,15 @@ const OrdersTab = ({ onOpenReturns }) => {
                         setDetailOrder(prev => prev ? { ...prev, ...updated } : prev);
                         showToast('Đã cập nhật địa chỉ giao hàng thành công', 'success');
                     }}
+                />
+            )}
+
+            {/* Write Review Modal */}
+            {reviewItem && (
+                <WriteReviewModal
+                    product={reviewItem}
+                    onClose={() => setReviewItem(null)}
+                    onSubmit={handleSubmitReview}
                 />
             )}
 

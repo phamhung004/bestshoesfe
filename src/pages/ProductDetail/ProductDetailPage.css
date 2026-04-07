@@ -293,8 +293,13 @@
 }
 
 /* CTA button */
+.pdp-cta-row {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+}
 .pdp-add-btn {
-    width: 100%;
+    flex: 1;
     padding: 15px 24px;
     background: #4f46e5;
     color: white;
@@ -312,6 +317,25 @@
     color: #9ca3af;
     cursor: not-allowed;
 }
+
+/* Wishlist button (heart) on product detail */
+.pdp-wishlist-btn {
+    width: 52px;
+    height: auto;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    color: #9ca3af;
+}
+.pdp-wishlist-btn:hover { border-color: #f43f5e; color: #f43f5e; }
+.pdp-wishlist-btn.active { border-color: #f43f5e; color: #f43f5e; background: #fff0f3; }
 
 /* Highlights */
 .pdp-highlights {

@@ -9,6 +9,7 @@ import CatalogPagination from './components/CatalogPagination';
 import ErrorState from '../../components/common/ErrorState';
 import { useProducts } from '../../hooks/useProducts';
 import { useFilterOptions } from '../../hooks/useFilterOptions';
+import { useWishlist } from '../../context/WishlistContext';
 import './CatalogPage.css';
 
 const CatalogPage = () => {
@@ -32,9 +33,9 @@ const CatalogPage = () => {
 
     // ── Local UI state ────────────────────────────────────
     const [viewMode, setViewMode] = useState('grid-4');
-    const [wishlist, setWishlist] = useState([]);
     const [toast, setToast] = useState(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const { wishlistArray, toggleWishlist } = useWishlist();
 
     // ── Handlers ─────────────────────────────────────────
     const handleFilterChange = useCallback((key, value) => {
@@ -48,14 +49,6 @@ const CatalogPage = () => {
     const handleRemoveFilter = useCallback((key) => {
         updateFilter(key, undefined);
     }, [updateFilter]);
-
-    const handleToggleWishlist = useCallback((productId) => {
-        setWishlist(prev =>
-            prev.includes(productId)
-                ? prev.filter(id => id !== productId)
-                : [...prev, productId]
-        );
-    }, []);
 
     const handleAddToCart = useCallback((product) => {
         setToast(`Đã thêm "${product.name}" vào giỏ hàng!`);
@@ -163,8 +156,8 @@ const CatalogPage = () => {
                                     viewMode={viewMode}
                                     onQuickView={handleQuickView}
                                     onAddToCart={handleAddToCart}
-                                    wishlist={wishlist}
-                                    onToggleWishlist={handleToggleWishlist}
+                                    wishlist={wishlistArray}
+                                    onToggleWishlist={toggleWishlist}
                                     onClearFilters={handleResetFilters}
                                     onShowAll={handleResetFilters}
                                 />

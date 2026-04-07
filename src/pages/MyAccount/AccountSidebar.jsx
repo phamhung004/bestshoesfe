@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-    LayoutDashboard, Package, User, MapPin, Lock, Star, LogOut, ChevronRight, X, RotateCcw
+    LayoutDashboard, Package, User, MapPin, Lock, Star, LogOut, ChevronRight, X, RotateCcw, Heart
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { formatMemberSince, getTierFromSpend, getTierEmoji } from './mockAccountData';
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
     { id: 'overview', label: 'Tổng quan', icon: LayoutDashboard, count: null },
     { id: 'orders', label: 'Đơn hàng của tôi', icon: Package, count: 'totalOrders' },
     { id: 'returns', label: 'Yêu cầu trả hàng', icon: RotateCcw, count: null },
+    { id: 'wishlist', label: 'Sản phẩm yêu thích', icon: Heart, count: null },
     { id: 'profile', label: 'Thông tin cá nhân', icon: User, count: null },
     { id: 'addresses', label: 'Địa chỉ của tôi', icon: MapPin, count: 'addressCount' },
     { id: 'password', label: 'Đổi mật khẩu', icon: Lock, count: null },

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
+import { useWishlist } from '../context/WishlistContext'
 import './Header.css'
 
 function Header() {
@@ -15,12 +16,11 @@ function Header() {
   const navigate = useNavigate()
   const { isAuthenticated, user, logout } = useAuth()
   const { cartItems: ctxCartItems, totalItems: cartCount, totalAmount: cartSubtotal } = useCart()
+  const { wishlistIds } = useWishlist()
+  const wishlistCount = wishlistIds.size
   const searchInputRef = useRef(null)
   const miniCartRef = useRef(null)
   const megaMenuTimeoutRef = useRef(null)
-
-  // Mock data
-  const wishlistCount = 1
 
   useEffect(() => {
     const handleScroll = () => {
@@ -240,7 +240,11 @@ function Header() {
             </button>
 
             {/* Wishlist */}
-            <button className="bs-header__icon-btn bs-header__wishlist-btn" aria-label="Wishlist">
+            <button
+              className="bs-header__icon-btn bs-header__wishlist-btn"
+              aria-label="Wishlist"
+              onClick={() => navigate('/account#wishlist')}
+            >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
@@ -416,7 +420,7 @@ function Header() {
             <input type="text" placeholder="Tìm kiếm..." className="bs-drawer__search-input" />
           </div>
           <div className="bs-drawer__icons">
-            <button className="bs-drawer__icon-btn" aria-label="Wishlist">
+            <button className="bs-drawer__icon-btn" aria-label="Wishlist" onClick={() => { setIsMenuOpen(false); navigate('/account#wishlist'); }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
