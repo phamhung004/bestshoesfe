@@ -12,6 +12,8 @@ export const normalizeReturnItem = (item) => {
         variant_id: item.variantId ?? item.variant_id,
         quantity: item.quantity,
         unit_price: item.unitPrice ?? item.unit_price,
+        original_price: item.originalPrice ?? item.original_price ?? null,
+        promotion_name: item.promotionName ?? item.promotion_name ?? null,
         total_price: item.totalPrice ?? item.total_price,
         product: item.product ? {
             product_id: item.product.productId ?? item.product.product_id,

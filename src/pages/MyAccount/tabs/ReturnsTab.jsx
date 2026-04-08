@@ -121,7 +121,7 @@ const ReturnCard = ({ ret, onCancelled }) => {
                     <div style={{ flex: 2, minWidth: 220 }}>
                         <p style={{ fontWeight: 600, fontSize: 13, color: '#374151', marginBottom: 8 }}>Sản phẩm trả hàng</p>
                         {(ret.items || []).map((item, idx) => (
-                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '6px 0', borderBottom: '1px solid #f3f4f6' }}>
+                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: 13, padding: '6px 0', borderBottom: '1px solid #f3f4f6', gap: 8 }}>
                                 <div>
                                     <span style={{ color: '#111827', fontWeight: 500 }}>{item.product?.name || '—'}</span>
                                     <span style={{ color: '#9ca3af', marginLeft: 8 }}>
@@ -129,8 +129,20 @@ const ReturnCard = ({ ret, onCancelled }) => {
                                         {item.color?.colorName && ` · ${item.color.colorName}`}
                                         {' × '}{item.quantity}
                                     </span>
+                                    {item.promotionName && (
+                                        <div style={{ fontSize: 11, color: '#ef4444', marginTop: 2 }}>🏷️ {item.promotionName}</div>
+                                    )}
                                 </div>
-                                <span style={{ fontWeight: 600 }}>{formatVND(item.totalPrice)}</span>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
+                                    {item.originalPrice && (
+                                        <span style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: 11 }}>
+                                            {formatVND(item.originalPrice * item.quantity)}
+                                        </span>
+                                    )}
+                                    <span style={{ fontWeight: 600, color: item.originalPrice ? '#ef4444' : '#111827' }}>
+                                        {formatVND(item.totalPrice)}
+                                    </span>
+                                </div>
                             </div>
                         ))}
 

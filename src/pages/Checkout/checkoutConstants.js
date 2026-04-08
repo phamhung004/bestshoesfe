@@ -40,18 +40,6 @@ export const PAYMENT_METHODS = [
         label: 'Chuyển khoản ngân hàng',
         desc: 'Chuyển khoản trực tiếp — xác nhận tự động qua SePay',
     },
-    {
-        id: 'momo',
-        icon: '📱',
-        label: 'Ví MoMo',
-        desc: 'Quét mã QR hoặc nhập số điện thoại MoMo',
-    },
-    {
-        id: 'card',
-        icon: '💳',
-        label: 'Thẻ tín dụng / Ghi nợ',
-        desc: 'Visa, Mastercard, JCB — Bảo mật SSL',
-    },
 ];
 
 // ─── FORMAT HELPERS ───────────────────────────────────

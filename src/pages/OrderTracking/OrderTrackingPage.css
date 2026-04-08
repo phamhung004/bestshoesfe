@@ -304,6 +304,20 @@
     box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
 }
 
+.ot-timeline-step.returned .ot-timeline-dot {
+    background: #f97316;
+    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2);
+}
+
+.ot-timeline-step.current .ot-timeline-dot {
+    animation: ot-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ot-pulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2); }
+    50%       { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.08); }
+}
+
 .ot-timeline-line {
     position: absolute;
     top: 16px;

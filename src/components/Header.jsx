@@ -10,8 +10,6 @@ function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isMiniCartOpen, setIsMiniCartOpen] = useState(false)
-  const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false)
-  const [catalogAccordionOpen, setCatalogAccordionOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const { isAuthenticated, user, logout } = useAuth()
@@ -20,7 +18,6 @@ function Header() {
   const wishlistCount = wishlistIds.size
   const searchInputRef = useRef(null)
   const miniCartRef = useRef(null)
-  const megaMenuTimeoutRef = useRef(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -81,20 +78,6 @@ function Header() {
     { id: 'Contact', label: 'Liên hệ', href: '/#contact' }
   ]
 
-  const megaMenuCategories = [
-    { icon: '🏃', label: 'Giày chạy bộ', href: '/catalog?cat=running' },
-    { icon: '⭐', label: 'Sneaker', href: '/catalog?cat=sneaker' },
-    { icon: '💼', label: 'Giày da công sở', href: '/catalog?cat=formal' },
-    { icon: '🩴', label: 'Dép & Sandal', href: '/catalog?cat=sandal' }
-  ]
-
-  const megaMenuBrands = [
-    { name: 'Nike', href: '/catalog?brand=nike' },
-    { name: 'Adidas', href: '/catalog?brand=adidas' },
-    { name: 'New Balance', href: '/catalog?brand=nb' },
-    { name: "Biti's Hunter", href: '/catalog?brand=bitis' }
-  ]
-
   const getActiveNav = () => {
     if (location.pathname === '/catalog') return 'Catalog'
     if (location.pathname === '/') return 'Home'
@@ -102,17 +85,6 @@ function Header() {
   }
 
   const activeNav = getActiveNav()
-
-  const handleMegaMenuEnter = () => {
-    clearTimeout(megaMenuTimeoutRef.current)
-    setIsMegaMenuOpen(true)
-  }
-
-  const handleMegaMenuLeave = () => {
-    megaMenuTimeoutRef.current = setTimeout(() => {
-      setIsMegaMenuOpen(false)
-    }, 150)
-  }
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -148,63 +120,13 @@ function Header() {
               <div
                 key={item.id}
                 className="bs-nav__item-wrapper"
-                onMouseEnter={item.id === 'Catalog' ? handleMegaMenuEnter : undefined}
-                onMouseLeave={item.id === 'Catalog' ? handleMegaMenuLeave : undefined}
               >
                 <Link
                   to={item.href}
                   className={`bs-nav__link ${activeNav === item.id ? 'bs-nav__link--active' : ''}`}
                 >
                   {item.label}
-                  {item.id === 'Catalog' && (
-                    <svg className="bs-nav__chevron" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
                 </Link>
-
-                {/* Mega Menu */}
-                {item.id === 'Catalog' && (
-                  <div className={`bs-megamenu ${isMegaMenuOpen ? 'bs-megamenu--open' : ''}`}>
-                    <div className="bs-megamenu__content">
-                      <div className="bs-megamenu__col">
-                        <h4 className="bs-megamenu__heading">Danh mục</h4>
-                        <ul className="bs-megamenu__list">
-                          {megaMenuCategories.map((cat) => (
-                            <li key={cat.label}>
-                              <Link to={cat.href} className="bs-megamenu__link">
-                                <span className="bs-megamenu__icon">{cat.icon}</span>
-                                {cat.label}
-                              </Link>
-                            </li>
-                          ))}
-                          <li>
-                            <Link to="/catalog" className="bs-megamenu__link bs-megamenu__link--all">
-                              Xem tất cả →
-                            </Link>
-                          </li>
-                        </ul>
-                      </div>
-                      <div className="bs-megamenu__col">
-                        <h4 className="bs-megamenu__heading">Thương hiệu nổi bật</h4>
-                        <ul className="bs-megamenu__list">
-                          {megaMenuBrands.map((brand) => (
-                            <li key={brand.name}>
-                              <Link to={brand.href} className="bs-megamenu__link">
-                                <span className="bs-megamenu__brand-dot" />
-                                {brand.name}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                    <div className="bs-megamenu__banner">
-                      <span>🔥 Sale cuối tuần — Giảm đến 40%</span>
-                      <Link to="/catalog?sale=true" className="bs-megamenu__banner-link">Xem ngay →</Link>
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </nav>
@@ -366,46 +288,16 @@ function Header() {
         <nav className="bs-drawer__nav">
           {navItems.map((item) => (
             <div key={item.id}>
-              {item.id === 'Catalog' ? (
-                <>
-                  <button
-                    className={`bs-drawer__link ${activeNav === item.id ? 'bs-drawer__link--active' : ''}`}
-                    onClick={() => setCatalogAccordionOpen(!catalogAccordionOpen)}
-                  >
-                    <span>{item.label}</span>
-                    <svg className={`bs-drawer__chevron ${catalogAccordionOpen ? 'bs-drawer__chevron--open' : ''}`} width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                  <div className={`bs-drawer__accordion ${catalogAccordionOpen ? 'bs-drawer__accordion--open' : ''}`}>
-                    {megaMenuCategories.map((cat) => (
-                      <Link
-                        key={cat.label}
-                        to={cat.href}
-                        className="bs-drawer__sublink"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <span className="bs-drawer__subicon">{cat.icon}</span>
-                        {cat.label}
-                      </Link>
-                    ))}
-                    <Link to="/catalog" className="bs-drawer__sublink bs-drawer__sublink--all" onClick={() => setIsMenuOpen(false)}>
-                      Xem tất cả →
-                    </Link>
-                  </div>
-                </>
-              ) : (
-                <Link
-                  to={item.href}
-                  className={`bs-drawer__link ${activeNav === item.id ? 'bs-drawer__link--active' : ''}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <span>{item.label}</span>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </Link>
-              )}
+              <Link
+                to={item.href}
+                className={`bs-drawer__link ${activeNav === item.id ? 'bs-drawer__link--active' : ''}`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <span>{item.label}</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
             </div>
           ))}
         </nav>

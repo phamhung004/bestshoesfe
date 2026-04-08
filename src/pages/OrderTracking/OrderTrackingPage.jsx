@@ -4,20 +4,19 @@ import { orderApi } from '../../api/orderApi';
 import './OrderTrackingPage.css';
 
 /* ───── Status helpers ───── */
-const STATUS_STEPS = {
-    'Chờ xác nhận':       ['Đặt hàng', 'Chờ xác nhận'],
-    'Đã xác nhận':        ['Đặt hàng', 'Xác nhận', 'Đang đóng gói'],
-    'Đang đóng gói':      ['Đặt hàng', 'Xác nhận', 'Đang đóng gói'],
-    'Bàn giao ĐVVC':      ['Đặt hàng', 'Xác nhận', 'Đóng gói', 'Bàn giao ĐVVC'],
-    'Đang giao':          ['Đặt hàng', 'Xác nhận', 'Đóng gói', 'Bàn giao ĐVVC', 'Đang giao'],
-    'Đã giao':            ['Đặt hàng', 'Xác nhận', 'Đóng gói', 'Bàn giao ĐVVC', 'Đang giao', 'Đã giao'],
-    'Đã hủy':             ['Đặt hàng', 'Đã hủy'],
-    'Trả hàng/Hoàn tiền': ['Đặt hàng', 'Xác nhận', 'Đã giao', 'Trả hàng'],
-};
+// Fixed 6-step normal flow — matches admin OrderSlideOver
+const MAIN_STEPS = ['Đặt hàng', 'Xác nhận', 'Đang đóng gói', 'Bàn giao ĐVVC', 'Đang giao', 'Đã giao'];
 
-const getStepIndex = (status) => {
-    const steps = STATUS_STEPS[status] || ['Đặt hàng'];
-    return steps.length - 1;
+// Map status → which step index is "current" (same mapping as admin)
+const STATUS_PROGRESS = {
+    'Chờ xác nhận':       0,
+    'Đã xác nhận':        1,
+    'Đang đóng gói':      2,
+    'Bàn giao ĐVVC':      3,
+    'Đang giao':          4,
+    'Đã giao':            5,
+    'Trả hàng/Hoàn tiền': 5,
+    'Đã hủy':             -1,
 };
 
 const formatVND = (v) => {
@@ -80,9 +79,21 @@ const OrderTrackingPage = () => {
         }
     };
 
-    const statusSteps = order ? (STATUS_STEPS[order.status] || ['Đặt hàng']) : [];
-    const activeStepIdx = order ? getStepIndex(order.status) : 0;
     const isCancelled = order?.status === 'Đã hủy';
+    const isReturned = order?.status === 'Trả hàng/Hoàn tiền';
+
+    // Choose the step list to show
+    const statusSteps = isCancelled
+        ? ['Đặt hàng', 'Đã hủy']
+        : isReturned
+            ? ['Đặt hàng', 'Xác nhận', 'Đã giao', 'Trả hàng/Hoàn tiền']
+            : MAIN_STEPS;
+
+    const activeStepIdx = isCancelled
+        ? 1
+        : isReturned
+            ? 3
+            : (STATUS_PROGRESS[order?.status] ?? 0);
 
     return (
         <div className="ot-page">
@@ -168,18 +179,26 @@ const OrderTrackingPage = () => {
                         <div className="ot-timeline-card">
                             <h3 className="ot-section-title">Trạng thái đơn hàng</h3>
                             <div className="ot-timeline">
-                                {statusSteps.map((step, i) => (
-                                    <div
-                                        key={i}
-                                        className={`ot-timeline-step ${i <= activeStepIdx ? 'active' : ''} ${isCancelled && i === activeStepIdx ? 'cancelled' : ''}`}
-                                    >
-                                        <div className="ot-timeline-dot">
-                                            {i <= activeStepIdx ? '✓' : (i + 1)}
+                                {statusSteps.map((step, i) => {
+                                    const isCompleted = i < activeStepIdx;
+                                    const isCurrent = i === activeStepIdx;
+                                    const stepClass = [
+                                        'ot-timeline-step',
+                                        isCompleted ? 'active' : '',
+                                        isCurrent ? 'active current' : '',
+                                        isCancelled && isCurrent ? 'cancelled' : '',
+                                        isReturned && isCurrent ? 'returned' : '',
+                                    ].filter(Boolean).join(' ');
+                                    return (
+                                        <div key={i} className={stepClass}>
+                                            <div className="ot-timeline-dot">
+                                                {isCompleted ? '✓' : isCurrent ? '●' : (i + 1)}
+                                            </div>
+                                            {i < statusSteps.length - 1 && <div className="ot-timeline-line" />}
+                                            <span className="ot-timeline-label">{step}</span>
                                         </div>
-                                        {i < statusSteps.length - 1 && <div className="ot-timeline-line" />}
-                                        <span className="ot-timeline-label">{step}</span>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
 
