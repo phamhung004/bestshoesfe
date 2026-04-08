@@ -15,12 +15,14 @@ const MAX_IMAGES = 10;
 const ImageDropZone = ({ variantId, label, images, onImagesChange }) => {
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef(null);
+  const imagesRef = useRef(images);
+  imagesRef.current = images;
 
-  // Cleanup object URLs on unmount
+  // Cleanup object URLs on unmount (uses ref to avoid stale closure)
   useEffect(() => {
     return () => {
-      images.forEach((img) => {
-        if (img.objectUrl) URL.revokeObjectURL(img.objectUrl);
+      imagesRef.current.forEach((img) => {
+        if (img.objectUrl && img.file) URL.revokeObjectURL(img.objectUrl);
       });
     };
   }, []);
@@ -36,6 +38,8 @@ const ImageDropZone = ({ variantId, label, images, onImagesChange }) => {
       isPrimary: images.length === 0 && idx === 0,
     }));
     onImagesChange(variantId, [...images, ...newImgs]);
+    // Reset input so the same file can be re-selected
+    if (inputRef.current) inputRef.current.value = '';
   };
 
   const handleDrop = (e) => {
@@ -151,9 +155,7 @@ const ImageDropZone = ({ variantId, label, images, onImagesChange }) => {
  *   onImagesChange   (variantId, images) => void
  */
 const TabImages = ({ variants = [], variantImages = {}, onImagesChange }) => {
-  const [activeVariantId, setActiveVariantId] = useState(
-    variants.length > 0 ? variants[0].id : 'shared'
-  );
+  const [activeVariantId, setActiveVariantId] = useState('shared');
 
   const pills = [
     { id: 'shared', label: 'Ảnh dùng chung', color: null },

@@ -597,28 +597,27 @@ const ProductManagementPage = () => {
     }
 
     // ── Step 3: Manage images for each variant ───────────────
-    // NOTE: key "shared" is a UI-only bucket, not a real variantId for backend API.
-    // Apply shared images to variants that don't have their own image list.
+    // "shared" is a UI-only bucket — images here are applied to ALL variants.
     const sharedImages = Array.isArray(variantImages?.shared) ? variantImages.shared : [];
+    const newSharedFiles = sharedImages.filter((img) => typeof img.id !== 'number' && img.file instanceof File);
 
     for (const variant of variants) {
       const tempVariantId = String(variant.id);
       const variantSpecificImages = Array.isArray(variantImages?.[tempVariantId])
         ? variantImages[tempVariantId]
         : [];
-      const images = variantSpecificImages.length > 0 ? variantSpecificImages : sharedImages;
 
       const resolvedVariantId = variantIdMap[variant.id] ?? variant.id;
       const realVariantId = Number(resolvedVariantId);
       if (!Number.isFinite(realVariantId)) continue;
 
       // ── Delete images that were removed in the UI ─────────
-      // Compare original server images vs current UI state and delete removed ones
+      // Only compare variant-specific images with originals (shared images are additive)
       const originalVariant = (existingProduct?.variants || []).find((v) => v.id === variant.id);
       if (originalVariant) {
         const originalImageIds = (originalVariant.images || []).map((img) => img.id);
         const currentImageIds = new Set(
-          images.filter((img) => typeof img.id === 'number').map((img) => img.id)
+          variantSpecificImages.filter((img) => typeof img.id === 'number').map((img) => img.id)
         );
         for (const origId of originalImageIds) {
           if (!currentImageIds.has(origId)) {
@@ -627,15 +626,12 @@ const ProductManagementPage = () => {
         }
       }
 
-      if (!images || images.length === 0) continue;
+      // ── Upload new variant-specific files ─────────────────
+      const existingImages = variantSpecificImages.filter((img) => typeof img.id === 'number');
+      const newVariantFiles = variantSpecificImages.filter((img) => typeof img.id !== 'number' && img.file instanceof File);
 
-      // Find existing images (id is a number) vs new files (id is a string like "ts-idx")
-      const existingImages = images.filter((img) => typeof img.id === 'number');
-      const newImages = images.filter((img) => typeof img.id !== 'number' && img.file instanceof File);
-
-      // Upload new files
       const uploadedImages = [];
-      for (const img of newImages) {
+      for (const img of newVariantFiles) {
         try {
           const res = await productImageAPI.upload(realVariantId, img.file);
           uploadedImages.push(res?.data ?? res);
@@ -644,12 +640,30 @@ const ProductManagementPage = () => {
         }
       }
 
-      // Set primary image
-      const primaryImg = images.find((img) => img.isPrimary);
+      // ── Upload shared files to this variant ───────────────
+      // Shared images are uploaded to ALL variants (not just those without images)
+      const uploadedSharedImages = [];
+      for (const img of newSharedFiles) {
+        try {
+          const res = await productImageAPI.upload(realVariantId, img.file);
+          uploadedSharedImages.push(res?.data ?? res);
+        } catch (e) {
+          console.error('Shared image upload failed:', e);
+        }
+      }
+
+      const allUploaded = [...uploadedImages, ...uploadedSharedImages];
+      if (existingImages.length === 0 && allUploaded.length === 0) continue;
+
+      // Set primary image (prefer variant-specific, then shared)
+      const allImages = [...variantSpecificImages, ...sharedImages];
+      const primaryImg = allImages.find((img) => img.isPrimary);
       if (primaryImg) {
+        const allNewFiles = [...newVariantFiles, ...newSharedFiles];
+        const allNewUploads = [...uploadedImages, ...uploadedSharedImages];
         const primaryRealId = typeof primaryImg.id === 'number'
           ? primaryImg.id
-          : uploadedImages.find((u, i) => newImages[i] === primaryImg)?.id;
+          : allNewUploads.find((u, i) => allNewFiles[i] === primaryImg)?.id;
         if (primaryRealId) {
           await productImageAPI.setPrimary(primaryRealId).catch(() => {});
         }
@@ -658,10 +672,27 @@ const ProductManagementPage = () => {
       // Reorder all current images (existing kept + newly uploaded)
       const allCurrentIds = [
         ...existingImages.map((i) => i.id),
-        ...uploadedImages.map((i) => i.id),
+        ...allUploaded.map((i) => i.id),
       ];
       if (allCurrentIds.length > 0) {
         await productImageAPI.reorder(realVariantId, allCurrentIds).catch(() => {});
+      }
+    }
+
+    // ── Step 4: Sync product cover image (Products.image_url) ───────────────
+    // Products.image_url is what shows in the list thumbnail and slide-over panel.
+    // Auto-derive it from the primary image of the first variant that has images.
+    if (variants.length > 0) {
+      const firstVariantRealId = Number(variantIdMap[variants[0].id] ?? variants[0].id);
+      if (Number.isFinite(firstVariantRealId)) {
+        try {
+          const imgRes = await productImageAPI.getByVariant(firstVariantRealId);
+          const imgs = Array.isArray(imgRes?.data) ? imgRes.data : (Array.isArray(imgRes) ? imgRes : []);
+          const primary = imgs.find((img) => img.isPrimary || img.isPrimary === 1) || imgs[0];
+          if (primary?.imageUrl) {
+            await productAPI.update(productId, { ...productPayload, imageUrl: primary.imageUrl });
+          }
+        } catch { /* non-critical, don't block save */ }
       }
     }
 
