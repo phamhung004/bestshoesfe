@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import CheckoutStepIndicator from './components/CheckoutStepIndicator';
-import FreeShippingBar from './components/FreeShippingBar';
 import CartItemCard from './components/CartItemCard';
 import BulkActionBar from './components/BulkActionBar';
 import SavedForLater from './components/SavedForLater';
@@ -238,8 +237,6 @@ const CartPage = () => {
                     <div className="cart-layout">
                         {/* Left Panel — Cart Items */}
                         <div className="cart-left-panel">
-                            <FreeShippingBar totalAmount={subtotal} />
-
                             <BulkActionBar
                                 selectedCount={selectedItems.length}
                                 totalCount={cartItems.length}

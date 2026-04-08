@@ -111,8 +111,11 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
         const colorName = item?.color?.colorName || item?.variant?.color_name || item?.colorName || '—';
         const qty = Number(item?.quantity || 0);
         const lineTotal = Number(item?.totalPrice ?? item?.netItemAmount ?? getItemSubtotal(item) ?? 0);
+        const originalPrice = item?.originalPrice != null ? Number(item.originalPrice) * qty : null;
+        const promotionName = item?.promotionName || item?.promotion?.name || null;
+        const hasPromo = promotionName && originalPrice != null && lineTotal < originalPrice;
 
-        return { imageUrl, productName, sizeName, colorName, qty, lineTotal };
+        return { imageUrl, productName, sizeName, colorName, qty, lineTotal, originalPrice: hasPromo ? originalPrice : null, promotionName: hasPromo ? promotionName : null };
     };
 
     const deliveryLabel = orderData.deliveryMethod === 'Online'
@@ -307,10 +310,20 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                                                     <p className="co-success-item-meta">
                                                         Size {d.sizeName} · {d.colorName} · ×{d.qty}
                                                     </p>
+                                                    {d.promotionName && (
+                                                        <p style={{ fontSize: 11, color: '#ef4444', margin: '2px 0 0' }}>🏷️ {d.promotionName}</p>
+                                                    )}
                                                 </div>
-                                                <span className="co-success-item-price">
-                                                    {formatVND(d.lineTotal)}
-                                                </span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
+                                                    {d.originalPrice && (
+                                                        <span style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: 12, whiteSpace: 'nowrap' }}>
+                                                            {formatVND(d.originalPrice)}
+                                                        </span>
+                                                    )}
+                                                    <span className="co-success-item-price" style={d.originalPrice ? { color: '#ef4444' } : undefined}>
+                                                        {formatVND(d.lineTotal)}
+                                                    </span>
+                                                </div>
                                             </div>
                                         );
                                     })}
@@ -487,10 +500,20 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                                                     <p className="co-success-item-meta">
                                                         Size {d.sizeName} · {d.colorName} · ×{d.qty}
                                                     </p>
+                                                    {d.promotionName && (
+                                                        <p style={{ fontSize: 11, color: '#ef4444', margin: '2px 0 0' }}>🏷️ {d.promotionName}</p>
+                                                    )}
                                                 </div>
-                                                <span className="co-success-item-price">
-                                                    {formatVND(d.lineTotal)}
-                                                </span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
+                                                    {d.originalPrice && (
+                                                        <span style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: 12, whiteSpace: 'nowrap' }}>
+                                                            {formatVND(d.originalPrice)}
+                                                        </span>
+                                                    )}
+                                                    <span className="co-success-item-price" style={d.originalPrice ? { color: '#ef4444' } : undefined}>
+                                                        {formatVND(d.lineTotal)}
+                                                    </span>
+                                                </div>
                                             </div>
                                         );
                                     })}

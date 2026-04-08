@@ -73,26 +73,6 @@ const OrderReviewPanel = ({
                     'Đặt hàng ngay →'
                 )}
             </button>
-
-            {/* Trust signals */}
-            <div className="co-trust-grid">
-                <div className="co-trust-item">
-                    <span className="co-trust-icon">🔒</span>
-                    Bảo mật SSL 256-bit
-                </div>
-                <div className="co-trust-item">
-                    <span className="co-trust-icon">✅</span>
-                    Hàng chính hãng 100%
-                </div>
-                <div className="co-trust-item">
-                    <span className="co-trust-icon">🔄</span>
-                    Đổi trả miễn phí 7 ngày
-                </div>
-                <div className="co-trust-item">
-                    <span className="co-trust-icon">🚚</span>
-                    Giao hàng toàn quốc
-                </div>
-            </div>
         </div>
     );
 };

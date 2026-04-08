@@ -952,12 +952,37 @@
     margin-top: 2px;
 }
 
+.co-item-promo-label {
+    font-size: 11px;
+    color: #ef4444;
+    margin-top: 3px;
+    font-weight: 500;
+}
+
+.co-item-price-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+.co-item-price-original {
+    font-size: 11px;
+    color: #9ca3af;
+    text-decoration: line-through;
+    white-space: nowrap;
+}
+
 .co-item-price {
     font-size: 14px;
     font-weight: 700;
     color: var(--catalog-dark, #111827);
     white-space: nowrap;
     flex-shrink: 0;
+}
+
+.co-item-price.promo {
+    color: #ef4444;
 }
 
 /* ─── Coupon Section ───────────────────────────────── */

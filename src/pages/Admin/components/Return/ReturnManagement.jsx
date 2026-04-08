@@ -258,16 +258,24 @@ const ReturnManagement = () => {
         try {
             await returnAPI.updateStatus(returnId, { status: newStatus });
             showToast(`Đã cập nhật trạng thái → ${newStatus}`);
-            // Refresh the detail if open
-            if (selectedReturnDetail && selectedReturnDetail.return_id === returnId) {
-                setSelectedReturnDetail(prev => prev ? { ...prev, return_status: newStatus } : prev);
-            }
             fetchReturns();
             fetchStatusCounts();
+            // Re-fetch full detail (including timeline) if slide-over is open for this return
+            if (selectedReturn && selectedReturn.return_id === returnId) {
+                try {
+                    const res = await returnAPI.getById(returnId);
+                    if (res?.data) {
+                        setSelectedReturnDetail(normalizeReturn(res.data));
+                    }
+                } catch {
+                    // fallback: at least patch the status so it's not stale
+                    setSelectedReturnDetail(prev => prev ? { ...prev, return_status: newStatus } : prev);
+                }
+            }
         } catch (err) {
             showToast('❌ Lỗi: ' + (err?.response?.data?.message || err?.message || 'Không thể cập nhật trạng thái'));
         }
-    }, [showToast, fetchReturns, fetchStatusCounts, selectedReturnDetail]);
+    }, [showToast, fetchReturns, fetchStatusCounts, selectedReturn]);
 
     // ── Approve (API) ─────────────────────────────────────────────
     const handleApprove = useCallback(async (ret) => {

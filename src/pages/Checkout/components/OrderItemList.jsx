@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { formatVND, getItemSubtotal } from '../checkoutConstants';
+import { formatVND, getItemSubtotal, getItemPrice } from '../checkoutConstants';
 
 const OrderItemList = ({ items }) => {
     const [expanded, setExpanded] = useState(false);
@@ -17,7 +17,9 @@ const OrderItemList = ({ items }) => {
             </div>
             <div className={`co-items-list ${expanded ? 'expanded' : 'collapsed'}`}>
                 {items.map((item) => {
-                    const subtotal = getItemSubtotal(item);
+                    const basePrice = (item.variant?.price || 0) * item.quantity;
+                    const effectivePrice = getItemSubtotal(item);
+                    const hasPromo = item.promotion && effectivePrice < basePrice;
                     return (
                         <div key={item.cart_item_id} className="co-item-row">
                             <div className="co-item-img-wrap">
@@ -31,8 +33,18 @@ const OrderItemList = ({ items }) => {
                                 <p className="co-item-variant">
                                     Size {item.variant.size_name} · {item.variant.color_name}
                                 </p>
+                                {hasPromo && (
+                                    <p className="co-item-promo-label">🏷️ {item.promotion.name}</p>
+                                )}
                             </div>
-                            <span className="co-item-price">{formatVND(subtotal)}</span>
+                            <div className="co-item-price-wrap">
+                                {hasPromo && (
+                                    <span className="co-item-price-original">{formatVND(basePrice)}</span>
+                                )}
+                                <span className={`co-item-price${hasPromo ? ' promo' : ''}`}>
+                                    {formatVND(effectivePrice)}
+                                </span>
+                            </div>
                         </div>
                     );
                 })}

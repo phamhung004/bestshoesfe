@@ -248,6 +248,11 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                                             </div>
                                         </div>
                                         <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                                            {item.promotionName && (
+                                                <div style={{ fontSize: 11, color: '#ef4444', marginBottom: 3 }}>
+                                                    🏷️ {item.promotionName}
+                                                </div>
+                                            )}
                                             {hasCoupon ? (
                                                 <div style={{ marginBottom: 4 }}>
                                                     <div style={{ fontSize: 11, color: '#9ca3af', textDecoration: 'line-through' }}>
@@ -255,6 +260,15 @@ const ReturnRequestModal = ({ order, onClose, onSuccess }) => {
                                                     </div>
                                                     <div style={{ fontSize: 13, fontWeight: 600, color: '#16a34a' }}>
                                                         {formatVND(Math.floor(item.unitPrice * paymentRatio))}
+                                                    </div>
+                                                </div>
+                                            ) : item.originalPrice ? (
+                                                <div style={{ marginBottom: 4 }}>
+                                                    <div style={{ fontSize: 11, color: '#9ca3af', textDecoration: 'line-through' }}>
+                                                        {formatVND(item.originalPrice)}
+                                                    </div>
+                                                    <div style={{ fontSize: 13, fontWeight: 600, color: '#ef4444' }}>
+                                                        {formatVND(item.unitPrice)}
                                                     </div>
                                                 </div>
                                             ) : (

@@ -143,11 +143,24 @@ const ReturnDetailSlideOver = ({
                         </div>
                         {(returnItem.items || []).map(item => (
                             <div key={item.order_item_id} className="rm-so-item">
-                                <img
-                                    src={item.product?.image_url}
-                                    alt={item.product?.name}
+                                {item.product?.image_url ? (
+                                    <img
+                                        src={item.product.image_url}
+                                        alt={item.product?.name}
+                                        className="rm-so-item-thumb"
+                                        onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'flex'; }}
+                                    />
+                                ) : null}
+                                <div
                                     className="rm-so-item-thumb"
-                                />
+                                    style={{
+                                        display: item.product?.image_url ? 'none' : 'flex',
+                                        alignItems: 'center', justifyContent: 'center',
+                                        background: 'var(--gray-100)', color: 'var(--gray-400)', fontSize: 22,
+                                    }}
+                                >
+                                    👟
+                                </div>
                                 <div className="rm-so-item-info">
                                     <div className="rm-so-item-name">{item.product?.name}</div>
                                     <div className="rm-so-item-variant">
@@ -156,9 +169,19 @@ const ReturnDetailSlideOver = ({
                                     <div className="rm-so-item-variant">
                                         Số lượng trả: {item.quantity} &nbsp;|&nbsp; Đơn giá: {formatVND(item.unit_price)}
                                     </div>
+                                    {item.promotion_name && (
+                                        <div style={{ fontSize: 11, color: '#ef4444', marginTop: 3 }}>🏷️ {item.promotion_name}</div>
+                                    )}
                                 </div>
-                                <div className="rm-so-item-price">
-                                    {formatVND(item.total_price)}
+                                <div className="rm-so-item-price" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                    {item.original_price && (
+                                        <span style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: 11, whiteSpace: 'nowrap' }}>
+                                            {formatVND(item.original_price * item.quantity)}
+                                        </span>
+                                    )}
+                                    <span style={item.original_price ? { color: '#ef4444' } : undefined}>
+                                        {formatVND(item.total_price)}
+                                    </span>
                                 </div>
                             </div>
                         ))}

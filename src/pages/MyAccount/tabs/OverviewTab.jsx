@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Package, DollarSign, Star, Award, User, MapPin, Lock } from 'lucide-react';
-import { MEMBERSHIP_TIERS, formatVND, formatDate, getTierFromSpend, getTierEmoji } from '../mockAccountData';
+import { ArrowRight, Package, DollarSign, Award, User, MapPin, Lock } from 'lucide-react';
+import { formatVND, formatDate, getTierFromSpend } from '../mockAccountData';
 import { getMyOrders } from '../../../api/accountApi';
 
 const CountUp = ({ target, duration = 600 }) => {
@@ -31,23 +31,10 @@ const statusBadgeClass = (status) => {
 };
 
 const OverviewTab = ({ onTabChange, customer, stats }) => {
-    const [barWidth, setBarWidth] = useState(0);
     const [recentOrders, setRecentOrders] = useState([]);
 
     const totalSpend = stats?.totalSpend || 0;
     const tier = getTierFromSpend(totalSpend);
-    const nextTierIdx = MEMBERSHIP_TIERS.findIndex(t => t.id === tier.id) + 1;
-    const nextTier = MEMBERSHIP_TIERS[nextTierIdx];
-    const progressPct = nextTier
-        ? Math.min((totalSpend / nextTier.threshold) * 100, 100)
-        : 100;
-    const remaining = nextTier ? nextTier.threshold - totalSpend : 0;
-
-    useEffect(() => {
-        const timer = setTimeout(() => setBarWidth(progressPct), 150);
-        return () => clearTimeout(timer);
-    }, [progressPct]);
-
     useEffect(() => {
         const fetchRecentOrders = async () => {
             try {
@@ -86,12 +73,6 @@ const OverviewTab = ({ onTabChange, customer, stats }) => {
                     <div className="acc-stat-num-big acc-stat-num-sm-text">{formatVND(totalSpend)}</div>
                     <div className="acc-stat-label-sm">tổng chi tiêu</div>
                     <div className="acc-stat-sub acc-sub-green">Hạng {tier.label}</div>
-                </div>
-                <div className="acc-stat-card">
-                    <div className="acc-stat-icon acc-stat-icon-amber"><Star size={22} /></div>
-                    <div className="acc-stat-num-big"><CountUp target={stats?.loyaltyPoints || 0} duration={800} /></div>
-                    <div className="acc-stat-label-sm">điểm thưởng</div>
-                    <div className="acc-stat-sub acc-sub-amber">≈ {formatVND((stats?.loyaltyPoints || 0) * 100)} giá trị</div>
                 </div>
                 <div className="acc-stat-card">
                     <div className="acc-stat-icon acc-stat-icon-purple"><Award size={22} /></div>
@@ -142,39 +123,6 @@ const OverviewTab = ({ onTabChange, customer, stats }) => {
                 ))}
                 {recentOrders.length === 0 && (
                     <p style={{ textAlign: 'center', color: '#888', padding: '20px 0' }}>Bạn chưa có đơn hàng nào</p>
-                )}
-            </div>
-
-            {/* Membership Progress */}
-            <div className="acc-membership-card">
-                <h3 className="acc-membership-title">Hạng thành viên của bạn</h3>
-                <div className="acc-tier-progress-wrap">
-                    {MEMBERSHIP_TIERS.map((t, i) => {
-                        const isActive = t.id === tier.id;
-                        return (
-                            <div key={t.id} className="acc-tier-col">
-                                {isActive && <div className="acc-tier-you-label">BẠN</div>}
-                                <div className={`acc-tier-dot${isActive ? ' active' : ''}`}>
-                                    {getTierEmoji(t.id)}
-                                </div>
-                                <div className={`acc-tier-name${isActive ? ' active' : ''}`}>{t.label}</div>
-                                <div className="acc-tier-threshold">
-                                    {t.threshold === 0 ? '0₫' : `${(t.threshold / 1000000).toFixed(0)}tr`}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-                <div className="acc-progress-bar-wrap">
-                    <div
-                        className="acc-progress-bar-fill"
-                        style={{ width: `${barWidth}%`, transition: 'width 700ms ease-out' }}
-                    />
-                </div>
-                {nextTier && (
-                    <p className="acc-tier-remaining">
-                        Còn {formatVND(remaining)} nữa để đạt hạng <strong>{nextTier.label}</strong> 🏆
-                    </p>
                 )}
             </div>
 
