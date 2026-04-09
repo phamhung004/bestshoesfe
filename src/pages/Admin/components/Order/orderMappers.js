@@ -54,5 +54,9 @@ export const normalizeOrder = (o) => {
         updated_at: o.updatedAt ?? o.updated_at,
         item_count: o.itemCount ?? o.item_count,
         items: o.items ? o.items.map(normalizeOrderItem) : undefined,
+        cancel_reason: o.cancelReason ?? o.cancel_reason ?? null,
+        cancelled_by: o.cancelledBy ?? o.cancelled_by ?? null,
+        cancelled_by_name: o.cancelledByName ?? o.cancelled_by_name ?? null,
+        cancelled_at: o.cancelledAt ?? o.cancelled_at ?? null,
     };
 };

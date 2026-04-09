@@ -325,7 +325,7 @@ const OrderTable = ({
                                                 </button>
                                                 {openMore === order.order_id && (
                                                     <div className="om-more-dropdown">
-                                                        {isManager && !isTerminalStatus(order.status) && (
+                                                        {isManager && (order.status === 'Chờ xác nhận' || order.status === 'Đã xác nhận') && (
                                                             <button onClick={() => { onCancelOrder(order); setOpenMore(null); }} className="destructive">
                                                                 ❌ Hủy đơn
                                                             </button>

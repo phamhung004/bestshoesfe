@@ -40,16 +40,16 @@ export const ALL_STATUSES = [
  * Valid forward status transitions map.
  * Mirrors backend validateStatusTransition logic:
  *  - Chờ xác nhận → Đã xác nhận → Đang đóng gói → Bàn giao ĐVVC → Đang giao → Đã giao
- *  - "Trả hàng/Hoàn tiền" and "Đã hủy" can be reached from specific states
- *  - "Đã hủy" is a terminal state (no further transitions)
- *  - "Trả hàng/Hoàn tiền" is also terminal
+ *  - "Trả hàng/Hoàn tiền" can be reached from "Đã giao"
+ *  - "Đã hủy" is handled separately via the dedicated cancel button/endpoint
+ *  - "Đã hủy" and "Trả hàng/Hoàn tiền" are terminal states
  */
 export const VALID_NEXT_STATUSES = {
-    'Chờ xác nhận':       ['Đã xác nhận', 'Đã hủy'],
-    'Đã xác nhận':        ['Đang đóng gói', 'Đã hủy'],
-    'Đang đóng gói':      ['Bàn giao ĐVVC', 'Đã hủy'],
-    'Bàn giao ĐVVC':      ['Đang giao', 'Đã hủy'],
-    'Đang giao':          ['Đã giao', 'Đã hủy'],
+    'Chờ xác nhận':       ['Đã xác nhận'],
+    'Đã xác nhận':        ['Đang đóng gói'],
+    'Đang đóng gói':      ['Bàn giao ĐVVC'],
+    'Bàn giao ĐVVC':      ['Đang giao'],
+    'Đang giao':          ['Đã giao'],
     'Đã giao':            ['Trả hàng/Hoàn tiền'],
     'Trả hàng/Hoàn tiền': [],
     'Đã hủy':             [],

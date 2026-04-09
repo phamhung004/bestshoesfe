@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { orderApi } from '../../api/orderApi';
+import { useAuth } from '../../context/AuthContext';
 import './OrderTrackingPage.css';
 
 /* ───── Status helpers ───── */
@@ -45,7 +46,9 @@ const OrderTrackingPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [order, setOrder] = useState(null);
+    const [cancelling, setCancelling] = useState(false);
     const resultRef = useRef(null);
+    const { isAuthenticated } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -297,8 +300,57 @@ const OrderTrackingPage = () => {
                             </div>
                         )}
 
+                        {/* Cancel Info */}
+                        {isCancelled && order.cancelReason && (
+                            <div className="ot-info-card" style={{ borderColor: '#fecaca', background: '#fef2f2' }}>
+                                <h3 className="ot-section-title" style={{ color: '#dc2626' }}>❌ Thông tin hủy đơn</h3>
+                                <div style={{ fontSize: 14, color: '#991b1b' }}>
+                                    <div>Lý do: <strong>{order.cancelReason}</strong></div>
+                                    {order.cancelledAt && (
+                                        <div style={{ marginTop: 4, fontSize: 13, color: '#b91c1c' }}>
+                                            Thời gian: {formatDate(order.cancelledAt)}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Actions */}
                         <div className="ot-result-actions">
+                            {isAuthenticated && order.status === 'Chờ xác nhận' && (
+                                order.paymentStatus !== 'Đã thanh toán'
+                                    ? (
+                                        <button
+                                            className="ot-btn-outline"
+                                            style={{ borderColor: '#fca5a5', color: '#dc2626', background: '#fef2f2' }}
+                                            disabled={cancelling}
+                                            onClick={async () => {
+                                                if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
+                                                setCancelling(true);
+                                                try {
+                                                    await orderApi.cancelOrder(order.orderNumber);
+                                                    setOrder(prev => ({
+                                                        ...prev,
+                                                        status: 'Đã hủy',
+                                                        cancelReason: 'Khách hàng tự hủy đơn',
+                                                        cancelledAt: new Date().toISOString(),
+                                                    }));
+                                                } catch (err) {
+                                                    setError(err.response?.data?.message || err.message || 'Không thể hủy đơn hàng');
+                                                } finally {
+                                                    setCancelling(false);
+                                                }
+                                            }}
+                                        >
+                                            {cancelling ? 'Đang hủy...' : '❌ Hủy đơn hàng'}
+                                        </button>
+                                    )
+                                    : (
+                                        <span style={{ fontSize: 13, color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 14px', lineHeight: 1.4 }}>
+                                            Đơn hàng đã được thanh toán. Vui lòng liên hệ shop để được hỗ trợ hủy đơn.
+                                        </span>
+                                    )
+                            )}
                             <Link to="/catalog" className="ot-btn-outline">Tiếp tục mua sắm</Link>
                             <button className="ot-btn-secondary" onClick={() => { setOrder(null); setOrderNumber(''); setPhone(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
                                 Tra cứu đơn khác

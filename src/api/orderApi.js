@@ -34,4 +34,11 @@ export const orderApi = {
    */
   trackOrder: (orderNumber, phone) =>
     axiosClient.get('/orders/track', { params: { orderNumber, phone } }),
+
+  /**
+   * Cancel an order (only if status = "Chờ xác nhận")
+   * @param {string} orderNumber
+   */
+  cancelOrder: (orderNumber) =>
+    axiosClient.put(`/orders/${orderNumber}/cancel`),
 };

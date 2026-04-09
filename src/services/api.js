@@ -712,8 +712,9 @@ export const orderAPI = {
   }),
 
   // Cancel a single order
-  cancel: (id) => apiCall(`/admin/orders/${id}/cancel`, {
+  cancel: (id, data) => apiCall(`/admin/orders/${id}/cancel`, {
     method: 'PUT',
+    body: JSON.stringify(data),
   }),
 
   // Bulk confirm orders

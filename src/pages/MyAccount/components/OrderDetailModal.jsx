@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, MapPin, Package, CreditCard, Printer, ShoppingBag, RotateCcw, ChevronRight, Edit3 } from 'lucide-react';
+import { X, MapPin, Package, CreditCard, Printer, ShoppingBag, RotateCcw, ChevronRight, Edit3, Ban } from 'lucide-react';
 import { formatVND, formatDate } from '../mockAccountData';
 import ChangeAddressModal from './ChangeAddressModal';
 
@@ -37,9 +37,10 @@ const StatusBadge = ({ status }) => {
     return <span className={`acc-status-badge ${map[status] || ''}`}>{status}</span>;
 };
 
-const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdated }) => {
+const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdated, onCancel }) => {
     const [order, setOrder] = useState(initialOrder);
     const [showChangeAddress, setShowChangeAddress] = useState(false);
+    const [cancelling, setCancelling] = useState(false);
 
     useEffect(() => {
         const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -222,6 +223,28 @@ const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdated }) => {
                             </span>
                         </div>
                     </div>
+
+                    {/* Cancel Info */}
+                    {order.status === 'Đã hủy' && order.cancelReason && (
+                        <div className="acc-detail-section">
+                            <h4 className="acc-section-label" style={{ color: '#dc2626' }}><Ban size={14} /> Thông tin hủy đơn</h4>
+                            <div style={{
+                                padding: '12px 16px',
+                                background: '#fef2f2',
+                                borderRadius: 10,
+                                border: '1px solid #fecaca',
+                                fontSize: 13,
+                                color: '#991b1b',
+                            }}>
+                                <div>Lý do: <strong>{order.cancelReason}</strong></div>
+                                {order.cancelledAt && (
+                                    <div style={{ marginTop: 4, fontSize: 12, color: '#b91c1c' }}>
+                                        Thời gian: {formatDate(order.cancelledAt)}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Sticky Footer */}
@@ -236,6 +259,37 @@ const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdated }) => {
                         <button className="acc-btn-orange-sm">
                             <RotateCcw size={15} /> Yêu cầu trả hàng
                         </button>
+                    )}
+                    {order.status === 'Chờ xác nhận' && onCancel && (
+                        order.paymentStatus !== 'Đã thanh toán'
+                            ? (
+                                <button
+                                    className="acc-btn-danger-sm"
+                                    disabled={cancelling}
+                                    onClick={async () => {
+                                        if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
+                                        setCancelling(true);
+                                        try {
+                                            await onCancel(order.orderNumber);
+                                            setOrder(prev => ({
+                                                ...prev,
+                                                status: 'Đã hủy',
+                                                cancelReason: 'Khách hàng tự hủy đơn',
+                                                cancelledAt: new Date().toISOString(),
+                                            }));
+                                        } finally {
+                                            setCancelling(false);
+                                        }
+                                    }}
+                                >
+                                    <Ban size={15} /> {cancelling ? 'Đang hủy...' : 'Hủy đơn hàng'}
+                                </button>
+                            )
+                            : (
+                                <span style={{ fontSize: 12, color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '6px 12px', lineHeight: 1.4 }}>
+                                    Đơn hàng đã được thanh toán. Vui lòng liên hệ shop để được hỗ trợ.
+                                </span>
+                            )
                     )}
                 </div>
             </div>

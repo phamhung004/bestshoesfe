@@ -158,10 +158,12 @@ const OrdersTab = ({ onOpenReturns, onOpenReviews }) => {
         setCancellingId(orderNumber);
         try {
             await cancelOrder(orderNumber);
-            setOrders(prev => prev.map(o => o.orderNumber === orderNumber ? { ...o, status: 'Đã hủy' } : o));
+            setOrders(prev => prev.map(o => o.orderNumber === orderNumber
+                ? { ...o, status: 'Đã hủy', cancelReason: 'Khách hàng tự hủy đơn', cancelledAt: new Date().toISOString() }
+                : o));
             showToast('Đã hủy đơn hàng thành công');
         } catch (err) {
-            showToast(err.response?.data?.message || 'Không thể hủy đơn hàng', 'error');
+            showToast(err.response?.data?.message || err.message || 'Không thể hủy đơn hàng', 'error');
         } finally {
             setCancellingId(null);
         }
@@ -277,6 +279,29 @@ const OrdersTab = ({ onOpenReturns, onOpenReviews }) => {
                                 )}
                             </div>
 
+                            {/* Cancel Info */}
+                            {order.status === 'Đã hủy' && order.cancelReason && (
+                                <div style={{
+                                    padding: '8px 16px',
+                                    background: '#fef2f2',
+                                    borderRadius: 8,
+                                    margin: '0 0 8px',
+                                    fontSize: 13,
+                                    color: '#991b1b',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 6
+                                }}>
+                                    <span>❌</span>
+                                    <span>Lý do hủy: <strong>{order.cancelReason}</strong></span>
+                                    {order.cancelledAt && (
+                                        <span style={{ marginLeft: 'auto', color: '#b91c1c', fontSize: 12 }}>
+                                            {formatDate(order.cancelledAt)}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+
                             {/* Footer */}
                             <div className="acc-order-card-footer">
                                 <div className="acc-order-footer-left">
@@ -342,7 +367,7 @@ const OrdersTab = ({ onOpenReturns, onOpenReviews }) => {
                                             </button>
                                         </div>
                                     )}
-                                    {order.status === 'Chờ xác nhận' && (
+                                    {order.status === 'Chờ xác nhận' && order.paymentStatus !== 'Đã thanh toán' && (
                                         <button
                                             className="acc-btn-danger-sm"
                                             onClick={() => handleCancel(order.orderNumber)}
@@ -413,6 +438,13 @@ const OrdersTab = ({ onOpenReturns, onOpenReviews }) => {
                 <OrderDetailModal
                     order={detailOrder}
                     onClose={() => setDetailOrder(null)}
+                    onCancel={async (orderNumber) => {
+                        await cancelOrder(orderNumber);
+                        setOrders(prev => prev.map(o => o.orderNumber === orderNumber
+                            ? { ...o, status: 'Đã hủy', cancelReason: 'Khách hàng tự hủy đơn', cancelledAt: new Date().toISOString() }
+                            : o));
+                        showToast('Đã hủy đơn hàng thành công');
+                    }}
                     onOrderUpdated={(updated) => {
                         setOrders(prev => prev.map(o =>
                             o.orderNumber === updated.orderNumber ? { ...o, ...updated } : o

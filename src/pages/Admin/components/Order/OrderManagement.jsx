@@ -9,6 +9,7 @@ import OrderFilters from './OrderFilters';
 import OrderTable from './OrderTable';
 import OrderSlideOver from './OrderSlideOver';
 import OrderPagination from './OrderPagination';
+import CancelOrderDialog from './CancelOrderDialog';
 import './OrderManagement.css';
 
 /**
@@ -235,28 +236,28 @@ const OrderManagement = () => {
     }, []);
 
     // ── Cancel order (API) ────────────────────────────────────────
+    const [cancelDialogOrder, setCancelDialogOrder] = useState(null);
+
     const handleCancelOrder = useCallback((order) => {
-        setConfirmDialog({
-            title: 'Hủy đơn hàng?',
-            message: `Bạn có chắc chắn muốn hủy đơn #${order.order_number}? Thao tác này không thể hoàn tác.`,
-            onConfirm: async () => {
-                try {
-                    await orderAPI.cancel(order.order_id);
-                    showToast(`Đã hủy đơn #${order.order_number}`);
-                    setConfirmDialog(null);
-                    setSelectedOrder(null);
-                    setSelectedOrderDetail(null);
-                    fetchOrders();
-                    fetchStatusCounts();
-                } catch (err) {
-                    const backendMsg = err?.response?.data?.message;
-                    showToast('❌ Lỗi: ' + (backendMsg || 'Không thể hủy đơn hàng'));
-                    setConfirmDialog(null);
-                }
-            },
-            onCancel: () => setConfirmDialog(null),
-        });
-    }, [showToast, fetchOrders, fetchStatusCounts]);
+        setCancelDialogOrder(order);
+    }, []);
+
+    const handleConfirmCancel = useCallback(async (cancelReason) => {
+        const order = cancelDialogOrder;
+        if (!order) return;
+        try {
+            await orderAPI.cancel(order.order_id, { cancelReason });
+            showToast(`Hủy đơn thành công #${order.order_number}`);
+            setCancelDialogOrder(null);
+            setSelectedOrder(null);
+            setSelectedOrderDetail(null);
+            fetchOrders();
+            fetchStatusCounts();
+        } catch (err) {
+            const backendMsg = err?.response?.data?.message;
+            showToast('❌ Lỗi: ' + (backendMsg || 'Không thể hủy đơn hàng'));
+        }
+    }, [cancelDialogOrder, showToast, fetchOrders, fetchStatusCounts]);
 
     // ── Update status (API) ───────────────────────────────────────
     const handleStatusChange = useCallback(async (orderId, newStatus) => {
@@ -529,6 +530,13 @@ const OrderManagement = () => {
             {toast && (
                 <div className="om-toast">{toast}</div>
             )}
+
+            {/* Cancel order dialog */}
+            <CancelOrderDialog
+                order={cancelDialogOrder}
+                onConfirm={handleConfirmCancel}
+                onCancel={() => setCancelDialogOrder(null)}
+            />
 
             {/* Confirm dialog */}
             {confirmDialog && (
