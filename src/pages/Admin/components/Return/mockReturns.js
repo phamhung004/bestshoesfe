@@ -8,12 +8,13 @@ export const RETURN_STATUS_CONFIG = {
     'Chờ duyệt': { color: '#EAB308', bg: '#FEF9C3', label: 'Chờ duyệt' },
     'Đã duyệt': { color: '#3B82F6', bg: '#DBEAFE', label: 'Đã duyệt' },
     'Đã nhận hàng': { color: '#8B5CF6', bg: '#EDE9FE', label: 'Đã nhận hàng' },
+    'Đã kiểm định': { color: '#0EA5E9', bg: '#E0F2FE', label: 'Đã kiểm định' },
     'Hoàn tiền': { color: '#22C55E', bg: '#DCFCE7', label: 'Hoàn tiền' },
     'Từ chối': { color: '#EF4444', bg: '#FEE2E2', label: 'Từ chối' },
 };
 
 export const ALL_RETURN_STATUSES = [
-    'Tất cả', 'Chờ duyệt', 'Đã duyệt', 'Đã nhận hàng', 'Hoàn tiền', 'Từ chối',
+    'Tất cả', 'Chờ duyệt', 'Đã duyệt', 'Đã nhận hàng', 'Đã kiểm định', 'Hoàn tiền', 'Từ chối',
 ];
 
 // ── Reason config (with color themes) ──────────────────────────

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
-    RETURN_STATUS_CONFIG, formatVND,
+    RETURN_STATUS_CONFIG,
 } from './mockReturns';
 import { returnAPI } from '../../../../services/api';
 import { normalizeReturn } from './returnMappers';
@@ -11,6 +11,7 @@ import ReturnDetailSlideOver from './ReturnDetailSlideOver';
 import ReturnPagination from './ReturnPagination';
 import RejectReasonModal from './RejectReasonModal';
 import CreateReturnModal from './CreateReturnModal';
+
 import './ReturnManagement.css';
 
 /**
@@ -57,8 +58,22 @@ const ReturnManagement = () => {
     // Toast state
     const [toast, setToast] = useState(null);
 
+    // Shared confirm dialog state
+
+
     // Status counts (fetched from backend)
     const [statusCounts, setStatusCounts] = useState({ 'Tất cả': 0 });
+
+    // Scrapped items table
+    const [scrappedFilters, setScrappedFilters] = useState(() => {
+        const to = new Date();
+        const from = new Date();
+        from.setDate(from.getDate() - 30);
+        const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        return { from: fmt(from), to: fmt(to), limit: 50 };
+    });
+    const [scrappedItems, setScrappedItems] = useState([]);
+    const [scrappedLoading, setScrappedLoading] = useState(false);
 
     // Ref to prevent race conditions
     const fetchIdRef = useRef(0);
@@ -156,6 +171,20 @@ const ReturnManagement = () => {
         }
     }, []);
 
+    const fetchScrappedItems = useCallback(async () => {
+        setScrappedLoading(true);
+        try {
+            const res = await returnAPI.getScrappedItems(scrappedFilters);
+            const list = res?.data ?? res ?? [];
+            setScrappedItems(Array.isArray(list) ? list : []);
+        } catch (err) {
+            console.error('Failed to fetch scrapped items:', err);
+            setScrappedItems([]);
+        } finally {
+            setScrappedLoading(false);
+        }
+    }, [scrappedFilters]);
+
     // ── Trigger fetch on filter/sort/page changes ─────────────────
     useEffect(() => {
         fetchReturns();
@@ -165,6 +194,11 @@ const ReturnManagement = () => {
     useEffect(() => {
         fetchStatusCounts();
     }, [fetchStatusCounts]);
+
+    // Fetch scrapped items table
+    useEffect(() => {
+        fetchScrappedItems();
+    }, [fetchScrappedItems]);
 
     // Reset to page 1 when filters change
     useEffect(() => {
@@ -258,29 +292,40 @@ const ReturnManagement = () => {
         try {
             await returnAPI.updateStatus(returnId, { status: newStatus });
             showToast(`Đã cập nhật trạng thái → ${newStatus}`);
+            if (selectedReturnDetail && selectedReturnDetail.return_id === returnId) {
+                setSelectedReturnDetail(prev => prev ? { ...prev, return_status: newStatus } : prev);
+            }
             fetchReturns();
             fetchStatusCounts();
-            // Re-fetch full detail (including timeline) if slide-over is open for this return
-            if (selectedReturn && selectedReturn.return_id === returnId) {
-                try {
-                    const res = await returnAPI.getById(returnId);
-                    if (res?.data) {
-                        setSelectedReturnDetail(normalizeReturn(res.data));
-                    }
-                } catch {
-                    // fallback: at least patch the status so it's not stale
-                    setSelectedReturnDetail(prev => prev ? { ...prev, return_status: newStatus } : prev);
-                }
-            }
         } catch (err) {
             showToast('❌ Lỗi: ' + (err?.response?.data?.message || err?.message || 'Không thể cập nhật trạng thái'));
         }
-    }, [showToast, fetchReturns, fetchStatusCounts, selectedReturn]);
+    }, [showToast, fetchReturns, fetchStatusCounts, selectedReturnDetail]);
 
     // ── Approve (API) ─────────────────────────────────────────────
     const handleApprove = useCallback(async (ret) => {
         await handleStatusChange(ret.return_id, 'Đã duyệt');
     }, [handleStatusChange]);
+
+    // ── Inspect (API) ─────────────────────────────────────────────
+    const handleInspect = useCallback(async (returnId, payload) => {
+        try {
+            await returnAPI.inspect(returnId, payload);
+            showToast('✅ Đã lưu kiểm định');
+            fetchReturns();
+            fetchStatusCounts();
+            if (selectedReturnDetail && selectedReturnDetail.return_id === returnId) {
+                try {
+                    const res = await returnAPI.getById(returnId);
+                    if (res?.data) setSelectedReturnDetail(normalizeReturn(res.data));
+                } catch {
+                    setSelectedReturnDetail(prev => prev ? { ...prev, return_status: 'Đã kiểm định' } : prev);
+                }
+            }
+        } catch (err) {
+            showToast('❌ Lỗi kiểm định: ' + (err?.response?.data?.message || err?.message || 'Không thể lưu kiểm định'));
+        }
+    }, [showToast, fetchReturns, fetchStatusCounts, selectedReturnDetail]);
 
     // ── Reject (API) ──────────────────────────────────────────────
     const handleRejectConfirm = useCallback(async (ret, reason, message) => {
@@ -450,6 +495,73 @@ const ReturnManagement = () => {
                 />
             )}
 
+            {/* Scrapped items */}
+            <div className="rm-so-section" style={{ marginTop: 16 }}>
+                <div className="rm-so-section-title">🧯 Danh sách sản phẩm hỏng</div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                    <input
+                        type="date"
+                        className="rm-method-select"
+                        value={scrappedFilters.from}
+                        onChange={(e) => setScrappedFilters((prev) => ({ ...prev, from: e.target.value }))}
+                    />
+                    <input
+                        type="date"
+                        className="rm-method-select"
+                        value={scrappedFilters.to}
+                        onChange={(e) => setScrappedFilters((prev) => ({ ...prev, to: e.target.value }))}
+                    />
+                    <select
+                        className="rm-method-select"
+                        value={scrappedFilters.limit}
+                        onChange={(e) => setScrappedFilters((prev) => ({ ...prev, limit: Number(e.target.value) }))}
+                    >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                    </select>
+                    <button className="rm-btn rm-btn-outline" onClick={fetchScrappedItems}>Lọc</button>
+                </div>
+                <div className="rm-table-wrap">
+                    <div className="rm-table-scroll">
+                        <table className="rm-table">
+                            <thead>
+                                <tr>
+                                    <th>Return code</th>
+                                    <th>Order</th>
+                                    <th>SKU</th>
+                                    <th>Sản phẩm</th>
+                                    <th>SL trả</th>
+                                    <th>SL hỏng</th>
+                                    <th>Ghi chú</th>
+                                    <th>Ngày tạo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {scrappedLoading ? (
+                                    <tr><td colSpan={8}>Đang tải...</td></tr>
+                                ) : scrappedItems.length === 0 ? (
+                                    <tr><td colSpan={8}>Không có dữ liệu sản phẩm hỏng</td></tr>
+                                ) : (
+                                    scrappedItems.map((it) => (
+                                        <tr key={it.returnItemId}>
+                                            <td>{it.returnCode}</td>
+                                            <td>{it.orderNumber}</td>
+                                            <td>{it.sku || '—'}</td>
+                                            <td>{it.productName} • Size {it.sizeName || '—'} • {it.colorName || '—'}</td>
+                                            <td>{it.returnedQty}</td>
+                                            <td>{it.scrappedQty}</td>
+                                            <td>{it.inspectionNote || '—'}</td>
+                                            <td>{it.returnCreatedAt ? new Date(it.returnCreatedAt).toLocaleString('vi-VN') : '—'}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             {/* Slide-over detail panel */}
             {selectedReturn && (
                 <ReturnDetailSlideOver
@@ -458,6 +570,7 @@ const ReturnManagement = () => {
                     onStatusChange={handleStatusChange}
                     onCopyReturnCode={handleCopyReturnCode}
                     onApprove={handleApprove}
+                    onInspect={handleInspect}
                     onReject={(ret) => { setSelectedReturn(null); setSelectedReturnDetail(null); setRejectTarget(ret); }}
                     onPrint={handlePrint}
                 />

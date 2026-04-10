@@ -749,30 +749,8 @@ const OrderSlideOver = ({
                     <div className="om-so-card">
                         <h3>Tiến trình đơn hàng</h3>
                         {order.status === 'Đã hủy' ? (
-                            <div style={{ fontSize: 13 }}>
-                                <div style={{ color: 'var(--danger-500)', fontWeight: 600, marginBottom: 8 }}>
-                                    ❌ Đơn hàng đã bị hủy
-                                </div>
-                                {(order.cancelled_by_name || order.cancelled_at || order.cancel_reason) && (
-                                    <div style={{
-                                        background: '#FEF2F2',
-                                        border: '1px solid #FECACA',
-                                        borderRadius: 8,
-                                        padding: '10px 14px',
-                                        lineHeight: 1.6,
-                                        color: '#7F1D1D',
-                                    }}>
-                                        {order.cancelled_by_name && (
-                                            <div>Hủy bởi: <strong>{order.cancelled_by_name}</strong></div>
-                                        )}
-                                        {order.cancelled_at && (
-                                            <div>Thời gian: {new Date(order.cancelled_at).toLocaleString('vi-VN')}</div>
-                                        )}
-                                        {order.cancel_reason && (
-                                            <div>Lý do: {order.cancel_reason}</div>
-                                        )}
-                                    </div>
-                                )}
+                            <div style={{ fontSize: 13, color: 'var(--danger-500)', fontWeight: 600 }}>
+                                ❌ Đơn hàng đã bị hủy
                             </div>
                         ) : (
                             <div className="om-timeline">
@@ -822,7 +800,7 @@ const OrderSlideOver = ({
                     >
                         🖨️ In hóa đơn
                     </button>
-                    {isManager && (order.status === 'Chờ xác nhận' || order.status === 'Đã xác nhận') && (
+                    {isManager && !isTerminal && (
                         <button
                             className="om-btn om-btn-danger-outline"
                             onClick={() => onCancelOrder(order)}

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     RETURN_STATUS_CONFIG, REASON_CONFIG, REFUND_METHODS,
     formatVND, formatDateTime, getInitials,
 } from './mockReturns';
 import { updateReturnRefundMethod } from '../../../../api/returnApi';
-import { VIETNAM_BANKS, getVietQrUrl, findBankByName } from '../../../../constants/bankConstants';
+import { getVietQrUrl, findBankByName } from '../../../../constants/bankConstants';
+import ConfirmDialog from '../../../../components/common/ConfirmDialog';
 
 /**
  * ReturnDetailSlideOver — right drawer with full return detail,
@@ -18,6 +19,7 @@ const ReturnDetailSlideOver = ({
     onApprove,
     onReject,
     onPrint,
+    onInspect,
 }) => {
     const [notes, setNotes] = useState(returnItem?.notes || '');
     const [autoSaved, setAutoSaved] = useState(false);
@@ -26,6 +28,17 @@ const ReturnDetailSlideOver = ({
     const [savingMethod, setSavingMethod] = useState(false);
     const [methodSaved, setMethodSaved] = useState(false);
     const [qrError, setQrError] = useState(false);
+    const [inspectionRows, setInspectionRows] = useState([]);
+    const [inspectionErrors, setInspectionErrors] = useState({});
+    const [confirmState, setConfirmState] = useState({
+        open: false,
+        title: 'Xác nhận',
+        message: '',
+        confirmText: 'Xác nhận',
+        cancelText: 'Hủy',
+        variant: 'primary',
+        onConfirm: null,
+    });
 
     // Bank info — API may return snake_case or camelCase
     const bankAccount = returnItem?.bank_account || returnItem?.bankAccount || null;
@@ -66,6 +79,87 @@ const ReturnDetailSlideOver = ({
         setAutoSaved(false);
         // Simulate auto-save
         setTimeout(() => setAutoSaved(true), 1000);
+    };
+
+    useEffect(() => {
+        const rows = (returnItem?.items || []).map((item) => ({
+            returnItemId: item.return_item_id,
+            quantity: Number(item.quantity || 0),
+            restockedQty: Number(item.restocked_qty || 0),
+            scrappedQty: Number(item.scrapped_qty || 0),
+            inspectionNote: item.inspection_note || '',
+        }));
+        setInspectionRows(rows);
+        setInspectionErrors({});
+    }, [returnItem]);
+
+    const inspectionErrorCount = useMemo(() => Object.keys(inspectionErrors).length, [inspectionErrors]);
+
+    const openLocalConfirm = (options) => {
+        setConfirmState({
+            open: true,
+            title: options.title || 'Xác nhận',
+            message: options.message || 'Bạn có chắc chắn muốn tiếp tục?',
+            confirmText: options.confirmText || 'Xác nhận',
+            cancelText: options.cancelText || 'Hủy',
+            variant: options.variant || 'primary',
+            onConfirm: options.onConfirm || null,
+        });
+    };
+
+    const closeLocalConfirm = () => {
+        setConfirmState((prev) => ({ ...prev, open: false, onConfirm: null }));
+    };
+
+    const updateInspectionRow = (returnItemId, field, value) => {
+        setInspectionRows((prev) => prev.map((row) => {
+            if (row.returnItemId !== returnItemId) return row;
+            return {
+                ...row,
+                [field]: field === 'inspectionNote' ? value : Math.max(0, Number(value || 0)),
+            };
+        }));
+    };
+
+    const validateInspection = () => {
+        const nextErrors = {};
+        inspectionRows.forEach((row) => {
+            if (row.restockedQty < 0 || row.scrappedQty < 0) {
+                nextErrors[row.returnItemId] = 'Số lượng không được âm';
+                return;
+            }
+            if (Number(row.restockedQty) + Number(row.scrappedQty) !== Number(row.quantity)) {
+                nextErrors[row.returnItemId] = `Tổng nhập kho + hỏng phải bằng ${row.quantity}`;
+            }
+        });
+        setInspectionErrors(nextErrors);
+        return Object.keys(nextErrors).length === 0;
+    };
+
+    const handleInspectSubmit = async () => {
+        if (!onInspect) return;
+        const ok = validateInspection();
+        if (!ok) return;
+        const payload = {
+            items: inspectionRows.map((row) => ({
+                returnItemId: row.returnItemId,
+                restockedQty: Number(row.restockedQty || 0),
+                scrappedQty: Number(row.scrappedQty || 0),
+                inspectionNote: row.inspectionNote || '',
+            })),
+        };
+
+        openLocalConfirm({
+            title: 'Xác nhận lưu kiểm định',
+            message: 'Bạn có chắc muốn lưu kiểm định? Hệ thống sẽ chuyển sang trạng thái "Đã kiểm định".',
+            confirmText: 'Lưu kiểm định',
+            cancelText: 'Hủy',
+            variant: 'primary',
+            onConfirm: async () => {
+                closeLocalConfirm();
+                await onInspect(returnItem.return_id, payload);
+            },
+        });
     };
 
     return (
@@ -143,24 +237,11 @@ const ReturnDetailSlideOver = ({
                         </div>
                         {(returnItem.items || []).map(item => (
                             <div key={item.order_item_id} className="rm-so-item">
-                                {item.product?.image_url ? (
-                                    <img
-                                        src={item.product.image_url}
-                                        alt={item.product?.name}
-                                        className="rm-so-item-thumb"
-                                        onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'flex'; }}
-                                    />
-                                ) : null}
-                                <div
+                                <img
+                                    src={item.product?.image_url}
+                                    alt={item.product?.name}
                                     className="rm-so-item-thumb"
-                                    style={{
-                                        display: item.product?.image_url ? 'none' : 'flex',
-                                        alignItems: 'center', justifyContent: 'center',
-                                        background: 'var(--gray-100)', color: 'var(--gray-400)', fontSize: 22,
-                                    }}
-                                >
-                                    👟
-                                </div>
+                                />
                                 <div className="rm-so-item-info">
                                     <div className="rm-so-item-name">{item.product?.name}</div>
                                     <div className="rm-so-item-variant">
@@ -169,23 +250,73 @@ const ReturnDetailSlideOver = ({
                                     <div className="rm-so-item-variant">
                                         Số lượng trả: {item.quantity} &nbsp;|&nbsp; Đơn giá: {formatVND(item.unit_price)}
                                     </div>
-                                    {item.promotion_name && (
-                                        <div style={{ fontSize: 11, color: '#ef4444', marginTop: 3 }}>🏷️ {item.promotion_name}</div>
-                                    )}
                                 </div>
-                                <div className="rm-so-item-price" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                    {item.original_price && (
-                                        <span style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: 11, whiteSpace: 'nowrap' }}>
-                                            {formatVND(item.original_price * item.quantity)}
-                                        </span>
-                                    )}
-                                    <span style={item.original_price ? { color: '#ef4444' } : undefined}>
-                                        {formatVND(item.total_price)}
-                                    </span>
+                                <div className="rm-so-item-price">
+                                    {formatVND(item.total_price)}
                                 </div>
                             </div>
                         ))}
                     </div>
+
+                    {/* Inspection */}
+                    {returnItem.return_status === 'Đã nhận hàng' && (
+                        <div className="rm-so-section">
+                            <div className="rm-so-section-title">🧪 Kiểm định hàng trả</div>
+                            <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 10 }}>
+                                Nhập đúng số lượng: Nhập kho + Hỏng = Số lượng trả.
+                            </div>
+                            {(returnItem.items || []).map((item) => {
+                                const row = inspectionRows.find((r) => r.returnItemId === item.return_item_id);
+                                const err = inspectionErrors[item.return_item_id];
+                                return (
+                                    <div key={item.return_item_id} style={{ border: '1px solid #E5E7EB', borderRadius: 10, padding: 10, marginBottom: 10 }}>
+                                        <div style={{ fontWeight: 600, marginBottom: 6 }}>{item.product?.name}</div>
+                                        <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8 }}>
+                                            Size {item.size?.size_name} • {item.color?.color_name} • SL trả: {item.quantity}
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                                            <div>
+                                                <label style={{ fontSize: 12, color: '#6B7280' }}>Nhập lại kho</label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    className="rm-method-select"
+                                                    value={row?.restockedQty ?? 0}
+                                                    onChange={(e) => updateInspectionRow(item.return_item_id, 'restockedQty', e.target.value)}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: 12, color: '#6B7280' }}>Hàng hỏng</label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    className="rm-method-select"
+                                                    value={row?.scrappedQty ?? 0}
+                                                    onChange={(e) => updateInspectionRow(item.return_item_id, 'scrappedQty', e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: 12, color: '#6B7280' }}>Ghi chú kiểm định</label>
+                                            <input
+                                                type="text"
+                                                className="rm-method-select"
+                                                value={row?.inspectionNote ?? ''}
+                                                onChange={(e) => updateInspectionRow(item.return_item_id, 'inspectionNote', e.target.value)}
+                                                placeholder="VD: Trầy đế"
+                                            />
+                                        </div>
+                                        {err && <div style={{ color: '#DC2626', fontSize: 12, marginTop: 6 }}>⚠ {err}</div>}
+                                    </div>
+                                );
+                            })}
+                            {inspectionErrorCount > 0 && (
+                                <div style={{ color: '#DC2626', fontSize: 12 }}>
+                                    Có {inspectionErrorCount} dòng chưa hợp lệ.
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Return Reason */}
                     <div className="rm-so-section">
@@ -354,7 +485,19 @@ const ReturnDetailSlideOver = ({
                         <>
                             <button
                                 className="rm-btn rm-btn-success"
-                                onClick={() => onApprove(returnItem)}
+                                onClick={() => {
+                                    openLocalConfirm({
+                                        title: 'Xác nhận duyệt yêu cầu',
+                                        message: 'Bạn có chắc muốn duyệt yêu cầu trả hàng này?',
+                                        confirmText: 'Duyệt',
+                                        cancelText: 'Hủy',
+                                        variant: 'primary',
+                                        onConfirm: async () => {
+                                            closeLocalConfirm();
+                                            await onApprove(returnItem);
+                                        },
+                                    });
+                                }}
                             >
                                 ✅ Duyệt yêu cầu
                             </button>
@@ -369,15 +512,47 @@ const ReturnDetailSlideOver = ({
                     {returnItem.return_status === 'Đã duyệt' && (
                         <button
                             className="rm-btn rm-btn-primary"
-                            onClick={() => onStatusChange(returnItem.return_id, 'Đã nhận hàng')}
+                            onClick={() => {
+                                openLocalConfirm({
+                                    title: 'Xác nhận đã nhận hàng',
+                                    message: 'Bạn có chắc đã nhận hàng về kho?',
+                                    confirmText: 'Xác nhận',
+                                    cancelText: 'Hủy',
+                                    variant: 'primary',
+                                    onConfirm: async () => {
+                                        closeLocalConfirm();
+                                        await onStatusChange(returnItem.return_id, 'Đã nhận hàng');
+                                    },
+                                });
+                            }}
                         >
                             📦 Xác nhận đã nhận hàng
                         </button>
                     )}
                     {returnItem.return_status === 'Đã nhận hàng' && (
                         <button
+                            className="rm-btn rm-btn-primary"
+                            onClick={handleInspectSubmit}
+                        >
+                            🧪 Lưu kiểm định
+                        </button>
+                    )}
+                    {returnItem.return_status === 'Đã kiểm định' && (
+                        <button
                             className="rm-btn rm-btn-success"
-                            onClick={() => onStatusChange(returnItem.return_id, 'Hoàn tiền')}
+                            onClick={() => {
+                                openLocalConfirm({
+                                    title: 'Xác nhận hoàn tiền',
+                                    message: `Bạn có chắc muốn xác nhận hoàn tiền ${formatVND(refundTotal)}?`,
+                                    confirmText: 'Xác nhận hoàn tiền',
+                                    cancelText: 'Hủy',
+                                    variant: 'primary',
+                                    onConfirm: async () => {
+                                        closeLocalConfirm();
+                                        await onStatusChange(returnItem.return_id, 'Hoàn tiền');
+                                    },
+                                });
+                            }}
                         >
                             💰 Xác nhận hoàn tiền ({formatVND(refundTotal)})
                         </button>
@@ -389,6 +564,20 @@ const ReturnDetailSlideOver = ({
                     )}
                 </div>
             </div>
+
+            <ConfirmDialog
+                open={confirmState.open}
+                title={confirmState.title}
+                message={confirmState.message}
+                confirmText={confirmState.confirmText}
+                cancelText={confirmState.cancelText}
+                variant={confirmState.variant}
+                align="right"
+                onCancel={closeLocalConfirm}
+                onConfirm={async () => {
+                    if (confirmState.onConfirm) await confirmState.onConfirm();
+                }}
+            />
 
             {/* Lightbox */}
             {lightboxImg && (

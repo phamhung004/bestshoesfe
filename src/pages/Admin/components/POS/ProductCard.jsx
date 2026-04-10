@@ -61,7 +61,7 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
                 <div className="pos-card-name">{product.name}</div>
                 <div className="pos-card-brand">{brandName}</div>
                 <div style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace', marginBottom: 2 }}>
-                    SKU: {product.sku || '—'}
+                    Mã SP: {product.code || product.productCode || '—'}
                 </div>
                 <div className={`pos-card-price${hasPromo ? ' has-promo' : ''}`}>{priceRange}</div>
 

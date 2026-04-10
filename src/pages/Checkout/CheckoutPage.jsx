@@ -7,6 +7,7 @@ import { addressApi } from '../../api/addressApi';
 import { couponApi } from '../../api/couponApi';
 import { shippingApi } from '../../api/shippingApi';
 import CheckoutStepIndicator from '../Cart/components/CheckoutStepIndicator';
+import DeliveryMethodSelector from './components/DeliveryMethodSelector';
 import SavedAddressSelector from './components/SavedAddressSelector';
 import RecipientForm from './components/RecipientForm';
 import AddressForm from './components/AddressForm';
@@ -700,7 +701,13 @@ const CheckoutPage = () => {
                             </div>
                         )}
 
-                        {/* A: Saved addresses (logged in + delivery) */}
+                        {/* A: Delivery method */}
+                        <DeliveryMethodSelector
+                            deliveryMethod={state.deliveryMethod}
+                            onSelect={(m) => dispatch({ type: 'SET_DELIVERY_METHOD', payload: m })}
+                        />
+
+                        {/* B: Saved addresses (logged in + delivery) */}
                         {isLoggedIn && state.deliveryMethod === 'Online' && (
                             <SavedAddressSelector
                                 addresses={savedAddresses}
@@ -724,7 +731,7 @@ const CheckoutPage = () => {
                             />
                         )}
 
-                        {/* B: Recipient info */}
+                        {/* C: Recipient info */}
                         <RecipientForm
                             formData={state.formData}
                             errors={state.errors}
@@ -733,7 +740,7 @@ const CheckoutPage = () => {
                             onBlur={handleFormBlur}
                         />
 
-                        {/* C: Address form (delivery + manual) */}
+                        {/* D: Address form (delivery + manual) */}
                         {state.deliveryMethod === 'Online' && (
                             !isLoggedIn || state.showManualForm || !state.selectedAddressId
                         ) && (
@@ -746,7 +753,7 @@ const CheckoutPage = () => {
                                 />
                             )}
 
-                        {/* D: Shipping fee info (delivery only — calculated via GHN) */}
+                        {/* E: Shipping fee info (delivery only — calculated via GHN) */}
                         {state.deliveryMethod === 'Online' && state.shippingFee && (
                             <div className="co-card co-stagger-5">
                                 <h3 className="co-card-title">Phí vận chuyển (GHN)</h3>
@@ -756,7 +763,7 @@ const CheckoutPage = () => {
                             </div>
                         )}
 
-                        {/* E: Shipping fee error (missing GHN IDs on saved address, etc.) */}
+                        {/* E2: Shipping fee error (missing GHN IDs on saved address, etc.) */}
                         {state.deliveryMethod === 'Online' && !state.shippingFee && state.shippingFeeError && (
                             <div className="co-card co-stagger-5">
                                 <div className="co-fee-error-box">

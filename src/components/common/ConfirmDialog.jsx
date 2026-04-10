@@ -8,6 +8,7 @@ const ConfirmDialog = ({
   confirmText = 'Xác nhận',
   cancelText = 'Hủy',
   variant = 'primary', // primary | danger
+  align = 'center', // center | right
   onConfirm,
   onCancel,
   loading = false,
@@ -15,7 +16,8 @@ const ConfirmDialog = ({
   if (!open) return null;
 
   return (
-    <div className="cf-overlay" onClick={onCancel}>
+    <div className={`cf-overlay ${align === 'right' ? 'cf-overlay-right' : ''}`} onClick={onCancel}>
+      <div className="cf-hotspot-blocker" onClick={(e) => e.stopPropagation()} />
       <div className="cf-dialog" onClick={(e) => e.stopPropagation()}>
         <h3 className="cf-title">{title}</h3>
         <p className="cf-message">{message}</p>

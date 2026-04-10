@@ -11,9 +11,10 @@ export const normalizeReturnItem = (item) => {
         return_item_id: item.returnItemId ?? item.return_item_id,
         variant_id: item.variantId ?? item.variant_id,
         quantity: item.quantity,
+        restocked_qty: item.restockedQty ?? item.restocked_qty ?? 0,
+        scrapped_qty: item.scrappedQty ?? item.scrapped_qty ?? 0,
+        inspection_note: item.inspectionNote ?? item.inspection_note ?? '',
         unit_price: item.unitPrice ?? item.unit_price,
-        original_price: item.originalPrice ?? item.original_price ?? null,
-        promotion_name: item.promotionName ?? item.promotion_name ?? null,
         total_price: item.totalPrice ?? item.total_price,
         product: item.product ? {
             product_id: item.product.productId ?? item.product.product_id,

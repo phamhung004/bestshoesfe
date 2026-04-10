@@ -186,7 +186,9 @@ const DashboardOverview = () => {
 
       if (byCategoryRes.status === 'fulfilled') {
         const data = byCategoryRes.value?.data ?? byCategoryRes.value ?? {};
-        const items = Array.isArray(data.items) ? data.items : [];
+        const items = Array.isArray(data)
+          ? data
+          : (Array.isArray(data.items) ? data.items : []);
         setCategoryData(items.map((it, idx) => ({
           name: it.categoryName,
           value: Number(it.ratioPercent || 0),
@@ -199,7 +201,9 @@ const DashboardOverview = () => {
 
       if (byBrandRes.status === 'fulfilled') {
         const data = byBrandRes.value?.data ?? byBrandRes.value ?? {};
-        const items = Array.isArray(data.items) ? data.items : [];
+        const items = Array.isArray(data)
+          ? data
+          : (Array.isArray(data.items) ? data.items : []);
         setBrandData(items.map((it) => ({
           name: it.brandName,
           revenue: Number(it.revenue || 0),
@@ -567,7 +571,6 @@ const DashboardOverview = () => {
               <tr>
                 <th>Mã đơn</th>
                 <th>Khách hàng</th>
-                <th>Sản phẩm</th>
                 <th>Tổng tiền</th>
                 <th>Trạng thái</th>
                 <th>Ngày đặt</th>
@@ -585,29 +588,6 @@ const DashboardOverview = () => {
                       <div className="customer-info">
                         <h4>{order.customer.name}</h4>
                         <p>{order.customer.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="product-cell">
-                      <div className="product-image">
-                        {order.product.image ? (
-                          <img
-                            src={order.product.image}
-                            alt={order.product.name}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }}
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const fallback = e.currentTarget.nextSibling;
-                              if (fallback) fallback.style.display = 'inline';
-                            }}
-                          />
-                        ) : null}
-                        <span style={{ display: order.product.image ? 'none' : 'inline' }}>👟</span>
-                      </div>
-                      <div className="product-info">
-                        <h4>{order.product.name}</h4>
-                        <p>{order.product.variant}</p>
                       </div>
                     </div>
                   </td>

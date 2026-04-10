@@ -36,6 +36,9 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
         return product.imageUrl || '/images/product-placeholder.svg';
     }, [selectedVariant, selectedColor, activeVariants, product.imageUrl]);
 
+    const selectedSku = selectedVariant?.sku || selectedVariant?.variantSku || null;
+    const productCode = product?.code || product?.productCode || null;
+
     // Check if a size+color combination exists
     const hasVariant = (sizeId, colorId) =>
         activeVariants.some(v => v.sizeId === sizeId && v.colorId === colorId);
@@ -65,7 +68,10 @@ const VariantPickerModal = ({ product, onClose, onAddToCart }) => {
                         <div className="pos-modal-title">{product.name}</div>
                         <div className="pos-modal-brand">{getBrandName(product.brandId)}</div>
                         <div style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
-                            SKU: {product.sku || '—'}
+                            Mã SP: {productCode || '—'}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>
+                            SKU: {selectedSku || 'Chọn size + màu để hiện SKU'}
                         </div>
                     </div>
                     <button className="pos-modal-close" onClick={onClose} aria-label="Đóng">×</button>
