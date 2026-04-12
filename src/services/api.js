@@ -894,6 +894,22 @@ export const returnAPI = {
     const qs = search ? `?search=${encodeURIComponent(search)}` : '';
     return apiCall(`/admin/returns/deliverable-orders${qs}`);
   },
+
+  // Inspect received return items (split restockedQty vs scrappedQty)
+  inspect: (id, data) => apiCall(`/admin/returns/${id}/inspect`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  // Get scrapped items list (items with scrappedQty > 0)
+  getScrappedItems: ({ from, to, limit = 50 } = {}) => {
+    const params = new URLSearchParams();
+    if (from) params.append('from', from);
+    if (to) params.append('to', to);
+    params.append('limit', Math.min(Number(limit) || 50, 50));
+    const qs = params.toString();
+    return apiCall(`/admin/returns/scrapped-items${qs ? `?${qs}` : ''}`);
+  },
 };
 
 

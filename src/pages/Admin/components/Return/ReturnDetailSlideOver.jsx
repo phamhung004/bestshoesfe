@@ -95,6 +95,38 @@ const ReturnDetailSlideOver = ({
 
     const inspectionErrorCount = useMemo(() => Object.keys(inspectionErrors).length, [inspectionErrors]);
 
+    const displayTimeline = useMemo(() => {
+        const ordered = ['Chờ duyệt', 'Đã duyệt', 'Đã nhận hàng', 'Đã kiểm định', 'Hoàn tiền'];
+        const statusIndex = ordered.indexOf(returnItem?.return_status);
+
+        const apiTimeline = Array.isArray(returnItem?.timeline) ? returnItem.timeline : [];
+        const hasUsefulApiTimeline = apiTimeline.length > 0 && apiTimeline.some((s) => s?.completed || s?.current || s?.timestamp);
+
+        if (hasUsefulApiTimeline) {
+            const normalizedApi = apiTimeline.map((s) => ({
+                label: s?.label,
+                completed: !!s?.completed,
+                current: !!s?.current,
+                timestamp: s?.timestamp || null,
+            }));
+
+            // If API timeline appears stale vs current status, fallback to status-based timeline
+            const apiCurrentIndex = normalizedApi.findIndex((s) => s.current);
+            if (statusIndex >= 0 && apiCurrentIndex >= 0 && apiCurrentIndex !== statusIndex) {
+                // continue to fallback below
+            } else {
+                return normalizedApi;
+            }
+        }
+
+        return ordered.map((label, idx) => ({
+            label,
+            completed: statusIndex >= 0 ? idx <= statusIndex : idx === 0,
+            current: statusIndex >= 0 ? idx === statusIndex : idx === 0,
+            timestamp: idx === 0 ? (returnItem?.created_at || null) : null,
+        }));
+    }, [returnItem]);
+
     const openLocalConfirm = (options) => {
         setConfirmState({
             open: true,
@@ -449,7 +481,7 @@ const ReturnDetailSlideOver = ({
                     <div className="rm-so-section">
                         <div className="rm-so-section-title">📅 Tiến trình xử lý</div>
                         <div className="rm-timeline">
-                            {returnItem.timeline.map((step, i) => (
+                            {displayTimeline.map((step, i) => (
                                 <div
                                     key={i}
                                     className={`rm-timeline-step ${step.completed ? 'completed' : ''} ${step.current ? 'current' : ''}`}

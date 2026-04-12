@@ -142,36 +142,30 @@ const ReturnManagement = () => {
         }
     }, [filters, activeTab, sortConfig, currentPage, rowsPerPage]);
 
-    // ── Fetch status counts for tabs ──────────────────────────────
-    const fetchStatusCounts = useCallback(async () => {
+    // ── Build status counts from current loaded page ──────────────
+    const fetchStatusCounts = useCallback(() => {
         try {
-            // Fetch total count (no filters)
-            const allRes = await returnAPI.search({ pageNum: 0, pageSize: 1 });
-            const allTotal = allRes?.data?.totalElements || 0;
-
-            const statuses = Object.keys(RETURN_STATUS_CONFIG);
-            const counts = { 'Tất cả': allTotal };
-
-            // Fetch counts per status in parallel
-            const results = await Promise.all(
-                statuses.map((s) =>
-                    returnAPI.search({ returnStatus: s, pageNum: 0, pageSize: 1 })
-                        .then((res) => ({ status: s, count: res?.data?.totalElements || 0 }))
-                        .catch(() => ({ status: s, count: 0 }))
-                )
-            );
-
-            results.forEach(({ status, count }) => {
-                counts[status] = count;
+            const counts = { 'Tất cả': totalElements || returns.length || 0 };
+            Object.keys(RETURN_STATUS_CONFIG).forEach((s) => {
+                counts[s] = 0;
             });
-
+            (returns || []).forEach((ret) => {
+                const s = ret?.return_status;
+                if (s && Object.prototype.hasOwnProperty.call(counts, s)) {
+                    counts[s] += 1;
+                }
+            });
             setStatusCounts(counts);
         } catch (err) {
-            console.error('Failed to fetch status counts:', err);
+            console.error('Failed to build status counts:', err);
         }
-    }, []);
+    }, [returns, totalElements]);
 
     const fetchScrappedItems = useCallback(async () => {
+        if (typeof returnAPI.getScrappedItems !== 'function') {
+            setScrappedItems([]);
+            return;
+        }
         setScrappedLoading(true);
         try {
             const res = await returnAPI.getScrappedItems(scrappedFilters);
@@ -295,7 +289,7 @@ const ReturnManagement = () => {
             if (selectedReturnDetail && selectedReturnDetail.return_id === returnId) {
                 setSelectedReturnDetail(prev => prev ? { ...prev, return_status: newStatus } : prev);
             }
-            fetchReturns();
+            await fetchReturns();
             fetchStatusCounts();
         } catch (err) {
             showToast('❌ Lỗi: ' + (err?.response?.data?.message || err?.message || 'Không thể cập nhật trạng thái'));
@@ -312,7 +306,7 @@ const ReturnManagement = () => {
         try {
             await returnAPI.inspect(returnId, payload);
             showToast('✅ Đã lưu kiểm định');
-            fetchReturns();
+            await fetchReturns();
             fetchStatusCounts();
             if (selectedReturnDetail && selectedReturnDetail.return_id === returnId) {
                 try {
