@@ -14,9 +14,11 @@ import PaymentMethodSelector from './components/PaymentMethodSelector';
 import OrderNoteInput from './components/OrderNoteInput';
 import OrderReviewPanel from './components/OrderReviewPanel';
 import OrderSuccessState from './components/OrderSuccessState';
+import PriceChangeModal from './components/PriceChangeModal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import {
     getItemSubtotal,
+    getItemPrice,
     formatAddress,
 } from './checkoutConstants';
 import './CheckoutPage.css';
@@ -76,6 +78,9 @@ const createInitialState = (user) => ({
     shippingFee: null,        // { total, serviceFee, insuranceFee }
     shippingFeeLoading: false,
     shippingFeeError: '',
+
+    // Price updates from 409 response: { [variantId]: newPrice }
+    priceUpdates: {},
 });
 
 // ─── REDUCER ───────────────────────────────────────────
@@ -143,6 +148,8 @@ function checkoutReducer(state, action) {
             return { ...state, shippingFeeLoading: action.payload };
         case 'SET_SHIPPING_FEE_ERROR':
             return { ...state, shippingFeeError: action.payload, shippingFee: null };
+        case 'UPDATE_PRICES':
+            return { ...state, priceUpdates: { ...state.priceUpdates, ...action.payload } };
         default:
             return state;
     }
@@ -230,6 +237,8 @@ const CheckoutPage = () => {
     const formRef = useRef(null);
     const [savedAddresses, setSavedAddresses] = useState([]);
     const [showConfirmOrder, setShowConfirmOrder] = useState(false);
+    const [showPriceChangeModal, setShowPriceChangeModal] = useState(false);
+    const [priceChangedItems, setPriceChangedItems] = useState([]);
 
     // Redirect to cart if empty (and not in success state)
     useEffect(() => {
@@ -265,8 +274,33 @@ const CheckoutPage = () => {
 
     const isLoggedIn = isAuthenticated;
 
+    // ── Helper: get effective price considering server-side price updates ──
+    const getEffectivePrice = useCallback((item) => {
+        const variantId = item.variant?.variant_id;
+        if (variantId && state.priceUpdates[variantId] !== undefined) {
+            return state.priceUpdates[variantId];
+        }
+        return getItemPrice(item);
+    }, [state.priceUpdates]);
+
+    // ── Effective items with price overrides applied ────
+    const effectiveCheckoutItems = useMemo(() => {
+        if (Object.keys(state.priceUpdates).length === 0) return checkoutItems;
+        return checkoutItems.map(item => {
+            const vid = item.variant?.variant_id;
+            if (vid && state.priceUpdates[vid] !== undefined) {
+                return {
+                    ...item,
+                    variant: { ...item.variant, price: state.priceUpdates[vid] },
+                    promotion: null,
+                };
+            }
+            return item;
+        });
+    }, [checkoutItems, state.priceUpdates]);
+
     // ── Calculations ────────────────────────────────────
-    const subtotal = checkoutItems.reduce((sum, item) => sum + getItemSubtotal(item), 0);
+    const subtotal = checkoutItems.reduce((sum, item) => sum + getEffectivePrice(item) * item.quantity, 0);
     const shippingCost = state.deliveryMethod === 'In-store' ? 0 : (state.shippingFee?.total || 0);
     const discountAmount = state.couponState?.discountAmount || 0;
     const total = subtotal + shippingCost - discountAmount;
@@ -546,6 +580,12 @@ const CheckoutPage = () => {
                 couponCode: state.couponState?.code || null,
             };
 
+            // Include client-side prices for price verification
+            checkoutData.clientPrices = checkoutItems.map(item => ({
+                variantId: item.variant?.variant_id,
+                price: getEffectivePrice(item),
+            }));
+
             // Address: either saved or manual
             if (selectedAddress) {
                 checkoutData.addressId = selectedAddress.addressId;
@@ -622,6 +662,20 @@ const CheckoutPage = () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
         } catch (err) {
+            // Handle price conflict (409)
+            if (err.status === 409 && Array.isArray(err.data) && err.data.length > 0) {
+                setPriceChangedItems(err.data);
+                setShowPriceChangeModal(true);
+
+                // Immediately update displayed prices
+                const updates = {};
+                err.data.forEach(item => {
+                    updates[item.variantId] = item.newPrice;
+                });
+                dispatch({ type: 'UPDATE_PRICES', payload: updates });
+                return;
+            }
+
             const msg = err.message || 'Đặt hàng thất bại. Vui lòng thử lại.';
             const msgLower = msg.toLowerCase();
 
@@ -641,7 +695,20 @@ const CheckoutPage = () => {
             dispatch({ type: 'SET_SUBMITTING', payload: false });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state, selectedAddress, clearCart, checkoutItems, selectedCartItemIds, removeItem, fetchCart]);
+    }, [state, selectedAddress, clearCart, checkoutItems, selectedCartItemIds, removeItem, fetchCart, getEffectivePrice]);
+
+    // ── Price change modal handlers ─────────────────────
+    const handlePriceChangeCancel = useCallback(() => {
+        setShowPriceChangeModal(false);
+        // priceUpdates already applied — order summary shows new prices
+    }, []);
+
+    const handlePriceChangeConfirm = useCallback(async () => {
+        setShowPriceChangeModal(false);
+        // priceUpdates already applied by the 409 handler, so the next
+        // submitOrder call will send the updated clientPrices automatically
+        await submitOrder();
+    }, [submitOrder]);
 
     // ── RENDER SUCCESS STATE ────────────────────────────
     if (state.orderSuccess) {
@@ -813,7 +880,7 @@ const CheckoutPage = () => {
                     {/* ── RIGHT PANEL ── */}
                     <div className="checkout-right-panel">
                         <OrderReviewPanel
-                            items={checkoutItems}
+                            items={effectiveCheckoutItems}
                             coupon={state.couponState}
                             subtotal={subtotal}
                             shippingCost={shippingCost}
@@ -852,6 +919,14 @@ const CheckoutPage = () => {
                     setShowConfirmOrder(false);
                     await submitOrder();
                 }}
+            />
+
+            <PriceChangeModal
+                open={showPriceChangeModal}
+                changedItems={priceChangedItems}
+                loading={state.isSubmitting}
+                onCancel={handlePriceChangeCancel}
+                onConfirm={handlePriceChangeConfirm}
             />
         </div>
     );

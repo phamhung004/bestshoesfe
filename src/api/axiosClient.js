@@ -54,6 +54,16 @@ axiosClient.interceptors.response.use(
       return Promise.reject(notFoundError);
     }
 
+    if (status === 409) {
+      const conflictError = new Error(
+        error.response.data?.message ?? 'Dữ liệu xung đột.'
+      );
+      conflictError.type = 'ConflictError';
+      conflictError.status = 409;
+      conflictError.data = error.response.data?.data ?? null;
+      return Promise.reject(conflictError);
+    }
+
     if (status >= 500) {
       const serverError = new Error(
         error.response.data?.message ?? 'Lỗi hệ thống. Vui lòng thử lại sau.'
