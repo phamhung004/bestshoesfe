@@ -20,6 +20,7 @@ export const normalizeOrderItem = (item) => {
             color_name: item.color.colorName ?? item.color.color_name,
             color_code: item.color.colorCode ?? item.color.color_code,
         } : null,
+        weight: item.weight ?? null,
         original_price: item.originalPrice ?? item.original_price ?? null,
         promotion_id: item.promotionId ?? item.promotion_id ?? null,
         promotion_name: item.promotionName ?? item.promotion_name ?? null,

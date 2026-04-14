@@ -130,26 +130,8 @@ const ReturnManagement = () => {
     // ── Fetch status counts for tabs ──────────────────────────────
     const fetchStatusCounts = useCallback(async () => {
         try {
-            // Fetch total count (no filters)
-            const allRes = await returnAPI.search({ pageNum: 0, pageSize: 1 });
-            const allTotal = allRes?.data?.totalElements || 0;
-
-            const statuses = Object.keys(RETURN_STATUS_CONFIG);
-            const counts = { 'Tất cả': allTotal };
-
-            // Fetch counts per status in parallel
-            const results = await Promise.all(
-                statuses.map((s) =>
-                    returnAPI.search({ returnStatus: s, pageNum: 0, pageSize: 1 })
-                        .then((res) => ({ status: s, count: res?.data?.totalElements || 0 }))
-                        .catch(() => ({ status: s, count: 0 }))
-                )
-            );
-
-            results.forEach(({ status, count }) => {
-                counts[status] = count;
-            });
-
+            const res = await returnAPI.getStatusCounts();
+            const counts = res?.data || {};
             setStatusCounts(counts);
         } catch (err) {
             console.error('Failed to fetch status counts:', err);

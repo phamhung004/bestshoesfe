@@ -133,9 +133,16 @@ const OrderSlideOver = ({
             setLoadingFee(true);
             setNewShippingFee(null);
             try {
+                // Calculate total weight from order items (grams)
+                const totalWeight = (order.items || []).reduce((sum, item) => {
+                    const w = item.weight || 500; // default 500g per pair
+                    return sum + w * item.quantity;
+                }, 0);
+
                 const res = await shippingApi.calculateFee({
                     toDistrictId: Number(newForm.ghnDistrictId),
                     toWardCode: e.target.value,
+                    weight: totalWeight > 0 ? totalWeight : 500,
                 });
                 const total = res?.data?.data?.total ?? res?.data?.total;
                 setNewShippingFee(total ?? null);
@@ -145,7 +152,7 @@ const OrderSlideOver = ({
                 setLoadingFee(false);
             }
         }
-    }, [addressForm, wards]);
+    }, [addressForm, wards, order]);
 
     const handleSaveAddress = useCallback(async () => {
         if (!addressForm.shippingProvince || !addressForm.shippingDistrict
