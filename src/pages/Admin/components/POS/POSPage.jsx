@@ -312,8 +312,8 @@ const POSPage = () => {
 
     const handleSaveHoldOrder = useCallback(async () => {
         if (cartItems.length === 0) return;
-        if (holdOrders.length >= 10 && !activeOrderId) {
-            showToast('Tối đa 10 hóa đơn chờ. Vui lòng hoàn tất hoặc xóa bớt.', 'warning');
+        if (holdOrders.length >= 6 && !activeOrderId) {
+            showToast('Tối đa 6 hóa đơn chờ. Vui lòng hoàn tất hoặc xóa bớt.', 'warning');
             return;
         }
         setIsSavingHold(true);

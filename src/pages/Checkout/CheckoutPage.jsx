@@ -316,9 +316,13 @@ const CheckoutPage = () => {
     const handleFormBlur = useCallback((field) => {
         dispatch({ type: 'SET_TOUCHED', field });
         const value = state.formData[field];
-        const error = validateField(field, value, state);
+        let error = validateField(field, value, state);
+        // Email is required for guest checkout
+        if (field === 'email' && !isLoggedIn && (!value || !value.trim())) {
+            error = 'Vui lòng nhập email để nhận thông tin đơn hàng';
+        }
         dispatch({ type: 'SET_ERROR', field, value: error });
-    }, [state.formData]);
+    }, [state.formData, isLoggedIn]);
 
     const handleCardChange = useCallback((field, value) => {
         dispatch({ type: 'SET_CARD_FIELD', field, value });
@@ -513,8 +517,16 @@ const CheckoutPage = () => {
             touched[f] = true;
         });
 
-        // Email — optional but validate format if filled
-        if (state.formData.email) {
+        // Email — required for guest, optional for logged-in (validate format if filled)
+        if (!isLoggedIn) {
+            const emailErr = validateField('email', state.formData.email);
+            if (!state.formData.email || !state.formData.email.trim()) {
+                newErrors['email'] = 'Vui lòng nhập email để nhận thông tin đơn hàng';
+            } else if (emailErr) {
+                newErrors['email'] = emailErr;
+            }
+            touched['email'] = true;
+        } else if (state.formData.email) {
             const emailErr = validateField('email', state.formData.email);
             if (emailErr) newErrors['email'] = emailErr;
             touched['email'] = true;
@@ -798,6 +810,7 @@ const CheckoutPage = () => {
                             touched={state.touched}
                             onChange={handleFormChange}
                             onBlur={handleFormBlur}
+                            isGuest={!isLoggedIn}
                         />
 
                         {/* C: Address form (delivery + manual) */}

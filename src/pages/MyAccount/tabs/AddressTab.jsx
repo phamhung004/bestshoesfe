@@ -80,7 +80,16 @@ const AddressTab = () => {
                     <h2 className="acc-tab-title">Địa chỉ của tôi</h2>
                     <p className="acc-tab-sub">Quản lý địa chỉ giao hàng</p>
                 </div>
-                <button className="acc-btn-primary" onClick={() => setModal({ mode: 'add' })}>
+                <button
+                    className="acc-btn-primary"
+                    onClick={() => {
+                        if (addresses.length >= 6) {
+                            showToast('Bạn chỉ có thể lưu tối đa 6 địa chỉ.', 'error');
+                            return;
+                        }
+                        setModal({ mode: 'add' });
+                    }}
+                >
                     <Plus size={16} /> Thêm địa chỉ mới
                 </button>
             </div>
@@ -91,6 +100,7 @@ const AddressTab = () => {
                     <h3>Chưa có địa chỉ nào</h3>
                     <p>Thêm địa chỉ để giao hàng nhanh hơn!</p>
                     <button className="acc-btn-primary" onClick={() => setModal({ mode: 'add' })}>Thêm địa chỉ đầu tiên</button>
+
                 </div>
             ) : (
                 <div className="acc-address-grid">
