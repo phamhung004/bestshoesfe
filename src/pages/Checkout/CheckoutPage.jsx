@@ -17,7 +17,6 @@ import OrderSuccessState from './components/OrderSuccessState';
 import PriceChangeModal from './components/PriceChangeModal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import {
-    getItemSubtotal,
     getItemPrice,
     formatAddress,
 } from './checkoutConstants';
@@ -216,7 +215,7 @@ function validateField(field, value) {
 
 // ─── COMPONENT ─────────────────────────────────────────
 const CheckoutPage = () => {
-    const { cartItems, clearCart, removeItem, fetchCart } = useCart();
+    const { cartItems, fetchCart } = useCart();
     const { user, isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -590,6 +589,7 @@ const CheckoutPage = () => {
                 paymentMethod: state.paymentMethod,
                 orderNote: state.orderNote || null,
                 couponCode: state.couponState?.code || null,
+                cartItemIds: checkoutItems.map(item => item.cart_item_id),
             };
 
             // Include client-side prices for price verification
@@ -632,14 +632,8 @@ const CheckoutPage = () => {
             // Save checkout items before cart mutations (for success page display)
             const savedItems = [...checkoutItems];
 
-            // If user checked out selected items only: remove just selected items from cart.
-            // Otherwise keep old behavior (clear all).
-            if (selectedCartItemIds && selectedCartItemIds.length > 0) {
-                await Promise.all(selectedCartItemIds.map((id) => removeItem(id)));
-                await fetchCart();
-            } else {
-                await clearCart();
-            }
+            // Backend removes only the checked-out rows, so refresh cart state from source of truth.
+            await fetchCart();
 
             dispatch({
                 type: 'SET_ORDER_SUCCESS',
@@ -707,7 +701,7 @@ const CheckoutPage = () => {
             dispatch({ type: 'SET_SUBMITTING', payload: false });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state, selectedAddress, clearCart, checkoutItems, selectedCartItemIds, removeItem, fetchCart, getEffectivePrice]);
+    }, [state, selectedAddress, checkoutItems, fetchCart, getEffectivePrice]);
 
     // ── Price change modal handlers ─────────────────────
     const handlePriceChangeCancel = useCallback(() => {
