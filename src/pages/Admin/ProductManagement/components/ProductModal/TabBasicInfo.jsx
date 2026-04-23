@@ -1,19 +1,12 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { slugify } from '../../mockProducts';
-
-const TAGS = [
-  { key: 'hot',        label: '🔥 HOT' },
-  { key: 'new',        label: '🆕 MỚI' },
-  { key: 'sale',       label: '💰 SALE' },
-  { key: 'bestseller', label: '⭐ BÁN CHẠY' },
-];
 
 /**
  * TabBasicInfo
  *
  * Props:
- *   data       { name, description, categoryId, brandId, materialId, status, tags, seoTitle, seoDesc, slug }
+ *   data       { name, description, categoryId, brandId, materialId, status, seoTitle, seoDesc, slug }
  *   onChange   (field, value) => void
  *   errors     { name?, categoryId?, brandId? }
  *   categories Category[]  from API
@@ -30,21 +23,36 @@ const TabBasicInfo = ({ data, onChange, errors = {}, categories = [], brands = [
     }
   }, [data.name]);
 
-  const toggleTag = (key) => {
-    const current = data.tags || [];
-    const next = current.includes(key)
-      ? current.filter((t) => t !== key)
-      : [...current, key];
-    onChange('tags', next);
-  };
-
   return (
-    <div className="pm-form-grid">
-      {/* ── Left column ─────────────────────────────────── */}
-      <div>
-        {/* Thông tin chung */}
-        <div className="pm-form-section">
-          <div className="pm-form-section-title">Thông tin chung</div>
+    <div>
+      {/* Thông tin chung */}
+      <div className="pm-form-section">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <span className="pm-form-section-title" style={{ marginBottom: 0 }}>Thông tin chung</span>
+            <div className="pm-toggle-row" style={{ gap: 12, width: 'auto' }}>
+              <div className="pm-toggle-label-wrap" style={{ textAlign: 'right' }}>
+                <span className="pm-toggle-title">
+                  {data.status === 'ACTIVE' ? 'Đang bán' : 'Ngừng bán'}
+                </span>
+                <span className="pm-toggle-sub">
+                  {data.status === 'ACTIVE'
+                    ? 'Đang hiển thị trên cửa hàng'
+                    : 'Đã ẩn khỏi cửa hàng'}
+                </span>
+              </div>
+              <label className="pm-toggle">
+                <input
+                  type="checkbox"
+                  className="pm-toggle-input"
+                  checked={data.status === 'ACTIVE'}
+                  onChange={(e) =>
+                    onChange('status', e.target.checked ? 'ACTIVE' : 'INACTIVE')
+                  }
+                />
+                <span className="pm-toggle-slider" />
+              </label>
+            </div>
+          </div>
 
           {/* Tên sản phẩm */}
           <div className="pm-field">
@@ -215,89 +223,9 @@ const TabBasicInfo = ({ data, onChange, errors = {}, categories = [], brands = [
             </div>
           )}
         </div>
-      </div>
-
-      {/* ── Right column ─────────────────────────────────── */}
-      <div>
-        {/* Trạng thái & Hiển thị */}
-        <div className="pm-form-section">
-          <div className="pm-form-section-title">Trạng thái & Hiển thị</div>
-
-          <div className="pm-field">
-            <div className="pm-toggle-row">
-              <div className="pm-toggle-label-wrap">
-                <span className="pm-toggle-title">
-                  {data.status === 'ACTIVE' ? 'Đang bán' : 'Ngừng bán'}
-                </span>
-                <span className="pm-toggle-sub">
-                  {data.status === 'ACTIVE'
-                    ? 'Sản phẩm hiển thị trên cửa hàng'
-                    : 'Sản phẩm bị ẩn khỏi cửa hàng'}
-                </span>
-              </div>
-              <label className="pm-toggle">
-                <input
-                  type="checkbox"
-                  className="pm-toggle-input"
-                  checked={data.status === 'ACTIVE'}
-                  onChange={(e) =>
-                    onChange('status', e.target.checked ? 'ACTIVE' : 'INACTIVE')
-                  }
-                />
-                <span className="pm-toggle-slider" />
-              </label>
-            </div>
-          </div>
-
-          {/* Tag badges */}
-          <div className="pm-field">
-            <label className="pm-label">Nhãn sản phẩm</label>
-            <div className="pm-tags-grid">
-              {TAGS.map(({ key, label }) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={`pm-tag-toggle ${(data.tags || []).includes(key) ? 'selected' : ''}`}
-                  onClick={() => toggleTag(key)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Thông tin bổ sung */}
-        <div className="pm-form-section">
-          <div className="pm-form-section-title">Thông tin bổ sung</div>
-
-          <div className="pm-field">
-            <label className="pm-label">Khối lượng (gram)</label>
-            <input
-              type="number"
-              className="pm-input"
-              placeholder="VD: 380"
-              min={0}
-              value={data.weight || ''}
-              onChange={(e) => onChange('weight', e.target.value)}
-            />
-            <span className="pm-field-hint">Dùng để tính phí vận chuyển</span>
-          </div>
-
-          <div className="pm-field">
-            <label className="pm-label">Ngày ra mắt</label>
-            <input
-              type="date"
-              className="pm-input"
-              value={data.launchDate || ''}
-              onChange={(e) => onChange('launchDate', e.target.value)}
-            />
-            <span className="pm-field-hint">Để trống nếu bán ngay</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
 
 export default TabBasicInfo;
+

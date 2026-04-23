@@ -143,18 +143,10 @@ const ReturnManagement = () => {
     }, [filters, activeTab, sortConfig, currentPage, rowsPerPage]);
 
     // ── Build status counts from current loaded page ──────────────
-    const fetchStatusCounts = useCallback(() => {
+    const fetchStatusCounts = useCallback(async () => {
         try {
-            const counts = { 'Tất cả': totalElements || returns.length || 0 };
-            Object.keys(RETURN_STATUS_CONFIG).forEach((s) => {
-                counts[s] = 0;
-            });
-            (returns || []).forEach((ret) => {
-                const s = ret?.return_status;
-                if (s && Object.prototype.hasOwnProperty.call(counts, s)) {
-                    counts[s] += 1;
-                }
-            });
+            const res = await returnAPI.getStatusCounts();
+            const counts = res?.data || {};
             setStatusCounts(counts);
         } catch (err) {
             console.error('Failed to build status counts:', err);

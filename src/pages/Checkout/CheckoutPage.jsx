@@ -15,9 +15,10 @@ import PaymentMethodSelector from './components/PaymentMethodSelector';
 import OrderNoteInput from './components/OrderNoteInput';
 import OrderReviewPanel from './components/OrderReviewPanel';
 import OrderSuccessState from './components/OrderSuccessState';
+import PriceChangeModal from './components/PriceChangeModal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import {
-    getItemSubtotal,
+    getItemPrice,
     formatAddress,
 } from './checkoutConstants';
 import './CheckoutPage.css';
@@ -77,6 +78,9 @@ const createInitialState = (user) => ({
     shippingFee: null,        // { total, serviceFee, insuranceFee }
     shippingFeeLoading: false,
     shippingFeeError: '',
+
+    // Price updates from 409 response: { [variantId]: newPrice }
+    priceUpdates: {},
 });
 
 // ─── REDUCER ───────────────────────────────────────────
@@ -144,6 +148,8 @@ function checkoutReducer(state, action) {
             return { ...state, shippingFeeLoading: action.payload };
         case 'SET_SHIPPING_FEE_ERROR':
             return { ...state, shippingFeeError: action.payload, shippingFee: null };
+        case 'UPDATE_PRICES':
+            return { ...state, priceUpdates: { ...state.priceUpdates, ...action.payload } };
         default:
             return state;
     }
@@ -210,7 +216,7 @@ function validateField(field, value) {
 
 // ─── COMPONENT ─────────────────────────────────────────
 const CheckoutPage = () => {
-    const { cartItems, clearCart, removeItem, fetchCart } = useCart();
+    const { cartItems, fetchCart } = useCart();
     const { user, isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -231,6 +237,8 @@ const CheckoutPage = () => {
     const formRef = useRef(null);
     const [savedAddresses, setSavedAddresses] = useState([]);
     const [showConfirmOrder, setShowConfirmOrder] = useState(false);
+    const [showPriceChangeModal, setShowPriceChangeModal] = useState(false);
+    const [priceChangedItems, setPriceChangedItems] = useState([]);
 
     // Redirect to cart if empty (and not in success state)
     useEffect(() => {
@@ -266,8 +274,33 @@ const CheckoutPage = () => {
 
     const isLoggedIn = isAuthenticated;
 
+    // ── Helper: get effective price considering server-side price updates ──
+    const getEffectivePrice = useCallback((item) => {
+        const variantId = item.variant?.variant_id;
+        if (variantId && state.priceUpdates[variantId] !== undefined) {
+            return state.priceUpdates[variantId];
+        }
+        return getItemPrice(item);
+    }, [state.priceUpdates]);
+
+    // ── Effective items with price overrides applied ────
+    const effectiveCheckoutItems = useMemo(() => {
+        if (Object.keys(state.priceUpdates).length === 0) return checkoutItems;
+        return checkoutItems.map(item => {
+            const vid = item.variant?.variant_id;
+            if (vid && state.priceUpdates[vid] !== undefined) {
+                return {
+                    ...item,
+                    variant: { ...item.variant, price: state.priceUpdates[vid] },
+                    promotion: null,
+                };
+            }
+            return item;
+        });
+    }, [checkoutItems, state.priceUpdates]);
+
     // ── Calculations ────────────────────────────────────
-    const subtotal = checkoutItems.reduce((sum, item) => sum + getItemSubtotal(item), 0);
+    const subtotal = checkoutItems.reduce((sum, item) => sum + getEffectivePrice(item) * item.quantity, 0);
     const shippingCost = state.deliveryMethod === 'In-store' ? 0 : (state.shippingFee?.total || 0);
     const discountAmount = state.couponState?.discountAmount || 0;
     const total = subtotal + shippingCost - discountAmount;
@@ -283,9 +316,13 @@ const CheckoutPage = () => {
     const handleFormBlur = useCallback((field) => {
         dispatch({ type: 'SET_TOUCHED', field });
         const value = state.formData[field];
-        const error = validateField(field, value, state);
+        let error = validateField(field, value, state);
+        // Email is required for guest checkout
+        if (field === 'email' && !isLoggedIn && (!value || !value.trim())) {
+            error = 'Vui lòng nhập email để nhận thông tin đơn hàng';
+        }
         dispatch({ type: 'SET_ERROR', field, value: error });
-    }, [state.formData]);
+    }, [state.formData, isLoggedIn]);
 
     const handleCardChange = useCallback((field, value) => {
         dispatch({ type: 'SET_CARD_FIELD', field, value });
@@ -480,8 +517,16 @@ const CheckoutPage = () => {
             touched[f] = true;
         });
 
-        // Email — optional but validate format if filled
-        if (state.formData.email) {
+        // Email — required for guest, optional for logged-in (validate format if filled)
+        if (!isLoggedIn) {
+            const emailErr = validateField('email', state.formData.email);
+            if (!state.formData.email || !state.formData.email.trim()) {
+                newErrors['email'] = 'Vui lòng nhập email để nhận thông tin đơn hàng';
+            } else if (emailErr) {
+                newErrors['email'] = emailErr;
+            }
+            touched['email'] = true;
+        } else if (state.formData.email) {
             const emailErr = validateField('email', state.formData.email);
             if (emailErr) newErrors['email'] = emailErr;
             touched['email'] = true;
@@ -545,7 +590,14 @@ const CheckoutPage = () => {
                 paymentMethod: state.paymentMethod,
                 orderNote: state.orderNote || null,
                 couponCode: state.couponState?.code || null,
+                cartItemIds: checkoutItems.map(item => item.cart_item_id),
             };
+
+            // Include client-side prices for price verification
+            checkoutData.clientPrices = checkoutItems.map(item => ({
+                variantId: item.variant?.variant_id,
+                price: getEffectivePrice(item),
+            }));
 
             // Address: either saved or manual
             if (selectedAddress) {
@@ -581,14 +633,8 @@ const CheckoutPage = () => {
             // Save checkout items before cart mutations (for success page display)
             const savedItems = [...checkoutItems];
 
-            // If user checked out selected items only: remove just selected items from cart.
-            // Otherwise keep old behavior (clear all).
-            if (selectedCartItemIds && selectedCartItemIds.length > 0) {
-                await Promise.all(selectedCartItemIds.map((id) => removeItem(id)));
-                await fetchCart();
-            } else {
-                await clearCart();
-            }
+            // Backend removes only the checked-out rows, so refresh cart state from source of truth.
+            await fetchCart();
 
             dispatch({
                 type: 'SET_ORDER_SUCCESS',
@@ -623,6 +669,20 @@ const CheckoutPage = () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
         } catch (err) {
+            // Handle price conflict (409)
+            if (err.status === 409 && Array.isArray(err.data) && err.data.length > 0) {
+                setPriceChangedItems(err.data);
+                setShowPriceChangeModal(true);
+
+                // Immediately update displayed prices
+                const updates = {};
+                err.data.forEach(item => {
+                    updates[item.variantId] = item.newPrice;
+                });
+                dispatch({ type: 'UPDATE_PRICES', payload: updates });
+                return;
+            }
+
             const msg = err.message || 'Đặt hàng thất bại. Vui lòng thử lại.';
             const msgLower = msg.toLowerCase();
 
@@ -642,7 +702,20 @@ const CheckoutPage = () => {
             dispatch({ type: 'SET_SUBMITTING', payload: false });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state, selectedAddress, clearCart, checkoutItems, selectedCartItemIds, removeItem, fetchCart]);
+    }, [state, selectedAddress, checkoutItems, fetchCart, getEffectivePrice]);
+
+    // ── Price change modal handlers ─────────────────────
+    const handlePriceChangeCancel = useCallback(() => {
+        setShowPriceChangeModal(false);
+        // priceUpdates already applied — order summary shows new prices
+    }, []);
+
+    const handlePriceChangeConfirm = useCallback(async () => {
+        setShowPriceChangeModal(false);
+        // priceUpdates already applied by the 409 handler, so the next
+        // submitOrder call will send the updated clientPrices automatically
+        await submitOrder();
+    }, [submitOrder]);
 
     // ── RENDER SUCCESS STATE ────────────────────────────
     if (state.orderSuccess) {
@@ -738,6 +811,7 @@ const CheckoutPage = () => {
                             touched={state.touched}
                             onChange={handleFormChange}
                             onBlur={handleFormBlur}
+                            isGuest={!isLoggedIn}
                         />
 
                         {/* D: Address form (delivery + manual) */}
@@ -820,7 +894,7 @@ const CheckoutPage = () => {
                     {/* ── RIGHT PANEL ── */}
                     <div className="checkout-right-panel">
                         <OrderReviewPanel
-                            items={checkoutItems}
+                            items={effectiveCheckoutItems}
                             coupon={state.couponState}
                             subtotal={subtotal}
                             shippingCost={shippingCost}
@@ -859,6 +933,14 @@ const CheckoutPage = () => {
                     setShowConfirmOrder(false);
                     await submitOrder();
                 }}
+            />
+
+            <PriceChangeModal
+                open={showPriceChangeModal}
+                changedItems={priceChangedItems}
+                loading={state.isSubmitting}
+                onCancel={handlePriceChangeCancel}
+                onConfirm={handlePriceChangeConfirm}
             />
         </div>
     );

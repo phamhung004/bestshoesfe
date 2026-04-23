@@ -696,6 +696,9 @@ export const orderAPI = {
     body: JSON.stringify(params),
   }),
 
+  // Get status counts for tab badges
+  getStatusCounts: () => apiCall('/admin/orders/status-counts'),
+
   // Get order detail by ID
   getById: (id) => apiCall(`/admin/orders/${id}`),
 
@@ -846,6 +849,9 @@ export const returnAPI = {
     method: 'POST',
     body: JSON.stringify(params),
   }),
+
+  // Get status counts for tab badges
+  getStatusCounts: () => apiCall('/admin/returns/status-counts'),
 
   // Get return detail by ID
   getById: (id) => apiCall(`/admin/returns/${id}`),

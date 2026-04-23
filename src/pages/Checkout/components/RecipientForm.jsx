@@ -1,6 +1,6 @@
 import React from 'react';
 
-const RecipientForm = ({ formData, errors, touched, onChange, onBlur }) => {
+const RecipientForm = ({ formData, errors, touched, onChange, onBlur, isGuest }) => {
     const getFieldClass = (field) => {
         if (errors[field] && touched[field]) return 'co-form-input error';
         if (touched[field] && !errors[field] && formData[field]) return 'co-form-input valid';
@@ -63,7 +63,9 @@ const RecipientForm = ({ formData, errors, touched, onChange, onBlur }) => {
 
             {/* Email */}
             <div className="co-form-group">
-                <label className="co-form-label">Email</label>
+                <label className="co-form-label">
+                    Email {isGuest && <span className="required">*</span>}
+                </label>
                 <input
                     type="email"
                     className={getFieldClass('email')}
@@ -75,7 +77,11 @@ const RecipientForm = ({ formData, errors, touched, onChange, onBlur }) => {
                 {errors.email && touched.email ? (
                     <p className="co-form-error">⚠ {errors.email}</p>
                 ) : (
-                    <p className="co-form-helper">Nhận xác nhận đơn hàng qua email</p>
+                    <p className="co-form-helper">
+                        {isGuest
+                            ? 'Nhận mã đơn hàng và thông tin tra cứu qua email'
+                            : 'Nhận xác nhận đơn hàng qua email'}
+                    </p>
                 )}
             </div>
         </div>
