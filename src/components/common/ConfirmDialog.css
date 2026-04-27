@@ -14,12 +14,6 @@
   padding-right: 28px;
 }
 
-.cf-hotspot-blocker {
-  position: fixed;
-  inset: 0;
-  width: calc(100% - 560px);
-  background: transparent;
-}
 
 .cf-dialog {
   width: 100%;
@@ -61,18 +55,19 @@
   margin-top: 18px;
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
 }
 
 .cf-btn {
-  height: 38px;
-  min-width: 96px;
-  border-radius: 10px;
+  height: 48px;
+  min-width: 120px;
+  border-radius: 12px;
   border: 1px solid transparent;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  padding: 0 14px;
+  padding: 0 18px;
+  touch-action: manipulation;
 }
 
 .cf-btn:disabled {

@@ -746,6 +746,7 @@
 
 .co-submit-btn {
     width: 100%;
+    min-height: 56px;
     padding: 16px 24px;
     background: #4F46E5;
     color: white;
@@ -760,6 +761,7 @@
     justify-content: center;
     gap: 8px;
     font-family: inherit;
+    touch-action: manipulation;
 }
 
 .co-submit-btn:hover:not(:disabled) {

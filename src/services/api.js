@@ -734,17 +734,57 @@ export const orderAPI = {
   // Get KPI dashboard data
   getKpi: () => apiCall('/admin/orders/kpi'),
 
-  // KPI time-series by day
-  getKpiTimeseries: (range = '30d', metric = 'net') =>
-    apiCall(`/admin/orders/kpi/timeseries?range=${encodeURIComponent(range)}&metric=${encodeURIComponent(metric)}`),
+  // KPI time-series by day or custom date range
+  getKpiTimeseries: ({ range = '30d', metric = 'net', startDate, endDate } = {}) => {
+    const params = new URLSearchParams();
+    if (startDate && endDate) {
+      params.append('startDate', startDate);
+      params.append('endDate', endDate);
+    } else {
+      params.append('range', range);
+    }
+    params.append('metric', metric);
+    return apiCall(`/admin/orders/kpi/timeseries?${params.toString()}`);
+  },
 
   // Revenue by category
-  getRevenueByCategory: (range = '30d', limit = 8) =>
-    apiCall(`/admin/orders/kpi/by-category?range=${encodeURIComponent(range)}&limit=${encodeURIComponent(limit)}`),
+  getRevenueByCategory: ({ range = '30d', startDate, endDate, limit = 8 } = {}) => {
+    const params = new URLSearchParams();
+    if (startDate && endDate) {
+      params.append('startDate', startDate);
+      params.append('endDate', endDate);
+    } else {
+      params.append('range', range);
+    }
+    params.append('limit', limit);
+    return apiCall(`/admin/orders/kpi/by-category?${params.toString()}`);
+  },
 
   // Revenue by brand
-  getRevenueByBrand: (range = '30d', limit = 10) =>
-    apiCall(`/admin/orders/kpi/by-brand?range=${encodeURIComponent(range)}&limit=${encodeURIComponent(limit)}`),
+  getRevenueByBrand: ({ range = '30d', startDate, endDate, limit = 10 } = {}) => {
+    const params = new URLSearchParams();
+    if (startDate && endDate) {
+      params.append('startDate', startDate);
+      params.append('endDate', endDate);
+    } else {
+      params.append('range', range);
+    }
+    params.append('limit', limit);
+    return apiCall(`/admin/orders/kpi/by-brand?${params.toString()}`);
+  },
+
+  // Best-selling products
+  getBestSellingProducts: ({ range = '30d', startDate, endDate, limit = 10 } = {}) => {
+    const params = new URLSearchParams();
+    if (startDate && endDate) {
+      params.append('startDate', startDate);
+      params.append('endDate', endDate);
+    } else {
+      params.append('range', range);
+    }
+    params.append('limit', limit);
+    return apiCall(`/admin/orders/best-selling?${params.toString()}`);
+  },
 
   // Recent orders
   getRecent: ({ page = 0, size = 10, status } = {}) => {

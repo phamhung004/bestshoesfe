@@ -5,7 +5,6 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 import { productAPI, orderAPI, returnAPI } from '../../../services/api';
-import { adminCustomerAPI, adminEmployeeAPI } from '../AccountManagement/accountApi';
 import './DashboardOverview.css';
 
 // Custom Tooltip Component
@@ -41,9 +40,11 @@ const formatNumber = (value) => {
 
 const PIE_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#8B5CF6', '#6B7280', '#06B6D4', '#EF4444'];
 
-const mapRangeFromUI = (range) => {
-  if (range === '7d' || range === '30d' || range === '90d') return range;
-  return '30d';
+const buildDateString = (date) => {
+  if (!date) return '';
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0, 10);
 };
 
 const formatDateLabel = (dateStr) => {
@@ -82,19 +83,6 @@ const StatCard = ({ title, value, change, changeLabel, icon, type, formatter }) 
   );
 };
 
-// Quick Action Card Component
-const QuickActionCard = ({ icon, title, description, onClick }) => {
-  return (
-    <div className="action-card" onClick={onClick}>
-      <div className="action-icon">{icon}</div>
-      <div className="action-content">
-        <h4>{title}</h4>
-        <p>{description}</p>
-      </div>
-    </div>
-  );
-};
-
 // Alert Card Component
 const AlertCard = ({ type, icon, title, message, time }) => {
   return (
@@ -111,66 +99,74 @@ const AlertCard = ({ type, icon, title, message, time }) => {
 
 // DashboardOverview Component
 const DashboardOverview = () => {
-  const [timeRange, setTimeRange] = useState('30d');
+  const todayStr = buildDateString(new Date());
+  const [startDate, setStartDate] = useState(todayStr);
+  const [endDate, setEndDate] = useState(todayStr);
   const [loading, setLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState('');
+  const [appliedStartDate, setAppliedStartDate] = useState(todayStr);
+  const [appliedEndDate, setAppliedEndDate] = useState(todayStr);
   const [revenueData, setRevenueData] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
   const [brandData, setBrandData] = useState([]);
-  const [recentOrders, setRecentOrders] = useState([]);
+  const [bestSellingProducts, setBestSellingProducts] = useState([]);
   const [lowStock, setLowStock] = useState({ threshold: 10, totalLowStockVariants: 0, items: [] });
-  const [activeProductCount, setActiveProductCount] = useState(null);
-  const [orderKpi, setOrderKpi] = useState(null);
   const [returnKpi, setReturnKpi] = useState(null);
-  const [customerKpi, setCustomerKpi] = useState(null);
-  const [employeeKpi, setEmployeeKpi] = useState(null);
+
+  useEffect(() => {
+    setStartDate(todayStr);
+    setEndDate(todayStr);
+    setAppliedStartDate(todayStr);
+    setAppliedEndDate(todayStr);
+  }, []);
 
   // Fetch dashboard data
   useEffect(() => {
     let cancelled = false;
-    const range = mapRangeFromUI(timeRange);
+    const hasCustomRange = Boolean(appliedStartDate && appliedEndDate);
 
     const load = async () => {
       setLoading(true);
       setDashboardError('');
 
       const results = await Promise.allSettled([
-        productAPI.countActive(),
-        orderAPI.getKpi(),
         returnAPI.getKpi(),
-        adminCustomerAPI.getKpis(),
-        adminEmployeeAPI.getKpis(),
-        orderAPI.getKpiTimeseries(range, 'net'),
-        orderAPI.getRevenueByCategory(range, 8),
-        orderAPI.getRevenueByBrand(range, 10),
-        orderAPI.getRecent({ page: 0, size: 10 }),
+        orderAPI.getKpiTimeseries({
+          metric: 'net',
+          ...(hasCustomRange
+            ? { startDate: buildDateString(appliedStartDate), endDate: buildDateString(appliedEndDate) }
+            : { range: '30d' }),
+        }),
+        orderAPI.getRevenueByCategory(
+          hasCustomRange
+            ? { startDate: buildDateString(appliedStartDate), endDate: buildDateString(appliedEndDate), limit: 8 }
+            : { range: '30d', limit: 8 }
+        ),
+        orderAPI.getRevenueByBrand(
+          hasCustomRange
+            ? { startDate: buildDateString(appliedStartDate), endDate: buildDateString(appliedEndDate), limit: 10 }
+            : { range: '30d', limit: 10 }
+        ),
+        orderAPI.getBestSellingProducts(
+          hasCustomRange
+            ? { startDate: buildDateString(appliedStartDate), endDate: buildDateString(appliedEndDate), limit: 10 }
+            : { range: '30d', limit: 10 }
+        ),
         productAPI.getLowStockKpi(10, 5),
       ]);
 
       if (cancelled) return;
 
       const [
-        activeCountRes,
-        orderRes,
         returnRes,
-        customerRes,
-        employeeRes,
         timeseriesRes,
         byCategoryRes,
         byBrandRes,
-        recentRes,
+        bestSellingRes,
         lowStockRes,
       ] = results;
 
-      if (activeCountRes.status === 'fulfilled') {
-        const count = activeCountRes.value?.data ?? activeCountRes.value;
-        if (typeof count === 'number') setActiveProductCount(count);
-      }
-
-      if (orderRes.status === 'fulfilled') setOrderKpi(orderRes.value?.data ?? orderRes.value ?? null);
       if (returnRes.status === 'fulfilled') setReturnKpi(returnRes.value?.data ?? returnRes.value ?? null);
-      if (customerRes.status === 'fulfilled') setCustomerKpi(customerRes.value?.data ?? customerRes.value ?? null);
-      if (employeeRes.status === 'fulfilled') setEmployeeKpi(employeeRes.value?.data ?? employeeRes.value ?? null);
 
       if (timeseriesRes.status === 'fulfilled') {
         const ts = timeseriesRes.value?.data ?? timeseriesRes.value ?? {};
@@ -190,8 +186,8 @@ const DashboardOverview = () => {
           ? data
           : (Array.isArray(data.items) ? data.items : []);
         setCategoryData(items.map((it, idx) => ({
-          name: it.categoryName,
-          value: Number(it.ratioPercent || 0),
+          name: it.categoryName || it.name || '—',
+          value: Number(it.ratioPercent ?? it.value ?? 0),
           revenue: Number(it.revenue || 0),
           color: PIE_COLORS[idx % PIE_COLORS.length],
         })));
@@ -205,35 +201,25 @@ const DashboardOverview = () => {
           ? data
           : (Array.isArray(data.items) ? data.items : []);
         setBrandData(items.map((it) => ({
-          name: it.brandName,
+          name: it.brandName || it.name || '—',
           revenue: Number(it.revenue || 0),
-          units: Number(it.unitsSold || 0),
+          units: Number(it.quantitySold ?? it.unitsSold ?? 0),
         })));
       } else {
         setBrandData([]);
       }
 
-      if (recentRes.status === 'fulfilled') {
-        const data = recentRes.value?.data ?? recentRes.value ?? {};
-        const content = Array.isArray(data.content) ? data.content : [];
-        setRecentOrders(content.map((o) => ({
-          id: o.orderNumber,
-          customer: {
-            name: o.customerName || 'Khách hàng',
-            email: o.customerEmail || o.customerPhone || '—',
-            avatar: (o.customerName || 'KH').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase(),
-          },
-          product: {
-            name: o.firstItem?.productName || o.productName || '—',
-            image: o.firstItem?.imageUrl || o.imageUrl || null,
-            variant: `Size ${o.firstItem?.sizeName || o.sizeName || '—'} • ${o.firstItem?.colorName || o.colorName || '—'}`,
-          },
-          total: Number(o.totalAmount || 0),
-          status: normalizeOrderStatus(o.orderStatus),
-          date: o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : '—',
+      if (bestSellingRes.status === 'fulfilled') {
+        const data = bestSellingRes.value?.data ?? bestSellingRes.value ?? [];
+        const items = Array.isArray(data) ? data : [];
+        setBestSellingProducts(items.map((it, idx) => ({
+          rank: idx + 1,
+          name: it.productName || '—',
+          quantitySold: Number(it.quantitySold || 0),
+          revenue: Number(it.revenue || 0),
         })));
       } else {
-        setRecentOrders([]);
+        setBestSellingProducts([]);
       }
 
       if (lowStockRes.status === 'fulfilled') {
@@ -252,25 +238,17 @@ const DashboardOverview = () => {
 
     load();
     return () => { cancelled = true; };
-  }, [timeRange]);
+  }, [appliedStartDate, appliedEndDate]);
 
   // Calculate summary stats
   const stats = useMemo(() => {
-    const totalRevenue = Number(orderKpi?.todayRevenue ?? revenueData.reduce((sum, item) => sum + item.revenue, 0));
-    const totalOrders = Number(orderKpi?.todayOrders ?? revenueData.reduce((sum, item) => sum + item.orders, 0));
-    const revenueChange = Number(orderKpi?.revenueDelta ?? 0);
-    const orderChange = Number(orderKpi?.ordersDelta ?? 0);
+    const totalRevenue = Number(revenueData.reduce((sum, item) => sum + item.revenue, 0));
+    const totalOrders = Number(revenueData.reduce((sum, item) => sum + item.orders, 0));
+    const revenueChange = 0;
+    const orderChange = 0;
 
-    const productCount = activeProductCount ?? 0;
-    const productChange = 0;
-
-    const userCount = Number(customerKpi?.totalCustomers ?? 0);
-    const userChange = userCount > 0
-      ? Number((((customerKpi?.newCustomersThisMonth ?? 0) / userCount) * 100).toFixed(1))
-      : 0;
-
-    const pendingCount = Number(orderKpi?.pendingCount ?? 0);
-    const cancelledCount = Number(orderKpi?.cancelledCount ?? 0);
+    const pendingCount = 0;
+    const cancelledCount = 0;
     const returnRate = Number(returnKpi?.returnRate ?? 0);
 
     return {
@@ -278,18 +256,12 @@ const DashboardOverview = () => {
       totalOrders,
       revenueChange,
       orderChange,
-      productCount,
-      productChange,
-      userCount,
-      userChange,
       pendingCount,
       cancelledCount,
       returnRate,
-      customerKpi,
-      employeeKpi,
       returnKpi,
     };
-  }, [revenueData, activeProductCount, orderKpi, customerKpi, employeeKpi, returnKpi]);
+  }, [revenueData, returnKpi]);
 
   if (loading) {
     return (
@@ -300,6 +272,22 @@ const DashboardOverview = () => {
     );
   }
 
+  const handleApplyRange = () => {
+    if (!startDate || !endDate) return;
+    setAppliedStartDate(startDate);
+    setAppliedEndDate(endDate);
+  };
+
+  const handleQuickRange = (days) => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - (days - 1));
+    setStartDate(buildDateString(start));
+    setEndDate(buildDateString(end));
+    setAppliedStartDate(buildDateString(start));
+    setAppliedEndDate(buildDateString(end));
+  };
+
   return (
     <div className="dashboard-overview">
       {/* Filters */}
@@ -309,16 +297,27 @@ const DashboardOverview = () => {
           <p>Chào mừng bạn trở lại! Dưới đây là thống kê doanh nghiệp của bạn.</p>
         </div>
         <div className="header-actions">
-          <div className="filter-controls">
-            <select
-              className="filter-select"
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value)}
-            >
-              <option value="7d">7 ngày qua</option>
-              <option value="30d">30 ngày qua</option>
-              <option value="90d">90 ngày qua</option>
-            </select>
+          <div className="filter-controls date-range-controls">
+            <input
+              type="date"
+              className="filter-select date-input"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+            <input
+              type="date"
+              className="filter-select date-input"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+            <button className="chart-btn active" onClick={handleApplyRange}>
+              Áp dụng
+            </button>
+          </div>
+          <div className="quick-range-buttons">
+            <button className="chart-btn" onClick={() => handleQuickRange(7)}>7 ngày</button>
+            <button className="chart-btn" onClick={() => handleQuickRange(30)}>30 ngày</button>
+            <button className="chart-btn" onClick={() => handleQuickRange(90)}>90 ngày</button>
           </div>
         </div>
       </div>
@@ -326,72 +325,23 @@ const DashboardOverview = () => {
       {/* Stat Cards */}
       <div className="stats-grid animate-fade-in">
         <StatCard
-          title="Doanh thu hôm nay (chưa gồm ship)"
+          title="Doanh thu trong khoảng ngày"
           value={stats.totalRevenue}
           change={stats.revenueChange}
-          changeLabel="Theo KPI đơn hàng"
+          changeLabel={`Khoảng: ${appliedStartDate} → ${appliedEndDate}`}
           icon="💰"
           type="revenue"
           formatter={formatCurrency}
         />
         <StatCard
-          title="Đơn hàng hôm nay"
+          title="Đơn hàng trong khoảng ngày"
           value={stats.totalOrders}
           change={stats.orderChange}
-          changeLabel={`Chờ xác nhận: ${stats.pendingCount}`}
+          changeLabel={`Khoảng: ${appliedStartDate} → ${appliedEndDate}`}
           icon="📦"
           type="orders"
           formatter={formatNumber}
         />
-        <StatCard
-          title="Tổng khách hàng"
-          value={stats.userCount}
-          change={stats.userChange}
-          changeLabel={`Active: ${stats.customerKpi?.activeCustomers ?? 0} • Locked: ${stats.customerKpi?.lockedCustomers ?? 0}`}
-          icon="👥"
-          type="users"
-          formatter={formatNumber}
-        />
-        <StatCard
-          title="Tổng nhân viên"
-          value={stats.employeeKpi?.totalEmployees ?? 0}
-          change={0}
-          changeLabel={`Admin: ${stats.employeeKpi?.adminCount ?? 0} • Manager: ${stats.employeeKpi?.managerCount ?? 0} • Staff: ${stats.employeeKpi?.staffCount ?? 0}`}
-          icon="🧑‍💼"
-          type="products"
-          formatter={formatNumber}
-        />
-      </div>
-
-      {/* Quick Actions */}
-      <div className="quick-actions-section animate-fade-in">
-        <h3 className="section-title">Thao tác nhanh</h3>
-        <div className="quick-actions">
-          <QuickActionCard
-            icon="➕"
-            title="Thêm sản phẩm"
-            description="Thêm sản phẩm mới vào kho"
-            onClick={() => {}}
-          />
-          <QuickActionCard
-            icon="🏷️"
-            title="Tạo khuyến mãi"
-            description="Tạo mã giảm giá mới"
-            onClick={() => {}}
-          />
-          <QuickActionCard
-            icon="📋"
-            title="Xem đơn hàng"
-            description="Xem đơn hàng đang chờ"
-            onClick={() => {}}
-          />
-          <QuickActionCard
-            icon="⚠️"
-            title="Cảnh báo tồn kho"
-            description={`${lowStock.totalLowStockVariants || 0} biến thể dưới ngưỡng ${lowStock.threshold || 10}`}
-            onClick={() => {}}
-          />
-        </div>
       </div>
 
       {/* Charts */}
@@ -401,7 +351,7 @@ const DashboardOverview = () => {
           <div className="chart-header">
             <div>
               <h3 className="chart-title">Doanh thu & Đơn hàng</h3>
-              <p className="chart-subtitle">Thống kê doanh thu và đơn hàng trong {timeRange === '7d' ? '7 ngày' : timeRange === '30d' ? '30 ngày' : '90 ngày'} qua</p>
+              <p className="chart-subtitle">Thống kê doanh thu và đơn hàng trong {appliedStartDate && appliedEndDate ? `${appliedStartDate} → ${appliedEndDate}` : '30 ngày gần nhất'}</p>
             </div>
             <div className="chart-actions">
               <button className="chart-btn active">Doanh thu</button>
@@ -539,15 +489,15 @@ const DashboardOverview = () => {
             type="warning"
             icon="↩️"
             title="KPI Trả hàng"
-            message={`Yêu cầu trả hôm nay: ${stats.returnKpi?.todayReturnRequests ?? 0} • Tỷ lệ trả: ${stats.returnRate}%`}
-            time="Dữ liệu realtime"
+            message={`Tỷ lệ trả: ${stats.returnRate}%`}
+            time={appliedStartDate && appliedEndDate ? `${appliedStartDate} → ${appliedEndDate}` : 'Khoảng ngày hiện tại'}
           />
           <AlertCard
             type="danger"
             icon="📦"
-            title="Đơn hàng chờ xử lý"
+            title="Đơn hàng trong khoảng"
             message={`Đơn chờ xác nhận: ${stats.pendingCount} • Đã hủy: ${stats.cancelledCount}`}
-            time="Dữ liệu realtime"
+            time={appliedStartDate && appliedEndDate ? `${appliedStartDate} → ${appliedEndDate}` : 'Khoảng ngày hiện tại'}
           />
           <AlertCard
             type="success"
@@ -559,49 +509,29 @@ const DashboardOverview = () => {
         </div>
       </div>
 
-      {/* Recent Orders */}
+      {/* Best Selling Products */}
       <div className="orders-section animate-fade-in">
         <div className="section-header">
-          <h3 className="section-title">Đơn hàng gần đây</h3>
+          <h3 className="section-title">Sản phẩm bán chạy</h3>
           <span className="view-all">Xem tất cả →</span>
         </div>
         <div className="table-responsive">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Mã đơn</th>
-                <th>Khách hàng</th>
-                <th>Tổng tiền</th>
-                <th>Trạng thái</th>
-                <th>Ngày đặt</th>
+                <th>#</th>
+                <th>Sản phẩm</th>
+                <th>Số lượng bán</th>
+                <th>Doanh thu</th>
               </tr>
             </thead>
             <tbody>
-              {recentOrders.map((order) => (
-                <tr key={order.id}>
-                  <td>
-                    <span className="order-id">{order.id}</span>
-                  </td>
-                  <td>
-                    <div className="customer-cell">
-                      <div className="customer-avatar">{order.customer.avatar}</div>
-                      <div className="customer-info">
-                        <h4>{order.customer.name}</h4>
-                        <p>{order.customer.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="order-total">{formatCurrency(order.total)}</span>
-                  </td>
-                  <td>
-                    <span className={`status-badge ${order.status?.key || 'pending'}`}>
-                      {order.status?.icon} {order.status?.label}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="order-date">{order.date}</span>
-                  </td>
+              {bestSellingProducts.map((item) => (
+                <tr key={`${item.rank}-${item.name}`}>
+                  <td><span className="order-id">{item.rank}</span></td>
+                  <td>{item.name}</td>
+                  <td>{formatNumber(item.quantitySold)}</td>
+                  <td><span className="order-total">{formatCurrency(item.revenue)}</span></td>
                 </tr>
               ))}
             </tbody>

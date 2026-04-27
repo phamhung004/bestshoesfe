@@ -17,7 +17,6 @@ const ConfirmDialog = ({
 
   return (
     <div className={`cf-overlay ${align === 'right' ? 'cf-overlay-right' : ''}`} onClick={onCancel}>
-      <div className="cf-hotspot-blocker" onClick={(e) => e.stopPropagation()} />
       <div className="cf-dialog" onClick={(e) => e.stopPropagation()}>
         <h3 className="cf-title">{title}</h3>
         <p className="cf-message">{message}</p>
