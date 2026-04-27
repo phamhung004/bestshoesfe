@@ -20,4 +20,11 @@ export const couponApi = {
     axiosClient.get('/coupons/available', {
       params: { orderAmount },
     }),
+
+  /**
+   * Revalidate a voucher right before checkout (stale-check)
+   * @param {Object} payload - { code, orderAmount, clientDiscountAmount, clientFinalAmount, guestEmail, guestPhone, flow }
+   */
+  revalidate: (payload) =>
+    axiosClient.post('/coupons/revalidate', payload),
 };

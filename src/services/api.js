@@ -819,6 +819,12 @@ export const posAPI = {
     body: JSON.stringify({ code, orderAmount }),
   }),
 
+  // Revalidate a coupon for POS (stale-check before checkout)
+  revalidateCoupon: (payload) => apiCall('/admin/pos/revalidate-coupon', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
+
   // Quick-create a new customer from POS counter
   quickCreateCustomer: (data) => apiCall('/admin/pos/customers/quick-create', {
     method: 'POST',
