@@ -239,6 +239,7 @@ const CheckoutPage = () => {
     const [showConfirmOrder, setShowConfirmOrder] = useState(false);
     const [showPriceChangeModal, setShowPriceChangeModal] = useState(false);
     const [priceChangedItems, setPriceChangedItems] = useState([]);
+    const [couponChangeData, setCouponChangeData] = useState(null);
 
     // Redirect to cart if empty (and not in success state)
     useEffect(() => {
@@ -433,6 +434,40 @@ const CheckoutPage = () => {
         return () => clearTimeout(timer);
     }, [subtotal, state.couponState, checkoutItems.length]);
 
+    useEffect(() => {
+        if (!state.couponState) return;
+        const handleVisibilityChange = async () => {
+            if (document.visibilityState !== 'visible' || !state.couponState?.code) return;
+            try {
+                const res = await couponApi.validate(state.couponState.code, subtotal);
+                const payload = res?.data ?? res;
+                if (payload?.valid) {
+                    if ((payload.discountAmount || 0) !== (state.couponState.discountAmount || 0)) {
+                        dispatch({
+                            type: 'SET_COUPON_STATE',
+                            payload: {
+                                ...state.couponState,
+                                discountAmount: payload.discountAmount || 0,
+                                minimumAmount: payload.minimumAmount || state.couponState.minimumAmount,
+                                maximumDiscount: payload.maximumDiscount ?? state.couponState.maximumDiscount,
+                            },
+                        });
+                        dispatch({ type: 'SET_TOAST', payload: 'Mã giảm giá đã được cập nhật theo giá trị mới' });
+                        setTimeout(() => dispatch({ type: 'SET_TOAST', payload: null }), 3000);
+                    }
+                } else {
+                    dispatch({ type: 'CLEAR_COUPON' });
+                    dispatch({ type: 'SET_TOAST', payload: payload?.reason || payload?.message || 'Mã giảm giá không còn hiệu lực' });
+                    setTimeout(() => dispatch({ type: 'SET_TOAST', payload: null }), 3000);
+                }
+            } catch {
+                // Keep the current checkout state on transient network errors.
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [state.couponState, subtotal]);
+
     // ── Get selected address ────────────────────────────
     const selectedAddress = savedAddresses.find(
         (a) => a.addressId === state.selectedAddressId
@@ -575,7 +610,7 @@ const CheckoutPage = () => {
         setShowConfirmOrder(true);
     }, [state]);
 
-    const submitOrder = useCallback(async () => {
+    const submitOrder = useCallback(async ({ couponChangeAccepted = false } = {}) => {
         // Start submitting
         dispatch({ type: 'SET_SUBMITTING', payload: true });
 
@@ -592,6 +627,11 @@ const CheckoutPage = () => {
                 couponCode: state.couponState?.code || null,
                 cartItemIds: checkoutItems.map(item => item.cart_item_id),
             };
+            if (state.couponState) {
+                checkoutData.clientCouponDiscountAmount = state.couponState.discountAmount || 0;
+                checkoutData.clientFinalAmount = total;
+                checkoutData.couponChangeAccepted = couponChangeAccepted;
+            }
 
             // Include client-side prices for price verification
             checkoutData.clientPrices = checkoutItems.map(item => ({
@@ -669,6 +709,21 @@ const CheckoutPage = () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
         } catch (err) {
+            const couponPayload = err.data || {};
+            if (err.status === 409 && (err.errorCode === 'COUPON_VALUE_CHANGED' || couponPayload.errorCode === 'COUPON_VALUE_CHANGED')) {
+                const payload = err.data || {};
+                setCouponChangeData(payload);
+                if (state.couponState) {
+                    dispatch({
+                        type: 'SET_COUPON_STATE',
+                        payload: {
+                            ...state.couponState,
+                            discountAmount: payload.newDiscount || 0,
+                        },
+                    });
+                }
+                return;
+            }
             // Handle price conflict (409)
             if (err.status === 409 && Array.isArray(err.data) && err.data.length > 0) {
                 setPriceChangedItems(err.data);
@@ -702,7 +757,7 @@ const CheckoutPage = () => {
             dispatch({ type: 'SET_SUBMITTING', payload: false });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [state, selectedAddress, checkoutItems, fetchCart, getEffectivePrice]);
+    }, [state, selectedAddress, checkoutItems, fetchCart, getEffectivePrice, total]);
 
     // ── Price change modal handlers ─────────────────────
     const handlePriceChangeCancel = useCallback(() => {
@@ -715,6 +770,15 @@ const CheckoutPage = () => {
         // priceUpdates already applied by the 409 handler, so the next
         // submitOrder call will send the updated clientPrices automatically
         await submitOrder();
+    }, [submitOrder]);
+
+    const formatMoney = useCallback((value) => (
+        new Intl.NumberFormat('vi-VN').format(value || 0) + 'đ'
+    ), []);
+
+    const handleCouponChangeConfirm = useCallback(async () => {
+        setCouponChangeData(null);
+        await submitOrder({ couponChangeAccepted: true });
     }, [submitOrder]);
 
     // ── RENDER SUCCESS STATE ────────────────────────────
@@ -941,6 +1005,20 @@ const CheckoutPage = () => {
                 loading={state.isSubmitting}
                 onCancel={handlePriceChangeCancel}
                 onConfirm={handlePriceChangeConfirm}
+            />
+
+            <ConfirmDialog
+                open={!!couponChangeData}
+                title="Mã giảm giá đã thay đổi"
+                message={couponChangeData
+                    ? `Giá trị mã giảm giá đã thay đổi từ ${formatMoney(couponChangeData.oldDiscount)} xuống ${formatMoney(couponChangeData.newDiscount)}. Tổng tiền mới: ${formatMoney(couponChangeData.newTotalAmount)}. Bạn có muốn tiếp tục?`
+                    : ''}
+                confirmText="Tiếp tục đặt hàng"
+                cancelText="Hủy"
+                variant="primary"
+                loading={state.isSubmitting}
+                onCancel={() => setCouponChangeData(null)}
+                onConfirm={handleCouponChangeConfirm}
             />
         </div>
     );

@@ -1719,6 +1719,45 @@
     flex-shrink: 0;
 }
 
+.pm-conflict-banner {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    background: #fffbeb;
+    color: #92400e;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.pm-picker-variant-row.conflict {
+    background: #fffbeb;
+    border-left: 3px solid #f59e0b;
+}
+
+.pm-conflict-badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.pm-conflict-footer {
+    color: #b45309;
+    font-weight: 600;
+}
+
+.pm-link-button {
+    margin-left: 10px;
+    border: 0;
+    background: transparent;
+    color: #1d4ed8;
+    font-weight: 700;
+    cursor: pointer;
+}
+
 /* Badge-dot helper  */
 .pm-badge-dot {
     width: 6px;

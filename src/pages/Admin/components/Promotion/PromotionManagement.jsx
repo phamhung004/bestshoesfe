@@ -57,6 +57,7 @@ const PromotionManagement = () => {
 
     /* ── variant picker modal ── */
     const [pickerPromotion, setPickerPromotion] = useState(null);
+    const [promotionConflicts, setPromotionConflicts] = useState([]);
 
     /* ── confirm dialog ── */
     const [confirmDialog, setConfirmDialog] = useState(null);
@@ -212,6 +213,7 @@ const PromotionManagement = () => {
         setShowForm(false);
         setEditingPromotion(null);
         setSelectedPromotion(null);
+        setPromotionConflicts([]);
         showToast(editingPromotion ? 'Đã cập nhật đợt giảm giá' : 'Đã thêm đợt giảm giá mới');
         refresh();
     }, [editingPromotion, refresh, showToast]);
@@ -219,6 +221,7 @@ const PromotionManagement = () => {
     const handleFormCancel = useCallback(() => {
         setShowForm(false);
         setEditingPromotion(null);
+        setPromotionConflicts([]);
     }, []);
 
     /* toggle status */
@@ -232,6 +235,12 @@ const PromotionManagement = () => {
                 setSelectedPromotion((prev) => prev ? { ...prev, isActive: !prev.isActive } : prev);
             }
         } catch (err) {
+            if (err.response?.status === 409 && err.response?.data?.errorCode === 'PROMOTION_VARIANT_CONFLICT') {
+                setPromotionConflicts(err.response.data.conflicts || []);
+                setPickerPromotion(promo);
+                showToast('Một số biến thể đang trùng khuyến mãi. Vui lòng kiểm tra lại.', 'error');
+                return;
+            }
             showToast('Lỗi: Không thể thay đổi trạng thái', 'error');
             console.error(err);
         }
@@ -265,6 +274,7 @@ const PromotionManagement = () => {
     }, []);
 
     const handlePickerSaved = useCallback(() => {
+        setPromotionConflicts([]);
         showToast('Đã cập nhật sản phẩm trong đợt giảm giá');
         refresh();
     }, [refresh, showToast]);
@@ -362,6 +372,11 @@ const PromotionManagement = () => {
                     promotion={editingPromotion}
                     onSave={handleFormSave}
                     onCancel={handleFormCancel}
+                    onConflict={(conflicts) => setPromotionConflicts(conflicts)}
+                    onManageVariants={() => {
+                        setShowForm(false);
+                        setPickerPromotion(editingPromotion);
+                    }}
                     isEditing={!!editingPromotion}
                 />
             )}
@@ -370,6 +385,7 @@ const PromotionManagement = () => {
             {pickerPromotion && (
                 <PromotionVariantPicker
                     promotionId={pickerPromotion.promotionId}
+                    initialConflicts={promotionConflicts}
                     onClose={() => setPickerPromotion(null)}
                     onSaved={handlePickerSaved}
                 />

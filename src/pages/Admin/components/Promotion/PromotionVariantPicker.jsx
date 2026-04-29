@@ -11,7 +11,7 @@ const formatCurrency = (amount) => {
 
 const getProductId = (product) => product.id || product.productId;
 
-const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
+const PromotionVariantPicker = ({ promotionId, initialConflicts = [], onClose, onSaved }) => {
     const [products, setProducts] = useState([]);
     const [expandedProduct, setExpandedProduct] = useState(null);
     const [variants, setVariants] = useState([]);
@@ -21,6 +21,7 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
     const [selected, setSelected] = useState({});
     const [saving, setSaving] = useState(false);
     const [existingVariantIds, setExistingVariantIds] = useState(new Set());
+    const [conflictsByVariantId, setConflictsByVariantId] = useState({});
 
     const loadProducts = useCallback(async () => {
         try {
@@ -50,6 +51,14 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
         loadProducts();
         loadExistingVariants();
     }, [loadProducts, loadExistingVariants]);
+
+    useEffect(() => {
+        const conflictMap = {};
+        (initialConflicts || []).forEach((conflict) => {
+            conflictMap[conflict.variantId] = conflict;
+        });
+        setConflictsByVariantId(conflictMap);
+    }, [initialConflicts]);
 
     const handleExpandProduct = async (productId) => {
         if (expandedProduct === productId) {
@@ -110,12 +119,24 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
     const handleSave = async () => {
         const items = Object.values(selected);
         if (items.length === 0) { alert('Vui lòng chọn ít nhất 1 sản phẩm.'); return; }
+        const blockingConflicts = items.filter((item) => conflictsByVariantId[item.variantId]).length;
+        if (blockingConflicts > 0) return;
         try {
             setSaving(true);
+            setConflictsByVariantId({});
             await promotionAPI.addVariants(promotionId, items);
             onSaved?.();
             onClose();
         } catch (err) {
+            const data = err.response?.data;
+            if (err.response?.status === 409 && data?.errorCode === 'PROMOTION_VARIANT_CONFLICT') {
+                const conflictMap = {};
+                (data.conflicts || []).forEach((conflict) => {
+                    conflictMap[conflict.variantId] = conflict;
+                });
+                setConflictsByVariantId(conflictMap);
+                return;
+            }
             alert('Không thể thêm sản phẩm. Vui lòng thử lại.');
             console.error('Error saving variants:', err);
         } finally {
@@ -124,6 +145,7 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
     };
 
     const selectedCount = Object.keys(selected).length;
+    const selectedConflictCount = Object.values(selected).filter((item) => conflictsByVariantId[item.variantId]).length;
 
     const filteredProducts = products.filter((p) => {
         if (!searchTerm.trim()) return true;
@@ -157,6 +179,11 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
 
                 {/* body */}
                 <div className="pm-picker-body">
+                    {selectedConflictCount > 0 && (
+                        <div className="pm-conflict-banner">
+                            Một số biến thể đã thuộc chương trình khuyến mãi khác trong cùng thời gian. Bỏ chọn các dòng cảnh báo để tiếp tục.
+                        </div>
+                    )}
                     {loadingProducts ? (
                         <div style={{ padding: 40, textAlign: 'center', color: 'var(--gray-400)' }}>
                             Đang tải danh sách sản phẩm...
@@ -219,10 +246,11 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
                                                     const vid = v.id || v.variantId;
                                                     const isExisting = existingVariantIds.has(vid);
                                                     const isSelected = !!selected[vid];
+                                                    const conflict = conflictsByVariantId[vid];
                                                     return (
                                                         <div
                                                             key={vid}
-                                                            className={`pm-picker-variant-row ${isSelected ? 'selected' : ''} ${isExisting ? 'existing' : ''}`}
+                                                            className={`pm-picker-variant-row ${isSelected ? 'selected' : ''} ${isExisting ? 'existing' : ''} ${conflict ? 'conflict' : ''}`}
                                                             onClick={() => !isExisting && toggleSelect(v)}
                                                         >
                                                             {isExisting ? (
@@ -294,6 +322,11 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
                                                                     Đã có
                                                                 </span>
                                                             )}
+                                                            {conflict && (
+                                                                <span className="pm-conflict-badge">
+                                                                    Đã thuộc {conflict.conflictingPromotionName}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     );
                                                 })}
@@ -310,6 +343,7 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
                 <div className="pm-picker-footer">
                     <span className="pm-picker-footer-info">
                         Đã chọn: <strong>{selectedCount}</strong> biến thể
+                        {selectedConflictCount > 0 && <span className="pm-conflict-footer"> · {selectedConflictCount} dòng xung đột</span>}
                     </span>
                     <div className="pm-picker-footer-actions">
                         <button className="pm-btn pm-btn-outline" onClick={onClose} disabled={saving}>
@@ -318,7 +352,7 @@ const PromotionVariantPicker = ({ promotionId, onClose, onSaved }) => {
                         <button
                             className="pm-btn pm-btn-primary"
                             onClick={handleSave}
-                            disabled={saving || selectedCount === 0}
+                            disabled={saving || selectedCount === 0 || selectedConflictCount > 0}
                         >
                             {saving ? 'Đang lưu...' : `Thêm ${selectedCount} sản phẩm`}
                         </button>

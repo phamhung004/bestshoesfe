@@ -219,6 +219,7 @@ const OrderManagement = () => {
 
     // ── Cancel order (API) ────────────────────────────────────────
     const [cancelDialogOrder, setCancelDialogOrder] = useState(null);
+    const [inactiveOrderIssue, setInactiveOrderIssue] = useState(null);
 
     const handleCancelOrder = useCallback((order) => {
         setCancelDialogOrder(order);
@@ -241,6 +242,12 @@ const OrderManagement = () => {
         }
     }, [cancelDialogOrder, showToast, fetchOrders, fetchStatusCounts]);
 
+    const findOrderById = useCallback((orderId) => (
+        selectedOrderDetail?.order_id === orderId ? selectedOrderDetail
+            : selectedOrder?.order_id === orderId ? selectedOrder
+                : orders.find((order) => order.order_id === orderId)
+    ), [orders, selectedOrder, selectedOrderDetail]);
+
     // ── Update status (API) ───────────────────────────────────────
     const handleStatusChange = useCallback(async (orderId, newStatus) => {
         try {
@@ -253,10 +260,19 @@ const OrderManagement = () => {
             fetchOrders();
             fetchStatusCounts();
         } catch (err) {
+            const data = err?.response?.data;
+            if (err?.response?.status === 422 && data?.errorCode === 'ORDER_ITEM_INACTIVE') {
+                setInactiveOrderIssue({
+                    mode: 'single',
+                    order: findOrderById(orderId),
+                    items: data.items || [],
+                });
+                return;
+            }
             const backendMsg = err?.response?.data?.message;
             showToast('❌ Lỗi: ' + (backendMsg || 'Không thể cập nhật trạng thái'));
         }
-    }, [showToast, fetchOrders, fetchStatusCounts, selectedOrderDetail]);
+    }, [showToast, fetchOrders, fetchStatusCounts, selectedOrderDetail, findOrderById]);
 
     // ── Confirm payment (REM-04A) ───────────────────────────────────────
     const handleConfirmPayment = useCallback(async (orderId) => {
@@ -348,6 +364,14 @@ const OrderManagement = () => {
             fetchOrders();
             fetchStatusCounts();
         } catch (err) {
+            const data = err?.response?.data;
+            if (err?.response?.status === 422 && data?.errorCode === 'BULK_ORDER_ITEM_INACTIVE') {
+                setInactiveOrderIssue({
+                    mode: 'bulk',
+                    orders: data.orders || [],
+                });
+                return;
+            }
             const backendMsg = err?.response?.data?.message;
             showToast('❌ Lỗi: ' + (backendMsg || 'Không thể xác nhận hàng loạt'));
         }
@@ -511,6 +535,70 @@ const OrderManagement = () => {
             {/* Toast notification */}
             {toast && (
                 <div className="om-toast">{toast}</div>
+            )}
+
+            {inactiveOrderIssue && (
+                <div className="om-confirm-overlay">
+                    <div className="om-confirm-dialog om-inactive-modal">
+                        <h3>Không thể xác nhận đơn hàng</h3>
+                        <p>Có sản phẩm hoặc biến thể đã ngừng bán. Kiểm tra danh sách dưới đây trước khi xử lý tiếp.</p>
+
+                        {inactiveOrderIssue.mode === 'bulk' ? (
+                            <div className="om-inactive-list">
+                                {(inactiveOrderIssue.orders || []).map((order) => (
+                                    <div className="om-inactive-order" key={order.orderId}>
+                                        <strong>#{order.orderNumber || order.orderId}</strong>
+                                        {(order.items || []).map((item) => (
+                                            <div className="om-inactive-item" key={`${order.orderId}-${item.orderItemId || item.variantId}`}>
+                                                <span>{item.productName || 'Sản phẩm'} · {item.sku || 'N/A'}</span>
+                                                <small>Biến thể: {item.variantStatus || '-'} · Sản phẩm: {item.productStatus || '-'}</small>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="om-inactive-list">
+                                {(inactiveOrderIssue.items || []).map((item) => (
+                                    <div className="om-inactive-item" key={item.orderItemId || item.variantId}>
+                                        <span>{item.productName || 'Sản phẩm'} · {item.sku || 'N/A'}</span>
+                                        <small>Biến thể: {item.variantStatus || '-'} · Sản phẩm: {item.productStatus || '-'}</small>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="om-confirm-actions">
+                            <button className="om-btn om-btn-outline" onClick={() => setInactiveOrderIssue(null)}>
+                                Đóng
+                            </button>
+                            {inactiveOrderIssue.mode === 'single' && (
+                                <>
+                                    <button
+                                        className="om-btn om-btn-outline"
+                                        onClick={() => {
+                                            const phone = inactiveOrderIssue.order?.customer_phone || inactiveOrderIssue.order?.customerPhone;
+                                            if (phone) navigator.clipboard?.writeText(phone);
+                                            showToast(phone ? `Đã sao chép SĐT: ${phone}` : 'Không có số điện thoại khách hàng');
+                                        }}
+                                    >
+                                        Liên hệ khách hàng
+                                    </button>
+                                    <button
+                                        className="om-btn om-btn-danger-outline"
+                                        onClick={() => {
+                                            const order = inactiveOrderIssue.order;
+                                            setInactiveOrderIssue(null);
+                                            if (order) setCancelDialogOrder(order);
+                                        }}
+                                    >
+                                        Hủy đơn hàng
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Cancel order dialog */}

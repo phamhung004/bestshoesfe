@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Check, Zap, Snowflake, Tag, Star } from 'lucide-react';
 import { promotionAPI } from '../../../../services/api';
 
-const PromotionForm = ({ promotion, onSave, onCancel, isEditing = false }) => {
+const PromotionForm = ({ promotion, onSave, onCancel, onConflict, onManageVariants, isEditing = false }) => {
     const [formData, setFormData] = useState({
         name: '', description: '', type: 'seasonal',
         discountPercentage: '', discountAmount: '',
@@ -10,6 +10,7 @@ const PromotionForm = ({ promotion, onSave, onCancel, isEditing = false }) => {
     });
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const [conflicts, setConflicts] = useState([]);
 
     useEffect(() => {
         if (promotion) {
@@ -31,6 +32,7 @@ const PromotionForm = ({ promotion, onSave, onCancel, isEditing = false }) => {
             });
         }
         setErrors({});
+        setConflicts([]);
     }, [promotion]);
 
     const handleInputChange = (e) => {
@@ -69,6 +71,7 @@ const PromotionForm = ({ promotion, onSave, onCancel, isEditing = false }) => {
         if (!validateForm()) return;
         setLoading(true);
         try {
+            setConflicts([]);
             const promotionData = {
                 ...formData,
                 name: formData.name.trim(),
@@ -87,6 +90,12 @@ const PromotionForm = ({ promotion, onSave, onCancel, isEditing = false }) => {
             onSave(result);
         } catch (error) {
             console.error('Error saving promotion:', error);
+            const data = error.response?.data;
+            if (error.response?.status === 409 && data?.errorCode === 'PROMOTION_VARIANT_CONFLICT') {
+                setConflicts(data.conflicts || []);
+                onConflict?.(data.conflicts || []);
+                return;
+            }
             if (error.response?.data?.error) alert(error.response.data.error);
             else alert('Có lỗi xảy ra. Vui lòng thử lại.');
         } finally {
@@ -120,6 +129,16 @@ const PromotionForm = ({ promotion, onSave, onCancel, isEditing = false }) => {
                 {/* body */}
                 <form onSubmit={handleSubmit}>
                     <div className="pm-form-body">
+                        {conflicts.length > 0 && (
+                            <div className="pm-conflict-banner">
+                                <strong>Không thể lưu khuyến mãi.</strong> {conflicts.length} biến thể đang thuộc chương trình khác trong cùng thời gian.
+                                {isEditing && onManageVariants && (
+                                    <button type="button" className="pm-link-button" onClick={onManageVariants}>
+                                        Quản lý sản phẩm
+                                    </button>
+                                )}
+                            </div>
+                        )}
                         <div className="pm-form-grid">
                             {/* name */}
                             <div className="pm-form-group full-width">

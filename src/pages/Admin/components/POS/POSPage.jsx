@@ -41,6 +41,7 @@ const POSPage = () => {
     const [variantPickerProduct, setVariantPickerProduct] = useState(null);
     const [isCheckingOut, setIsCheckingOut] = useState(false);
     const [successOrder, setSuccessOrder] = useState(null);
+    const [inactiveItems, setInactiveItems] = useState([]);
     // ── Hold orders (Hóa đơn chờ) ────────────────────────────────
     const [holdOrders, setHoldOrders] = useState([]);
     const [isSavingHold, setIsSavingHold] = useState(false);
@@ -260,6 +261,12 @@ const POSPage = () => {
             setSuccessOrder(order);
         } catch (err) {
             console.error('Checkout failed:', err);
+            const data = err.response?.data;
+            if (err.response?.status === 422 && data?.errorCode === 'ORDER_ITEM_INACTIVE') {
+                setInactiveItems(data.items || []);
+                showToast('Có sản phẩm ngừng bán trong giỏ. Vui lòng kiểm tra lại.', 'error');
+                return;
+            }
             const msg = err.response?.data?.message || 'Thanh toán thất bại. Vui lòng thử lại.';
             const msgLower = msg.toLowerCase();
 
@@ -632,6 +639,35 @@ const POSPage = () => {
                     onNewOrder={handleNewOrder}
                     onClose={handleNewOrder}
                 />
+            )}
+
+            {inactiveItems.length > 0 && (
+                <div className="pos-modal-overlay">
+                    <div className="pos-modal" style={{ width: 460 }}>
+                        <div className="pos-modal-header">
+                            <div className="pos-modal-title">Không thể thanh toán</div>
+                            <button className="pos-modal-close" onClick={() => setInactiveItems([])} aria-label="Đóng">×</button>
+                        </div>
+                        <div className="pos-modal-body">
+                            <div className="pos-warning-box">
+                                Các sản phẩm dưới đây đã ngừng bán hoặc không còn hoạt động.
+                            </div>
+                            <div className="pos-inactive-list">
+                                {inactiveItems.map((item) => (
+                                    <div className="pos-inactive-item" key={item.orderItemId || item.variantId}>
+                                        <strong>{item.productName || 'Sản phẩm'} · {item.sku || 'N/A'}</strong>
+                                        <span>Biến thể: {item.variantStatus || '-'} · Sản phẩm: {item.productStatus || '-'}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="pos-modal-actions">
+                            <button className="pos-btn pos-btn-primary" onClick={() => setInactiveItems([])}>
+                                Đã hiểu
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             <ConfirmDialog

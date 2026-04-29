@@ -60,7 +60,8 @@ axiosClient.interceptors.response.use(
       );
       conflictError.type = 'ConflictError';
       conflictError.status = 409;
-      conflictError.data = error.response.data?.data ?? null;
+      conflictError.errorCode = error.response.data?.errorCode;
+      conflictError.data = error.response.data?.data ?? error.response.data ?? null;
       return Promise.reject(conflictError);
     }
 
@@ -73,9 +74,11 @@ axiosClient.interceptors.response.use(
       return Promise.reject(serverError);
     }
 
-    return Promise.reject(
-      new Error(error.response.data?.message ?? 'Đã xảy ra lỗi.')
-    );
+    const clientError = new Error(error.response.data?.message ?? 'Đã xảy ra lỗi.');
+    clientError.status = status;
+    clientError.data = error.response.data ?? null;
+    clientError.errorCode = error.response.data?.errorCode;
+    return Promise.reject(clientError);
   }
 );
 
