@@ -17,6 +17,8 @@ import OrderReviewPanel from './components/OrderReviewPanel';
 import OrderSuccessState from './components/OrderSuccessState';
 import PriceChangeModal from './components/PriceChangeModal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
+// --- ADDED: Out-of-stock inline banner component ---
+import OutOfStockBanner from './components/OutOfStockBanner';
 import {
     getItemPrice,
     formatAddress,
@@ -216,7 +218,7 @@ function validateField(field, value) {
 
 // ─── COMPONENT ─────────────────────────────────────────
 const CheckoutPage = () => {
-    const { cartItems, fetchCart } = useCart();
+    const { cartItems, fetchCart, removeItem } = useCart();
     const { user, isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -240,6 +242,14 @@ const CheckoutPage = () => {
     const [showPriceChangeModal, setShowPriceChangeModal] = useState(false);
     const [priceChangedItems, setPriceChangedItems] = useState([]);
     const [couponChangeData, setCouponChangeData] = useState(null);
+
+    // --- ADDED: Out-of-stock error state (Req [4]) ---
+    // Tracks which items have stock errors: [{ productId, name, remaining }]
+    const [outOfStockItems, setOutOfStockItems] = useState([]);
+    // Controls the shake/pulse animation on the banner (Req [6])
+    const [bannerPulse, setBannerPulse] = useState(false);
+    // Ref to the inline OOS banner so we can scroll to it (Req [6])
+    const oosBannerRef = useRef(null);
 
     // Redirect to cart if empty (and not in success state)
     useEffect(() => {
@@ -594,8 +604,44 @@ const CheckoutPage = () => {
         return newErrors;
     };
 
+    // --- ADDED: Parse outOfStockItems from API error response (Req [5]) ---
+    // The backend may send: { success: false, message: "...", outOfStockItems: [...] }
+    // If the array is absent, fall back to parsing the product name from the message string.
+    const parseOutOfStockItems = useCallback((err) => {
+        // Prefer structured array from response body
+        const body = err.data || err.response?.data || {};
+        if (Array.isArray(body.outOfStockItems) && body.outOfStockItems.length > 0) {
+            return body.outOfStockItems.map((o) => ({
+                productId: String(o.productId || o.product_id || ''),
+                name: o.name || o.productName || '',
+                remaining: typeof o.remaining === 'number' ? o.remaining : 0,
+            }));
+        }
+        // Fallback: parse name from message "Sản phẩm 'X' không đủ tồn kho. Còn lại: N"
+        const msg = err.message || body.message || '';
+        const nameMatch = msg.match(/['"](.+?)['"]/); // capture text between quotes
+        const remainMatch = msg.match(/Còn lại[:\s]+([\d]+)/i);
+        if (nameMatch) {
+            return [{
+                productId: '', // unknown from message alone
+                name: nameMatch[1],
+                remaining: remainMatch ? parseInt(remainMatch[1], 10) : 0,
+            }];
+        }
+        return [];
+    }, []);
+
     // ── Submit ──────────────────────────────────────────
     const handleSubmit = useCallback(() => {
+        // --- ADDED: If stock errors exist, scroll to banner + pulse instead of submitting (Req [6]) ---
+        if (outOfStockItems.length > 0) {
+            if (oosBannerRef.current) {
+                oosBannerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            setBannerPulse(true);
+            return;
+        }
+
         const errors = validateAll();
         const errorFields = Object.keys(errors).filter((f) => errors[f]);
 
@@ -608,7 +654,7 @@ const CheckoutPage = () => {
         }
 
         setShowConfirmOrder(true);
-    }, [state]);
+    }, [state, outOfStockItems]);
 
     const submitOrder = useCallback(async ({ couponChangeAccepted = false } = {}) => {
         // Start submitting
@@ -741,6 +787,29 @@ const CheckoutPage = () => {
             const msg = err.message || 'Đặt hàng thất bại. Vui lòng thử lại.';
             const msgLower = msg.toLowerCase();
 
+            // --- ADDED: Detect insufficient-stock errors and populate outOfStockItems (Req [4][5]) ---
+            const isStockError =
+                msgLower.includes('tồn kho') ||
+                msgLower.includes('out of stock') ||
+                msgLower.includes('insufficient stock') ||
+                (err.data && Array.isArray(err.data?.outOfStockItems));
+
+            if (isStockError) {
+                const parsed = parseOutOfStockItems(err);
+                if (parsed.length > 0) {
+                    setOutOfStockItems(parsed);
+                    // Scroll to banner and pulse it to draw attention (Req [6])
+                    setTimeout(() => {
+                        if (oosBannerRef.current) {
+                            oosBannerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        setBannerPulse(true);
+                    }, 100);
+                    // Do NOT navigate away; preserve form data (Req [6])
+                    return;
+                }
+            }
+
             // Auto-remove coupon on coupon-specific errors
             if (state.couponState && (
                 msgLower.includes('coupon') || msgLower.includes('phiếu giảm giá') ||
@@ -780,6 +849,24 @@ const CheckoutPage = () => {
         setCouponChangeData(null);
         await submitOrder({ couponChangeAccepted: true });
     }, [submitOrder]);
+
+    // --- ADDED: Remove an out-of-stock item from cart and clear its error (Req [4]) ---
+    // When the user clicks the inline [Xóa] button on an OOS item, we remove it from
+    // the cart via CartContext.removeItem and clear that item from outOfStockItems state.
+    const handleRemoveOosItem = useCallback(async (item) => {
+        try {
+            // Use CartContext's removeItem which calls cartApi.removeCartItem internally
+            await removeItem(item.cart_item_id);
+        } catch (e) {
+            console.warn('Could not remove item from cart:', e);
+        }
+
+        // Clear this specific item from outOfStockItems state
+        const productId = String(item.product?.product_id || item.product_id || '');
+        setOutOfStockItems((prev) =>
+            prev.filter((o) => o.productId !== productId && o.name !== item.product?.name)
+        );
+    }, [removeItem]);
 
     // ── RENDER SUCCESS STATE ────────────────────────────
     if (state.orderSuccess) {
@@ -930,20 +1017,38 @@ const CheckoutPage = () => {
 
                         {/* H: Submit */}
                         <div className="co-submit-section">
-                            <button
-                                className="co-submit-btn"
-                                disabled={state.isSubmitting}
-                                onClick={handleSubmit}
+                            {/* --- ADDED: Inline OOS banner above the submit button (Req [1]) --- */}
+                            <div ref={oosBannerRef}>
+                                <OutOfStockBanner
+                                    outOfStockItems={outOfStockItems}
+                                    pulse={bannerPulse}
+                                    onPulseEnd={() => setBannerPulse(false)}
+                                />
+                            </div>
+
+                            {/* --- MODIFIED: Button disabled + text changed when OOS errors exist (Req [3]) --- */}
+                            <div
+                                className="co-submit-btn-wrapper"
+                                title={outOfStockItems.length > 0 ? 'Giỏ hàng có sản phẩm hết hàng — vui lòng xóa trước khi đặt hàng' : undefined}
                             >
-                                {state.isSubmitting ? (
-                                    <>
-                                        <span className="co-submit-spinner" />
-                                        Đang xử lý...
-                                    </>
-                                ) : (
-                                    'Đặt hàng ngay →'
-                                )}
-                            </button>
+                                <button
+                                    className={`co-submit-btn${outOfStockItems.length > 0 ? ' co-submit-btn--disabled-oos' : ''}`}
+                                    disabled={state.isSubmitting || outOfStockItems.length > 0}
+                                    onClick={handleSubmit}
+                                    aria-disabled={state.isSubmitting || outOfStockItems.length > 0}
+                                >
+                                    {state.isSubmitting ? (
+                                        <>
+                                            <span className="co-submit-spinner" />
+                                            Đang xử lý...
+                                        </>
+                                    ) : outOfStockItems.length > 0 ? (
+                                        'Không thể đặt hàng — Giỏ hàng có sản phẩm hết hàng'
+                                    ) : (
+                                        'Đặt hàng ngay →'
+                                    )}
+                                </button>
+                            </div>
                             <div className="co-submit-footer">
                                 <p>🔒 Thông tin của bạn được bảo mật tuyệt đối</p>
                                 <p>
@@ -957,6 +1062,7 @@ const CheckoutPage = () => {
 
                     {/* ── RIGHT PANEL ── */}
                     <div className="checkout-right-panel">
+                        {/* --- MODIFIED: Pass outOfStockItems + onRemoveItem to OrderReviewPanel (Req [2][3]) --- */}
                         <OrderReviewPanel
                             items={effectiveCheckoutItems}
                             coupon={state.couponState}
@@ -974,6 +1080,8 @@ const CheckoutPage = () => {
                             onRemoveCoupon={handleRemoveCoupon}
                             shippingFeeLoading={state.shippingFeeLoading}
                             shippingFeeError={state.shippingFeeError}
+                            outOfStockItems={outOfStockItems}
+                            onRemoveItem={handleRemoveOosItem}
                         />
                     </div>
                 </div>

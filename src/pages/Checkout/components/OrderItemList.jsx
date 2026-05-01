@@ -1,15 +1,35 @@
-import React, { useState } from 'react';
-import { formatVND, getItemSubtotal, getItemPrice } from '../checkoutConstants';
+// --- MODIFIED: OrderItemList ---
+// Now accepts `outOfStockItems` and `onRemoveItem` props.
+// Delegates per-item rendering to the reusable <OrderSummaryItem />.
 
-const OrderItemList = ({ items }) => {
+import React, { useState } from 'react';
+import OrderSummaryItem from './OrderSummaryItem';
+
+/**
+ * OrderItemList
+ *
+ * @param {Array}    items            - Cart items to display
+ * @param {Array}    outOfStockItems  - [{ productId, name, remaining }] from parent state
+ * @param {function} onRemoveItem     - Called with the cart item when user clicks inline [Xóa]
+ */
+const OrderItemList = ({ items, outOfStockItems = [], onRemoveItem }) => {
     const [expanded, setExpanded] = useState(false);
     const totalQty = items.reduce((sum, i) => sum + i.quantity, 0);
+
+    // Build a fast lookup set of out-of-stock productIds
+    const oosIds = new Set(outOfStockItems.map((o) => String(o.productId)));
 
     return (
         <div>
             <div className="co-items-toggle" onClick={() => setExpanded(!expanded)}>
                 <span className="co-items-toggle-text">
                     {totalQty} sản phẩm
+                    {/* Show count badge when there are out-of-stock items */}
+                    {outOfStockItems.length > 0 && (
+                        <span className="co-items-oos-count" aria-label="sản phẩm hết hàng">
+                            {outOfStockItems.length} hết hàng
+                        </span>
+                    )}
                 </span>
                 <span className={`co-items-toggle-icon ${expanded ? 'open' : ''}`}>
                     ▼
@@ -17,35 +37,16 @@ const OrderItemList = ({ items }) => {
             </div>
             <div className={`co-items-list ${expanded ? 'expanded' : 'collapsed'}`}>
                 {items.map((item) => {
-                    const basePrice = (item.variant?.price || 0) * item.quantity;
-                    const effectivePrice = getItemSubtotal(item);
-                    const hasPromo = item.promotion && effectivePrice < basePrice;
+                    // Match by productId stored on item.product.product_id (or product_id)
+                    const productId = String(item.product?.product_id || item.product_id || '');
+                    const isOutOfStock = oosIds.has(productId);
                     return (
-                        <div key={item.cart_item_id} className="co-item-row">
-                            <div className="co-item-img-wrap">
-                                <img src={item.image_url} alt={item.product.name} />
-                                {item.quantity > 1 && (
-                                    <span className="co-item-qty-badge">{item.quantity}</span>
-                                )}
-                            </div>
-                            <div className="co-item-info">
-                                <p className="co-item-name">{item.product.name}</p>
-                                <p className="co-item-variant">
-                                    Size {item.variant.size_name} · {item.variant.color_name}
-                                </p>
-                                {hasPromo && (
-                                    <p className="co-item-promo-label">🏷️ {item.promotion.name}</p>
-                                )}
-                            </div>
-                            <div className="co-item-price-wrap">
-                                {hasPromo && (
-                                    <span className="co-item-price-original">{formatVND(basePrice)}</span>
-                                )}
-                                <span className={`co-item-price${hasPromo ? ' promo' : ''}`}>
-                                    {formatVND(effectivePrice)}
-                                </span>
-                            </div>
-                        </div>
+                        <OrderSummaryItem
+                            key={item.cart_item_id}
+                            item={item}
+                            isOutOfStock={isOutOfStock}
+                            onRemove={onRemoveItem}
+                        />
                     );
                 })}
             </div>

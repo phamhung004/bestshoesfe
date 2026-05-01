@@ -1,3 +1,7 @@
+// --- MODIFIED: OrderReviewPanel ---
+// Added `outOfStockItems` and `onRemoveItem` props forwarded to OrderItemList.
+// The submit button is disabled and text/style changed when stock errors exist.
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import OrderItemList from './OrderItemList';
@@ -21,7 +25,13 @@ const OrderReviewPanel = ({
     onRemoveCoupon,
     shippingFeeLoading,
     shippingFeeError,
+    // --- ADDED: out-of-stock props ---
+    outOfStockItems,
+    onRemoveItem,
 }) => {
+    // --- ADDED: Derive disabled state from outOfStockItems ---
+    const hasStockError = outOfStockItems && outOfStockItems.length > 0;
+
     return (
         <div className="co-review-card co-right-entrance">
             {/* Header */}
@@ -30,8 +40,12 @@ const OrderReviewPanel = ({
                 <Link to="/cart" className="co-review-edit-link">Chỉnh sửa</Link>
             </div>
 
-            {/* Item list */}
-            <OrderItemList items={items} />
+            {/* --- MODIFIED: Item list now receives out-of-stock data --- */}
+            <OrderItemList
+                items={items}
+                outOfStockItems={outOfStockItems}
+                onRemoveItem={onRemoveItem}
+            />
 
             {/* Coupon */}
             <CouponSection
@@ -57,22 +71,31 @@ const OrderReviewPanel = ({
                 shippingFeeError={shippingFeeError}
             />
 
-            {/* Submit button */}
-            <button
-                className="co-submit-btn"
-                style={{ marginTop: 16 }}
-                disabled={isSubmitting}
-                onClick={onSubmit}
+            {/* --- MODIFIED: Submit button disabled + tooltip when stock error --- */}
+            <div
+                className="co-submit-btn-wrapper"
+                /* Tooltip via title attribute; also handled by CSS ::after for richer look */
+                title={hasStockError ? 'Giỏ hàng có sản phẩm hết hàng — vui lòng xóa trước khi đặt hàng' : undefined}
             >
-                {isSubmitting ? (
-                    <>
-                        <span className="co-submit-spinner" />
-                        Đang xử lý...
-                    </>
-                ) : (
-                    'Đặt hàng ngay →'
-                )}
-            </button>
+                <button
+                    className={`co-submit-btn${hasStockError ? ' co-submit-btn--disabled-oos' : ''}`}
+                    style={{ marginTop: 16 }}
+                    disabled={isSubmitting || hasStockError}
+                    onClick={hasStockError ? undefined : onSubmit}
+                    aria-disabled={hasStockError || isSubmitting}
+                >
+                    {isSubmitting ? (
+                        <>
+                            <span className="co-submit-spinner" />
+                            Đang xử lý...
+                        </>
+                    ) : hasStockError ? (
+                        'Không thể đặt hàng — Giỏ hàng có sản phẩm hết hàng'
+                    ) : (
+                        'Đặt hàng ngay →'
+                    )}
+                </button>
+            </div>
         </div>
     );
 };

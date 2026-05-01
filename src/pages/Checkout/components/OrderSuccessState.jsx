@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import CheckoutStepIndicator from '../../Cart/components/CheckoutStepIndicator';
 import {
     formatVND,
@@ -35,9 +35,12 @@ const POLL_INTERVAL_MS = 5000; // Poll every 5 seconds
 const MAX_POLL_DURATION_MS = 30 * 60 * 1000; // Stop polling after 30 minutes
 
 const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
+    const navigate = useNavigate();
     const [copied, setCopied] = useState(false);
     const [copiedField, setCopiedField] = useState('');
     const [isPaid, setIsPaid] = useState(false);
+    const [terminalPaymentState, setTerminalPaymentState] = useState(null);
+    const [isRedirectingAfterPayment, setIsRedirectingAfterPayment] = useState(false);
 
     const normalizePaymentMethod = (value) => String(value || '').toLowerCase();
     const isBankTransfer = normalizePaymentMethod(orderData?.paymentMethod) === 'bank';
@@ -45,14 +48,22 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
     // ── Payment status polling (bank transfer only) ────────
     const pollIntervalRef = useRef(null);
     const pollStartRef = useRef(Date.now());
+    const redirectTimeoutRef = useRef(null);
+
+    const stopPolling = useCallback(() => {
+        if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+        }
+    }, []);
 
     useEffect(() => {
-        if (!isBankTransfer || isPaid || !orderData?.orderNumber) return;
+        if (!isBankTransfer || terminalPaymentState || !orderData?.orderNumber) return;
 
         const checkPaymentStatus = async () => {
             // Stop polling after max duration
             if (Date.now() - pollStartRef.current > MAX_POLL_DURATION_MS) {
-                clearInterval(pollIntervalRef.current);
+                stopPolling();
                 return;
             }
             try {
@@ -62,11 +73,30 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                     orderData.customerPhone
                 );
                 const order = res?.data;
-                const status = order?.paymentStatus;
-                // Backend sets paymentStatus = "Đã thanh toán" when SePay confirms
-                if (status === 'Đã thanh toán') {
+                const orderStatus = order?.status;
+                const paymentStatus = order?.paymentStatus;
+                const refundStatus = order?.refundStatus;
+
+                if (orderStatus === 'Đã hủy') {
+                    setTerminalPaymentState(refundStatus === 'Cần hoàn tiền' ? 'refund-needed' : 'cancelled');
+                    stopPolling();
+                    return;
+                }
+
+                if (paymentStatus === 'Đã thanh toán') {
                     setIsPaid(true);
-                    clearInterval(pollIntervalRef.current);
+                    setTerminalPaymentState('paid');
+                    stopPolling();
+                    setIsRedirectingAfterPayment(true);
+                    redirectTimeoutRef.current = setTimeout(() => {
+                        navigate(isLoggedIn ? '/account' : '/tra-cuu-don-hang');
+                    }, 2000);
+                    return;
+                }
+
+                if (refundStatus === 'Cần hoàn tiền') {
+                    setTerminalPaymentState('refund-needed');
+                    stopPolling();
                 }
             } catch {
                 // Ignore polling errors silently
@@ -77,11 +107,20 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
         checkPaymentStatus();
         pollIntervalRef.current = setInterval(checkPaymentStatus, POLL_INTERVAL_MS);
 
-        return () => clearInterval(pollIntervalRef.current);
-    }, [isBankTransfer, isPaid, orderData?.orderNumber]);
+        return stopPolling;
+    }, [isBankTransfer, isLoggedIn, navigate, orderData?.customerPhone, orderData?.orderNumber, stopPolling, terminalPaymentState]);
+
+    useEffect(() => () => {
+        stopPolling();
+        if (redirectTimeoutRef.current) {
+            clearTimeout(redirectTimeoutRef.current);
+        }
+    }, [stopPolling]);
 
     // Show success screen when payment confirmed
-    const showSuccessScreen = !isBankTransfer || isPaid;
+    const showSuccessScreen = !isBankTransfer || isPaid || terminalPaymentState === 'paid';
+    const isCancelledPaymentState =
+        terminalPaymentState === 'cancelled' || terminalPaymentState === 'refund-needed';
 
     // Mã thanh toán SePay: BS + orderId (ví dụ: BS00001)
     // Fallback về orderNumber nếu backend chưa trả paymentReference
@@ -160,7 +199,21 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                                 </button>
                             </div>
 
-                            {/* SePay QR Section */}
+                            {isCancelledPaymentState ? (
+                                <div className="co-sepay-terminal co-sepay-terminal-cancelled">
+                                    <h2>Đơn hàng đã hết thời gian thanh toán</h2>
+                                    <p>Đơn hàng đã hết thời gian thanh toán và đã bị hủy tự động.</p>
+                                    {terminalPaymentState === 'refund-needed' && (
+                                        <p className="co-sepay-terminal-note">
+                                            Hệ thống đã ghi nhận thanh toán sau khi đơn bị hủy. Shop sẽ liên hệ để hoàn tiền.
+                                        </p>
+                                    )}
+                                    <div className="co-success-actions">
+                                        <Link to="/cart" className="co-success-btn-primary">Quay lại giỏ hàng</Link>
+                                        <Link to="/catalog" className="co-success-btn-outline">Tiếp tục mua sắm</Link>
+                                    </div>
+                                </div>
+                            ) : (
                             <div className="co-sepay-section">
                                 <div className="co-sepay-header">
                                     <span className="co-sepay-icon">🏦</span>
@@ -255,7 +308,10 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                                     Sản phẩm chỉ được xác nhận sau khi nhận được thanh toán.
                                 </div>
                             </div>
+                            )}
 
+                            {!isCancelledPaymentState && (
+                            <>
                             {/* Order summary */}
                             <div className="co-success-summary">
                                 <div className="co-success-info-grid">
@@ -395,6 +451,8 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                                     </>
                                 )}
                             </div>
+                            </>
+                            )}
                         </>
                     ) : (
                         /* ══════════════════════════════════════════════════════
@@ -402,9 +460,10 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                             ══════════════════════════════════════════════════════ */
                         <>
                             {/* Banner xác nhận chuyển khoản thành công */}
-                            {isPaid && (
+                            {terminalPaymentState === 'paid' && (
                                 <div className="co-payment-confirmed-banner">
-                                    ✅ Thanh toán chuyển khoản đã được xác nhận!
+                                    Thanh toán thành công! Đơn hàng của bạn đang được xử lý.
+                                    {isRedirectingAfterPayment && <span> Đang chuyển đến trang xác nhận...</span>}
                                 </div>
                             )}
 
