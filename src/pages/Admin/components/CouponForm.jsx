@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { couponAPI } from '../../../services/api';
+import ConfirmDialog from '../../../components/common/ConfirmDialog';
 import './CouponForm.css';
 
 const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
@@ -19,6 +20,7 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     if (coupon) {
@@ -174,6 +176,11 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
       return;
     }
 
+    setShowConfirm(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    setShowConfirm(false);
     setLoading(true);
     try {
       // Get current user ID from localStorage or sessionStorage
@@ -476,6 +483,19 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
           </div>
         </form>
       </div>
+
+      <ConfirmDialog
+        open={showConfirm}
+        title={isEditing ? 'Xác nhận cập nhật' : 'Xác nhận thêm mã giảm giá'}
+        message={isEditing
+          ? 'Bạn có chắc chắn muốn cập nhật mã giảm giá này không?'
+          : 'Bạn có chắc chắn muốn thêm mã giảm giá mới không?'}
+        confirmText={isEditing ? 'Cập nhật' : 'Thêm mới'}
+        cancelText="Hủy"
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={handleConfirmSubmit}
+        loading={loading}
+      />
     </div>
   );
 };

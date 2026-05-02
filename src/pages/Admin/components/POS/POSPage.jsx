@@ -47,6 +47,7 @@ const POSPage = () => {
     const [isSavingHold, setIsSavingHold] = useState(false);
     const [activeOrderId, setActiveOrderId] = useState(null); // null = new order
     const [duplicateVariantWarning, setDuplicateVariantWarning] = useState(null);
+    const [showCheckoutConfirm, setShowCheckoutConfirm] = useState(false);
 
     // Ref for search input (keyboard shortcut F1)
     const searchInputRef = useRef(null);
@@ -671,13 +672,28 @@ const POSPage = () => {
             )}
 
             <ConfirmDialog
+                open={showCheckoutConfirm}
+                title="Xác nhận thanh toán"
+                message={`Bạn có chắc chắn muốn thanh toán đơn hàng này không? Tổng tiền: ${formatVND(totalAmount)}`}
+                confirmText="Thanh toán"
+                cancelText="Hủy"
+                variant="primary"
+                loading={isCheckingOut}
+                onConfirm={async () => {
+                    setShowCheckoutConfirm(false);
+                    await handleCheckout();
+                }}
+                onCancel={() => setShowCheckoutConfirm(false)}
+            />
+
+            <ConfirmDialog
                 open={!!duplicateVariantWarning}
                 title="Sản phẩm đã có ở hóa đơn chờ khác"
                 message={duplicateVariantWarning
                     ? `Sản phẩm này đã tồn tại ở hóa đơn chờ "${duplicateVariantWarning.orderLabel}" với số lượng ${duplicateVariantWarning.quantity}. Bạn muốn vẫn thêm vào đơn hiện tại hay hủy?`
                     : ''}
                 confirmText="Vẫn thêm"
-                cancelText="Cancel"
+                cancelText="Hủy"
                 variant="primary"
                 onConfirm={() => {
                     const pending = duplicateVariantWarning?.pendingAdd;
