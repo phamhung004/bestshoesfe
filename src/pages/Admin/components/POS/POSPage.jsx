@@ -600,6 +600,7 @@ const POSPage = () => {
                     setPaymentMethod={setPaymentMethod}
                     cashReceived={cashReceived}
                     setCashReceived={setCashReceived}
+                    onRequestCheckout={() => setShowCheckoutConfirm(true)}
                     onCheckout={handleCheckout}
                     isCheckingOut={isCheckingOut}
                     cartBounce={cartBounce}

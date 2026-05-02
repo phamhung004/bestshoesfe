@@ -19,7 +19,7 @@ const OrderCart = ({
     guestName, setGuestName, guestPhone, setGuestPhone,
     appliedCoupon, setAppliedCoupon, setDiscountAmount,
     paymentMethod, setPaymentMethod, cashReceived, setCashReceived,
-    onCheckout, isCheckingOut, cartBounce,
+    onCheckout, onRequestCheckout, isCheckingOut, cartBounce,
     // Hold order props
     holdOrders = [], isSavingHold = false,
     onSaveHold,
@@ -144,7 +144,7 @@ const OrderCart = ({
                 {/* Checkout button */}
                 <button
                     className="pos-checkout-btn"
-                    onClick={() => onCheckout()}
+                    onClick={() => (onRequestCheckout ? onRequestCheckout() : onCheckout())}
                     disabled={cartItems.length === 0 || isCheckingOut}
                     title={cartItems.length === 0 ? 'Giỏ hàng trống' : 'Thanh toán (F8)'}
                 >
