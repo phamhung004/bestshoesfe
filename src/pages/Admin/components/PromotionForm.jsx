@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { promotionAPI } from '../../../services/api';
+import ConfirmDialog from '../../../components/common/ConfirmDialog';
 import './PromotionForm.css';
 
 const PromotionForm = ({ promotion, onSave, onCancel, isEditing = false }) => {
@@ -15,6 +16,7 @@ const PromotionForm = ({ promotion, onSave, onCancel, isEditing = false }) => {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     if (promotion) {
@@ -109,6 +111,11 @@ const PromotionForm = ({ promotion, onSave, onCancel, isEditing = false }) => {
       return;
     }
 
+    setShowConfirm(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    setShowConfirm(false);
     setLoading(true);
     try {
       const promotionData = {
@@ -322,6 +329,19 @@ const PromotionForm = ({ promotion, onSave, onCancel, isEditing = false }) => {
           </div>
         </form>
       </div>
+
+      <ConfirmDialog
+        open={showConfirm}
+        title={isEditing ? 'Xác nhận cập nhật' : 'Xác nhận thêm đợt giảm giá'}
+        message={isEditing
+          ? 'Bạn có chắc chắn muốn cập nhật đợt giảm giá này không?'
+          : 'Bạn có chắc chắn muốn thêm đợt giảm giá mới không?'}
+        confirmText={isEditing ? 'Cập nhật' : 'Thêm mới'}
+        cancelText="Hủy"
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={handleConfirmSubmit}
+        loading={loading}
+      />
     </div>
   );
 };

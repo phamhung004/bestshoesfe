@@ -144,7 +144,7 @@ const OrderCart = ({
                 {/* Checkout button */}
                 <button
                     className="pos-checkout-btn"
-                    onClick={onCheckout}
+                    onClick={() => onCheckout()}
                     disabled={cartItems.length === 0 || isCheckingOut}
                     title={cartItems.length === 0 ? 'Giỏ hàng trống' : 'Thanh toán (F8)'}
                 >

@@ -65,20 +65,14 @@ const normalizeOrderStatus = (status) => {
 };
 
 // Stat Card Component
-const StatCard = ({ title, value, change, changeLabel, icon, type, formatter }) => {
-  const isPositive = change >= 0;
-
+const StatCard = ({ title, value, icon, type, formatter }) => {
   return (
     <div className={`stat-card ${type}`}>
       <div className="stat-card-header">
         <div className="stat-icon">{icon}</div>
-        <div className={`stat-change ${isPositive ? 'positive' : 'negative'}`}>
-          {isPositive ? '↑' : '↓'} {Math.abs(change)}%
-        </div>
       </div>
       <div className="stat-value">{formatter ? formatter(value) : value}</div>
       <div className="stat-label">{title}</div>
-      <div className="stat-comparison">{changeLabel}</div>
     </div>
   );
 };
@@ -174,7 +168,7 @@ const DashboardOverview = () => {
         setRevenueData(points.map(p => ({
           date: formatDateLabel(p.date),
           revenue: Number(p.revenue || 0),
-          orders: Number(p.orders || 0),
+          orders: Number(p.orderCount || 0),
         })));
       } else {
         setRevenueData([]);
@@ -327,17 +321,13 @@ const DashboardOverview = () => {
         <StatCard
           title="Doanh thu trong khoảng ngày"
           value={stats.totalRevenue}
-          change={stats.revenueChange}
-          changeLabel={`Khoảng: ${appliedStartDate} → ${appliedEndDate}`}
           icon="💰"
           type="revenue"
           formatter={formatCurrency}
         />
         <StatCard
-          title="Đơn hàng trong khoảng ngày"
+          title="Đơn đã giao trong khoảng ngày"
           value={stats.totalOrders}
-          change={stats.orderChange}
-          changeLabel={`Khoảng: ${appliedStartDate} → ${appliedEndDate}`}
           icon="📦"
           type="orders"
           formatter={formatNumber}
@@ -350,12 +340,8 @@ const DashboardOverview = () => {
         <div className="chart-card full-width">
           <div className="chart-header">
             <div>
-              <h3 className="chart-title">Doanh thu & Đơn hàng</h3>
-              <p className="chart-subtitle">Thống kê doanh thu và đơn hàng trong {appliedStartDate && appliedEndDate ? `${appliedStartDate} → ${appliedEndDate}` : '30 ngày gần nhất'}</p>
-            </div>
-            <div className="chart-actions">
-              <button className="chart-btn active">Doanh thu</button>
-              <button className="chart-btn">Đơn hàng</button>
+              <h3 className="chart-title">Doanh thu</h3>
+              <p className="chart-subtitle">Thống kê doanh thu trong {appliedStartDate && appliedEndDate ? `${appliedStartDate} → ${appliedEndDate}` : '30 ngày gần nhất'}</p>
             </div>
           </div>
           <div className="chart-wrapper large">
@@ -365,10 +351,6 @@ const DashboardOverview = () => {
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366F1" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#6366F1" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -383,7 +365,6 @@ const DashboardOverview = () => {
                   axisLine={{ stroke: '#E5E7EB' }}
                 />
                 <Tooltip content={<CustomTooltip formatter={(value) => formatCurrency(value)} />} />
-                <Legend />
                 <Area
                   type="monotone"
                   dataKey="revenue"
@@ -392,17 +373,6 @@ const DashboardOverview = () => {
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorRevenue)"
-                  dot={false}
-                  activeDot={{ r: 6, strokeWidth: 2 }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="orders"
-                  name="Đơn hàng"
-                  stroke="#6366F1"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorOrders)"
                   dot={false}
                   activeDot={{ r: 6, strokeWidth: 2 }}
                 />
@@ -416,7 +386,7 @@ const DashboardOverview = () => {
           <div className="chart-header">
             <div>
               <h3 className="chart-title">Doanh thu theo danh mục</h3>
-              <p className="chart-subtitle">Phân bổ doanh thu sản phẩm theo danh mục</p>
+              <p className="chart-subtitle">Phân bổ doanh thu sản phẩm theo danh mục trong khoảng ngày đã chọn</p>
             </div>
           </div>
           <div className="chart-wrapper">
@@ -504,7 +474,7 @@ const DashboardOverview = () => {
             icon="⚠️"
             title="Tồn kho thấp"
             message={`Biến thể sắp hết: ${lowStock.totalLowStockVariants ?? 0}${lowStock.items?.[0] ? ` • Nổi bật: ${lowStock.items[0].productName} (${lowStock.items[0].stock})` : ''}`}
-            time="Dữ liệu realtime"
+            time=""
           />
         </div>
       </div>
@@ -513,7 +483,6 @@ const DashboardOverview = () => {
       <div className="orders-section animate-fade-in">
         <div className="section-header">
           <h3 className="section-title">Sản phẩm bán chạy</h3>
-          <span className="view-all">Xem tất cả →</span>
         </div>
         <div className="table-responsive">
           <table className="data-table">

@@ -119,15 +119,9 @@ const menuStructure = [
     roles: ALL_ROLES,
   },
   {
-    id: 'analytics',
-    label: 'Phân tích',
-    icon: Icons.Analytics,
-    type: 'single',
-    roles: ADMIN_MANAGER,
-  },{
     id: 'products',
     label: 'Sản phẩm',
-    icon: Icons.Analytics,
+    icon: Icons.Products,
     type: 'single',
     roles: ALL_ROLES,
   },
@@ -153,24 +147,7 @@ const menuStructure = [
     type: 'single',
     roles: ALL_ROLES,
   },
-  {
-    id: 'user-management',
-    label: 'Tài khoản',
-    icon: Icons.Users,
-    type: 'parent',
-    roles: ADMIN_MANAGER,
-    children: [
-      { id: 'customers', label: 'Khách hàng', icon: Icons.Users, roles: ADMIN_MANAGER },
-      { id: 'employees', label: 'Nhân viên', icon: Icons.Users, roles: ADMIN_ONLY },
-    ],
-  },
-  {
-    id: 'account-management',
-    label: 'Quản lý tài khoản',
-    icon: Icons.Returns,
-    type: 'single',
-    roles: ADMIN_MANAGER,
-  },
+
   {
     id: 'returns',
     label: 'Trả hàng',
@@ -182,6 +159,13 @@ const menuStructure = [
     id: 'reviews',
     label: 'Đánh giá',
     icon: Icons.Tag,
+    type: 'single',
+    roles: ADMIN_MANAGER,
+  },
+  {
+    id: 'account-management',
+    label: 'Quản lý tài khoản',
+    icon: Icons.Returns,
     type: 'single',
     roles: ADMIN_MANAGER,
   },
@@ -225,7 +209,6 @@ const AdminSidebar = ({ activeSection, onSectionChange, isCollapsed, onToggleCol
 
   const [expandedItems, setExpandedItems] = useState({
     'product-management': activeSection.startsWith('product-management/'),
-    'user-management': activeSection.startsWith('user-management/'),
     'promotions': activeSection.startsWith('promotions/'),
   });
 
