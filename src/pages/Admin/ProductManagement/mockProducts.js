@@ -1,7 +1,7 @@
 // ─── Status config ────────────────────────────────────────────────────────────
 export const STATUS_CONFIG = {
   ACTIVE: {
-    label: 'Đang bán',
+    label: 'Hiển thị',
     className: 'pm-badge-active',
     dot: '#22c55e',
   },
@@ -11,7 +11,7 @@ export const STATUS_CONFIG = {
     dot: '#ef4444',
   },
   INACTIVE: {
-    label: 'Ngừng bán',
+    label: 'Đã ẩn',
     className: 'pm-badge-inactive',
     dot: '#9ca3af',
   },

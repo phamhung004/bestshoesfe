@@ -42,6 +42,12 @@ const stockColor = (stock) => {
 const stockBarWidth = (stock, max = 100) =>
   `${Math.min(100, (stock / max) * 100)}%`;
 
+const getActiveVariantCount = (product) =>
+  (product.variants || []).filter((v) => (v.status || 'ACTIVE') === 'ACTIVE').length;
+
+const getVariantCount = (product) =>
+  product.totalVariants ?? (product.variants || []).length;
+
 /* ─── Sort header helper ─────────────────────────────────────── */
 const SortIcon = ({ active, dir }) => {
   if (!active)
@@ -289,7 +295,10 @@ const ProductTable = ({
 
                 {/* Variants */}
                 <td style={{ color: '#64748b', fontSize: 13 }}>
-                  {product.totalVariants} biến thể
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>
+                    {getActiveVariantCount(product)}/{getVariantCount(product)}
+                  </span>{' '}
+                  đang bán
                 </td>
 
                 {/* Stock */}

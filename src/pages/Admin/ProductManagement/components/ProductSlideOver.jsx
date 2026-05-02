@@ -17,6 +17,12 @@ const StatusBadge = ({ status }) => {
 
 const MAX_DESC_CHARS = 200;
 
+const getActiveVariantCount = (product) =>
+  (product.variants || []).filter((v) => (v.status || 'ACTIVE') === 'ACTIVE').length;
+
+const getVariantCount = (product) =>
+  product.totalVariants ?? (product.variants || []).length;
+
 /**
  * ProductSlideOver
  * Props: product (null = hidden), onClose(), onEdit(product)
@@ -134,7 +140,7 @@ const ProductSlideOver = ({ product, onClose, onEdit }) => {
           {product.variants && product.variants.length > 0 && (
             <div className="pm-so-section">
               <div className="pm-so-section-title">
-                Biến thể ({product.totalVariants} biến thể · {product.totalStock} trong kho)
+                Biến thể ({getActiveVariantCount(product)}/{getVariantCount(product)} đang bán · {product.totalStock} trong kho)
               </div>
               <div style={{ overflowX: 'auto' }}>
                 <table className="pm-variant-table-sm">
@@ -145,6 +151,7 @@ const ProductSlideOver = ({ product, onClose, onEdit }) => {
                       <th>Màu</th>
                       <th>Giá bán</th>
                       <th>Tồn kho</th>
+                      <th>Trạng thái</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -178,6 +185,9 @@ const ProductSlideOver = ({ product, onClose, onEdit }) => {
                           >
                             {v.stock === 0 ? 'Hết' : v.stock}
                           </span>
+                        </td>
+                        <td>
+                          <StatusBadge status={v.status || 'ACTIVE'} />
                         </td>
                       </tr>
                     ))}

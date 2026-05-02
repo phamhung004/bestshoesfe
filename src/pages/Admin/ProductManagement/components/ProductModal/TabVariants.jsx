@@ -478,6 +478,7 @@ const TabVariants = ({ variants = [], onChange, errors = {}, sizes: sizeProp, co
                   <th style={{ minWidth: 110 }}>Giá vốn (₫)</th>
                   <th style={{ width: 80 }}>Tồn kho</th>
                   <th style={{ width: 90 }}>Khối lượng (g)</th>
+                  <th style={{ width: 120 }}>Trạng thái bán</th>
                   <th style={{ width: 40 }} />
                 </tr>
               </thead>
@@ -545,6 +546,19 @@ const TabVariants = ({ variants = [], onChange, errors = {}, sizes: sizeProp, co
                         value={v.weight}
                         onChange={(e) => handleUpdateField(v.id, 'weight', e.target.value)}
                       />
+                    </td>
+                    <td>
+                      <label className="pm-variant-status-toggle">
+                        <input
+                          type="checkbox"
+                          checked={(v.status || 'ACTIVE') === 'ACTIVE'}
+                          onChange={(e) => handleUpdateField(v.id, 'status', e.target.checked ? 'ACTIVE' : 'INACTIVE')}
+                        />
+                        <span className="pm-variant-status-track" />
+                        <span className="pm-variant-status-text">
+                          {(v.status || 'ACTIVE') === 'ACTIVE' ? 'Đang bán' : 'Ngừng bán'}
+                        </span>
+                      </label>
                     </td>
                     <td>
                       <button

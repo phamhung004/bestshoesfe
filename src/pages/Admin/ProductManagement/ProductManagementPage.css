@@ -1341,6 +1341,51 @@
 .pm-inline-input:hover { border-color: #e2e8f0; background: #f8fafc; }
 .pm-inline-input:focus { border-color: #6366f1; background: #ffffff; box-shadow: 0 0 0 2px rgba(99,102,241,0.1); }
 
+.pm-variant-status-toggle {
+  display: inline-grid;
+  grid-template-columns: 34px minmax(64px, auto);
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pm-variant-status-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.pm-variant-status-track {
+  position: relative;
+  width: 34px;
+  height: 18px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  transition: background 0.15s ease;
+}
+.pm-variant-status-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
+  transition: transform 0.15s ease;
+}
+.pm-variant-status-toggle input:checked + .pm-variant-status-track {
+  background: #22c55e;
+}
+.pm-variant-status-toggle input:checked + .pm-variant-status-track::after {
+  transform: translateX(16px);
+}
+.pm-variant-status-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
 .pm-profit {
   font-size: 11px;
   font-weight: 600;

@@ -32,12 +32,12 @@ const TabBasicInfo = ({ data, onChange, errors = {}, categories = [], brands = [
             <div className="pm-toggle-row" style={{ gap: 12, width: 'auto' }}>
               <div className="pm-toggle-label-wrap" style={{ textAlign: 'right' }}>
                 <span className="pm-toggle-title">
-                  {data.status === 'ACTIVE' ? 'Đang bán' : 'Ngừng bán'}
+                  {data.status === 'ACTIVE' ? 'Đang hiển thị' : 'Đã ẩn'}
                 </span>
                 <span className="pm-toggle-sub">
                   {data.status === 'ACTIVE'
-                    ? 'Đang hiển thị trên cửa hàng'
-                    : 'Đã ẩn khỏi cửa hàng'}
+                    ? 'Sản phẩm cha đang xuất hiện trên cửa hàng'
+                    : 'Ẩn toàn bộ sản phẩm khỏi cửa hàng'}
                 </span>
               </div>
               <label className="pm-toggle">

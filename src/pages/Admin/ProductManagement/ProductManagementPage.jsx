@@ -388,10 +388,12 @@ const ProductManagementPage = () => {
   const kpiStats = useMemo(() => {
     const all = state.products;
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const activeVariantsOf = (product) =>
+      (product.variants || []).filter((v) => (v.status || 'ACTIVE') === 'ACTIVE');
     return {
       total:         state.totalElements,
       active:        all.filter((p) => p.status === 'ACTIVE').length,
-      outOfStock:    all.filter((p) => p.status === 'OUT_OF_STOCK').length,
+      outOfStock:    all.filter((p) => p.status === 'ACTIVE' && activeVariantsOf(p).every((v) => Number(v.stock || 0) <= 0)).length,
       inactive:      all.filter((p) => p.status === 'INACTIVE').length,
       comingSoon:    all.filter((p) => p.status === 'COMING_SOON').length,
       totalVariants: all.reduce((s, p) => s + (p.totalVariants || 0), 0),

@@ -21,7 +21,7 @@ const ProductKpiCards = ({ stats }) => {
       ),
     },
     {
-      label: 'Đang bán',
+      label: 'Đang hiển thị',
       value: stats.active,
       icon: TrendingUp,
       iconClass: 'green',
