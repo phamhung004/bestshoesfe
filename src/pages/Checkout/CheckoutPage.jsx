@@ -7,7 +7,6 @@ import { addressApi } from '../../api/addressApi';
 import { couponApi } from '../../api/couponApi';
 import { shippingApi } from '../../api/shippingApi';
 import CheckoutStepIndicator from '../Cart/components/CheckoutStepIndicator';
-import DeliveryMethodSelector from './components/DeliveryMethodSelector';
 import SavedAddressSelector from './components/SavedAddressSelector';
 import RecipientForm from './components/RecipientForm';
 import AddressForm from './components/AddressForm';
@@ -926,10 +925,6 @@ const CheckoutPage = () => {
                         )}
 
                         {/* A: Delivery method */}
-                        <DeliveryMethodSelector
-                            deliveryMethod={state.deliveryMethod}
-                            onSelect={(m) => dispatch({ type: 'SET_DELIVERY_METHOD', payload: m })}
-                        />
 
                         {/* B: Saved addresses (logged in + delivery) */}
                         {isLoggedIn && state.deliveryMethod === 'Online' && (

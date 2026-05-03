@@ -47,6 +47,17 @@ const buildDateString = (date) => {
   return d.toISOString().slice(0, 10);
 };
 
+const getCurrentMonthRange = () => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  return {
+    startDate: buildDateString(start),
+    endDate: buildDateString(end),
+    label: `${start.toLocaleDateString('vi-VN', { month: '2-digit', year: 'numeric' })}`,
+  };
+};
+
 const formatDateLabel = (dateStr) => {
   if (!dateStr) return '';
   const d = new Date(dateStr);
@@ -94,18 +105,20 @@ const AlertCard = ({ type, icon, title, message, time }) => {
 // DashboardOverview Component
 const DashboardOverview = () => {
   const todayStr = buildDateString(new Date());
-  const [startDate, setStartDate] = useState(todayStr);
-  const [endDate, setEndDate] = useState(todayStr);
+  const currentMonthRange = getCurrentMonthRange();
+  const [startDate, setStartDate] = useState(currentMonthRange.startDate);
+  const [endDate, setEndDate] = useState(currentMonthRange.endDate);
   const [loading, setLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState('');
-  const [appliedStartDate, setAppliedStartDate] = useState(todayStr);
-  const [appliedEndDate, setAppliedEndDate] = useState(todayStr);
+  const [appliedStartDate, setAppliedStartDate] = useState(currentMonthRange.startDate);
+  const [appliedEndDate, setAppliedEndDate] = useState(currentMonthRange.endDate);
   const [revenueData, setRevenueData] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
   const [brandData, setBrandData] = useState([]);
   const [bestSellingProducts, setBestSellingProducts] = useState([]);
   const [lowStock, setLowStock] = useState({ threshold: 10, totalLowStockVariants: 0, items: [] });
   const [returnKpi, setReturnKpi] = useState(null);
+  const [monthSummary, setMonthSummary] = useState({ revenue: 0, deliveredOrders: 0, cancelledOrders: 0, soldQuantity: 0 });
 
   useEffect(() => {
     setStartDate(todayStr);
@@ -118,6 +131,7 @@ const DashboardOverview = () => {
   useEffect(() => {
     let cancelled = false;
     const hasCustomRange = Boolean(appliedStartDate && appliedEndDate);
+    const defaultMonthRange = getCurrentMonthRange();
 
     const load = async () => {
       setLoading(true);
@@ -125,27 +139,28 @@ const DashboardOverview = () => {
 
       const results = await Promise.allSettled([
         returnAPI.getKpi(),
+        orderAPI.getMonthSummary(currentMonthRange.startDate.slice(0, 7)),
         orderAPI.getKpiTimeseries({
           metric: 'net',
           ...(hasCustomRange
             ? { startDate: buildDateString(appliedStartDate), endDate: buildDateString(appliedEndDate) }
-            : { range: '30d' }),
+            : { startDate: currentMonthRange.startDate, endDate: currentMonthRange.endDate }),
         }),
         orderAPI.getRevenueByCategory(
           hasCustomRange
             ? { startDate: buildDateString(appliedStartDate), endDate: buildDateString(appliedEndDate), limit: 8 }
-            : { range: '30d', limit: 8 }
+            : { startDate: currentMonthRange.startDate, endDate: currentMonthRange.endDate, limit: 8 }
         ),
         orderAPI.getRevenueByBrand(
           hasCustomRange
             ? { startDate: buildDateString(appliedStartDate), endDate: buildDateString(appliedEndDate), limit: 10 }
-            : { range: '30d', limit: 10 }
+            : { startDate: currentMonthRange.startDate, endDate: currentMonthRange.endDate, limit: 10 }
         ),
-        orderAPI.getBestSellingProducts(
-          hasCustomRange
-            ? { startDate: buildDateString(appliedStartDate), endDate: buildDateString(appliedEndDate), limit: 10 }
-            : { range: '30d', limit: 10 }
-        ),
+        orderAPI.getBestSellingProducts({
+          startDate: hasCustomRange ? buildDateString(appliedStartDate) : currentMonthRange.startDate,
+          endDate: hasCustomRange ? buildDateString(appliedEndDate) : currentMonthRange.endDate,
+          limit: 10,
+        }),
         productAPI.getLowStockKpi(10, 5),
       ]);
 
@@ -153,6 +168,7 @@ const DashboardOverview = () => {
 
       const [
         returnRes,
+        monthSummaryRes,
         timeseriesRes,
         byCategoryRes,
         byBrandRes,
@@ -161,6 +177,18 @@ const DashboardOverview = () => {
       ] = results;
 
       if (returnRes.status === 'fulfilled') setReturnKpi(returnRes.value?.data ?? returnRes.value ?? null);
+
+      if (monthSummaryRes.status === 'fulfilled') {
+        const data = monthSummaryRes.value?.data ?? monthSummaryRes.value ?? {};
+        setMonthSummary({
+          revenue: Number(data.revenue || 0),
+          deliveredOrders: Number(data.deliveredOrders || 0),
+          cancelledOrders: Number(data.cancelledOrders || 0),
+          soldQuantity: Number(data.soldQuantity || 0),
+        });
+      } else {
+        setMonthSummary({ revenue: 0, deliveredOrders: 0, cancelledOrders: 0, soldQuantity: 0 });
+      }
 
       if (timeseriesRes.status === 'fulfilled') {
         const ts = timeseriesRes.value?.data ?? timeseriesRes.value ?? {};
@@ -236,14 +264,15 @@ const DashboardOverview = () => {
 
   // Calculate summary stats
   const stats = useMemo(() => {
-    const totalRevenue = Number(revenueData.reduce((sum, item) => sum + item.revenue, 0));
-    const totalOrders = Number(revenueData.reduce((sum, item) => sum + item.orders, 0));
+    const totalRevenue = Number(monthSummary.revenue || 0);
+    const totalOrders = Number(monthSummary.deliveredOrders || 0);
     const revenueChange = 0;
     const orderChange = 0;
 
     const pendingCount = 0;
-    const cancelledCount = 0;
+    const cancelledCount = Number(monthSummary.cancelledOrders || 0);
     const returnRate = Number(returnKpi?.returnRate ?? 0);
+    const soldQuantity = Number(monthSummary.soldQuantity || 0);
 
     return {
       totalRevenue,
@@ -254,8 +283,9 @@ const DashboardOverview = () => {
       cancelledCount,
       returnRate,
       returnKpi,
+      soldQuantity,
     };
-  }, [revenueData, returnKpi]);
+  }, [monthSummary, returnKpi]);
 
   if (loading) {
     return (
@@ -288,7 +318,7 @@ const DashboardOverview = () => {
       <div className="dashboard-header">
         <div className="header-left">
           <h1>Tổng quan</h1>
-          <p>Chào mừng bạn trở lại! Dưới đây là thống kê doanh nghiệp của bạn.</p>
+          <p>Tháng hiện tại: {currentMonthRange.label}</p>
         </div>
         <div className="header-actions">
           <div className="filter-controls date-range-controls">
@@ -316,22 +346,12 @@ const DashboardOverview = () => {
         </div>
       </div>
 
-      {/* Stat Cards */}
+      {/* KPI Cards */}
       <div className="stats-grid animate-fade-in">
-        <StatCard
-          title="Doanh thu trong khoảng ngày"
-          value={stats.totalRevenue}
-          icon="💰"
-          type="revenue"
-          formatter={formatCurrency}
-        />
-        <StatCard
-          title="Đơn đã giao trong khoảng ngày"
-          value={stats.totalOrders}
-          icon="📦"
-          type="orders"
-          formatter={formatNumber}
-        />
+        <StatCard title="Doanh thu tháng này" value={monthSummary.revenue || 0} icon="💰" type="revenue" formatter={formatCurrency} />
+        <StatCard title="Đơn đã giao" value={monthSummary.deliveredOrders || 0} icon="📦" type="orders" formatter={formatNumber} />
+        <StatCard title="Đơn đã hủy" value={monthSummary.cancelledOrders || 0} icon="❌" type="cancelled" formatter={formatNumber} />
+        <StatCard title="Số lượng đã bán" value={monthSummary.soldQuantity || 0} icon="🛍️" type="sold" formatter={formatNumber} />
       </div>
 
       {/* Charts */}
@@ -483,6 +503,7 @@ const DashboardOverview = () => {
       <div className="orders-section animate-fade-in">
         <div className="section-header">
           <h3 className="section-title">Sản phẩm bán chạy</h3>
+          <span className="view-all">Mặc định theo tháng hiện tại</span>
         </div>
         <div className="table-responsive">
           <table className="data-table">

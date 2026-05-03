@@ -13,7 +13,6 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
     minimumAmount: '',
     maximumDiscount: '',
     usageLimit: '',
-    perCustomerLimit: '',
     startDate: '',
     endDate: '',
     status: true
@@ -33,7 +32,6 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
         minimumAmount: coupon.minimumAmount || '',
         maximumDiscount: coupon.maximumDiscount || '',
         usageLimit: coupon.usageLimit || '',
-        perCustomerLimit: coupon.perCustomerLimit || '',
         startDate: coupon.startDate ? new Date(coupon.startDate).toISOString().slice(0, 16) : '',
         endDate: coupon.endDate ? new Date(coupon.endDate).toISOString().slice(0, 16) : '',
         status: coupon.status !== undefined ? coupon.status : true
@@ -49,7 +47,6 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
         minimumAmount: '',
         maximumDiscount: '',
         usageLimit: '',
-        perCustomerLimit: '',
         startDate: '',
         endDate: '',
         status: true
@@ -134,10 +131,6 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
       newErrors.usageLimit = 'Số lần sử dụng không được âm';
     }
 
-    if (formData.perCustomerLimit && formData.perCustomerLimit < 1) {
-      newErrors.perCustomerLimit = 'Giới hạn mỗi khách hàng phải ít nhất là 1';
-    }
-
     if (!formData.startDate) {
       newErrors.startDate = 'Ngày bắt đầu là bắt buộc';
     }
@@ -196,7 +189,6 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
         minimumAmount: formData.minimumAmount ? parseFloat(formData.minimumAmount) : null,
         maximumDiscount: formData.maximumDiscount ? parseFloat(formData.maximumDiscount) : null,
         usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null,
-        perCustomerLimit: formData.perCustomerLimit ? parseInt(formData.perCustomerLimit) : null,
         startDate: new Date(formData.startDate).toISOString(),
         endDate: new Date(formData.endDate).toISOString(),
         status: formData.status,
@@ -406,26 +398,6 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
               {errors.usageLimit && <span className="error-message">{errors.usageLimit}</span>}
               <small className="form-hint">
                 Để trống nếu không giới hạn số lần sử dụng
-              </small>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="perCustomerLimit" className="form-label">
-                Giới hạn mỗi khách hàng
-              </label>
-              <input
-                type="number"
-                id="perCustomerLimit"
-                name="perCustomerLimit"
-                value={formData.perCustomerLimit}
-                onChange={handleInputChange}
-                className={`form-input ${errors.perCustomerLimit ? 'error' : ''}`}
-                placeholder="Ví dụ: 1"
-                min="1"
-              />
-              {errors.perCustomerLimit && <span className="error-message">{errors.perCustomerLimit}</span>}
-              <small className="form-hint">
-                Mỗi khách chỉ dùng tối đa N lần. Để trống = không giới hạn
               </small>
             </div>
 

@@ -734,6 +734,8 @@ export const orderAPI = {
 
   // Get KPI dashboard data
   getKpi: () => apiCall('/admin/orders/kpi'),
+  getMonthSummary: (month) => apiCall(`/admin/orders/kpi/month-summary${month ? `?month=${encodeURIComponent(month)}` : ''}`),
+  getMonthSummary: (month) => apiCall(`/admin/orders/kpi/month-summary${month ? `?month=${encodeURIComponent(month)}` : ''}`),
 
   // KPI time-series by day or custom date range
   getKpiTimeseries: ({ range = '30d', metric = 'net', startDate, endDate } = {}) => {
@@ -746,6 +748,11 @@ export const orderAPI = {
     }
     params.append('metric', metric);
     return apiCall(`/admin/orders/kpi/timeseries?${params.toString()}`);
+  },
+
+  getMonthSummary: (month) => {
+    const params = month ? `?month=${encodeURIComponent(month)}` : '';
+    return apiCall(`/admin/orders/kpi/month-summary${params}`);
   },
 
   // Revenue by category

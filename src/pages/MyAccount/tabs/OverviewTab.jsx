@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Package, DollarSign, Award, User, MapPin, Lock } from 'lucide-react';
-import { formatVND, formatDate, getTierFromSpend } from '../mockAccountData';
+import { formatVND, formatDate } from '../mockAccountData';
 import { getMyOrders } from '../../../api/accountApi';
 
 const CountUp = ({ target, duration = 600 }) => {
@@ -34,7 +34,6 @@ const OverviewTab = ({ onTabChange, customer, stats }) => {
     const [recentOrders, setRecentOrders] = useState([]);
 
     const totalSpend = stats?.totalSpend || 0;
-    const tier = getTierFromSpend(totalSpend);
     useEffect(() => {
         const fetchRecentOrders = async () => {
             try {
@@ -72,7 +71,6 @@ const OverviewTab = ({ onTabChange, customer, stats }) => {
                     <div className="acc-stat-icon acc-stat-icon-green"><DollarSign size={22} /></div>
                     <div className="acc-stat-num-big acc-stat-num-sm-text">{formatVND(totalSpend)}</div>
                     <div className="acc-stat-label-sm">tổng chi tiêu</div>
-                    <div className="acc-stat-sub acc-sub-green">Hạng {tier.label}</div>
                 </div>
                 <div className="acc-stat-card">
                     <div className="acc-stat-icon acc-stat-icon-purple"><Award size={22} /></div>

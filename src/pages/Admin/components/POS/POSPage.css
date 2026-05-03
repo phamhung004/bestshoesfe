@@ -7,10 +7,11 @@
 .pos-page-root {
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 80px);
-    height: auto;
-    margin: -24px;
-    overflow: visible;
+    height: calc(100vh - 80px);
+    min-height: 0;
+    margin: 0;
+    width: 100%;
+    overflow: hidden;
 }
 
 /* ── Hold Order Tab Bar ───────────────────────────────────── */
@@ -202,11 +203,13 @@
     display: flex;
     gap: 0;
     flex: 1;
-    overflow: visible;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .pos-left-panel {
-    width: 65%;
+    flex: 1 1 0;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--gray-200);
@@ -215,11 +218,14 @@
 }
 
 .pos-right-panel {
-    width: 35%;
+    flex: 0 0 380px;
+    width: 380px;
+    max-width: 380px;
+    min-width: 320px;
     display: flex;
     flex-direction: column;
     background: #fff;
-    overflow: visible;
+    overflow: hidden;
     height: auto;
 }
 
@@ -466,6 +472,7 @@
 /* ── Left Panel: Product grid ────────────────────────────── */
 .pos-product-grid-wrap {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 16px 20px;
 }

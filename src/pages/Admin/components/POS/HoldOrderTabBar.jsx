@@ -110,18 +110,18 @@ const HoldOrderTabBar = ({
                 <button
                     className="pos-tab pos-tab--new"
                     onClick={onNewOrder}
-                    disabled={isSavingHold || holdOrders.length >= 10}
-                    title={holdOrders.length >= 10 ? 'Tối đa 10 hóa đơn chờ' : 'Tạo đơn mới (F2)'}
+                    disabled={isSavingHold || holdOrders.length >= 6}
+                    title={holdOrders.length >= 6 ? 'Tối đa 6 hóa đơn chờ' : 'Tạo đơn mới (F2)'}
                 >
                     <Plus size={14} />
                     <span className="pos-tab-label">Đơn mới</span>
                 </button>
             </div>
 
-            {holdOrders.length >= 8 && (
+            {holdOrders.length >= 4 && (
                 <div className="pos-tab-bar-warning">
                     <AlertCircle size={12} />
-                    {holdOrders.length}/10 hóa đơn chờ
+                    {holdOrders.length}/6 hóa đơn chờ
                 </div>
             )}
         </div>

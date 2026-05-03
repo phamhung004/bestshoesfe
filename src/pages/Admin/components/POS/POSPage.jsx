@@ -48,6 +48,8 @@ const POSPage = () => {
     const [activeOrderId, setActiveOrderId] = useState(null); // null = new order
     const [duplicateVariantWarning, setDuplicateVariantWarning] = useState(null);
     const [showCheckoutConfirm, setShowCheckoutConfirm] = useState(false);
+    const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+    const [pendingDiscardOrderId, setPendingDiscardOrderId] = useState(null);
 
     // Ref for search input (keyboard shortcut F1)
     const searchInputRef = useRef(null);
@@ -470,12 +472,19 @@ const POSPage = () => {
         }
     }, [cartItems, buildHoldPayload, clearCart, refreshHoldOrders, showToast]);
 
-    const handleDiscardHoldOrder = useCallback(async (orderId) => {
+    const handleDiscardHoldOrder = useCallback((orderId) => {
         if (switchingRef.current) return;
-        if (!window.confirm('Xóa hóa đơn chờ này?')) return;
+        setPendingDiscardOrderId(orderId);
+        setShowDiscardConfirm(true);
+    }, []);
+
+    const confirmDiscardHoldOrder = useCallback(async () => {
+        const orderId = pendingDiscardOrderId;
+        if (!orderId) return;
+        setShowDiscardConfirm(false);
+        setPendingDiscardOrderId(null);
         try {
             await posAPI.deleteHoldOrder(orderId);
-            // If we were editing this hold order, switch to new order
             if (activeOrderIdRef.current === orderId) {
                 clearCart();
                 setPaymentMethod('cash');
@@ -486,7 +495,7 @@ const POSPage = () => {
         } catch (err) {
             showToast(err?.response?.data?.message || 'Xóa thất bại.', 'error');
         }
-    }, [refreshHoldOrders, clearCart, showToast]);
+    }, [pendingDiscardOrderId, refreshHoldOrders, clearCart, showToast]);
 
     // ── Variant picker handler from ProductBrowser ──────────────
     const handleProductClick = useCallback((product) => {
@@ -685,6 +694,21 @@ const POSPage = () => {
                     await handleCheckout();
                 }}
                 onCancel={() => setShowCheckoutConfirm(false)}
+            />
+
+            <ConfirmDialog
+                open={showDiscardConfirm}
+                title="Xác nhận xóa hóa đơn chờ"
+                message="Bạn có chắc chắn muốn xóa hóa đơn chờ này không? Thao tác này không thể hoàn tác."
+                confirmText="Xóa"
+                cancelText="Hủy"
+                variant="danger"
+                loading={isSavingHold}
+                onConfirm={confirmDiscardHoldOrder}
+                onCancel={() => {
+                    setShowDiscardConfirm(false);
+                    setPendingDiscardOrderId(null);
+                }}
             />
 
             <ConfirmDialog
