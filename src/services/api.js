@@ -28,7 +28,7 @@ const apiCall = async (endpoint, options = {}) => {
       let errorData = {};
       try {
         errorData = await response.json();
-      } catch (e) {
+      } catch {
         // If response body is not JSON, just use status
       }
 
@@ -734,8 +734,6 @@ export const orderAPI = {
 
   // Get KPI dashboard data
   getKpi: () => apiCall('/admin/orders/kpi'),
-  getMonthSummary: (month) => apiCall(`/admin/orders/kpi/month-summary${month ? `?month=${encodeURIComponent(month)}` : ''}`),
-  getMonthSummary: (month) => apiCall(`/admin/orders/kpi/month-summary${month ? `?month=${encodeURIComponent(month)}` : ''}`),
 
   // KPI time-series by day or custom date range
   getKpiTimeseries: ({ range = '30d', metric = 'net', startDate, endDate } = {}) => {
@@ -857,6 +855,11 @@ export const posAPI = {
     body: JSON.stringify(request),
   }),
 
+  checkoutHoldOrder: (orderId, request) => apiCall(`/admin/pos/hold/${orderId}/checkout`, {
+    method: 'POST',
+    body: JSON.stringify(request),
+  }),
+
   // Get recent POS (In-store) orders
   getRecentOrders: (limit = 10) =>
     apiCall(`/admin/pos/recent-orders?limit=${limit}`),
@@ -883,6 +886,11 @@ export const posAPI = {
   // Save current cart as a hold order (stock NOT deducted)
   saveHoldOrder: (data) => apiCall('/admin/pos/hold', {
     method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  updateHoldOrder: (orderId, data) => apiCall(`/admin/pos/hold/${orderId}`, {
+    method: 'PUT',
     body: JSON.stringify(data),
   }),
 

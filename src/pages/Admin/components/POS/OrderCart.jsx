@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Trash2, Save, ShoppingCart, Clock, CreditCard } from 'lucide-react';
 import CartItem from './CartItem';
 import CustomerLookup from './CustomerLookup';
@@ -19,25 +19,26 @@ const OrderCart = ({
     guestName, setGuestName, guestPhone, setGuestPhone,
     appliedCoupon, setAppliedCoupon, setDiscountAmount,
     paymentMethod, setPaymentMethod, cashReceived, setCashReceived,
-    onCheckout, onRequestCheckout, isCheckingOut, cartBounce,
+    onCheckout, onRequestCheckout, isCheckingOut,
     // Hold order props
     holdOrders = [], isSavingHold = false,
     onSaveHold,
     activeOrderId, activeHoldOrder,
 }) => {
-    const [waitMinutes, setWaitMinutes] = useState(0);
+    const [nowTick, setNowTick] = useState(() => Date.now());
+    const holdCreatedAt = activeHoldOrder?.createdAt;
 
     // Calculate waiting time for active hold order
     useEffect(() => {
-        if (!activeHoldOrder?.createdAt) { setWaitMinutes(0); return; }
-        const calc = () => {
-            const mins = Math.floor((Date.now() - new Date(activeHoldOrder.createdAt).getTime()) / 60000);
-            setWaitMinutes(mins);
-        };
-        calc();
-        const interval = setInterval(calc, 30000);
+        if (!holdCreatedAt) return;
+        const interval = setInterval(() => setNowTick(Date.now()), 30000);
         return () => clearInterval(interval);
-    }, [activeHoldOrder?.createdAt]);
+    }, [holdCreatedAt]);
+
+    const waitMinutes = useMemo(() => {
+        if (!holdCreatedAt) return 0;
+        return Math.floor((nowTick - new Date(holdCreatedAt).getTime()) / 60000);
+    }, [holdCreatedAt, nowTick]);
 
     const handleClear = () => {
         if (cartItems.length === 0) return;
@@ -66,7 +67,7 @@ const OrderCart = ({
                     <button
                         className="pos-icon-btn"
                         onClick={onSaveHold}
-                        disabled={cartItems.length === 0 || isSavingHold || (holdOrders.length >= 10 && !activeOrderId)}
+                        disabled={cartItems.length === 0 || isSavingHold || (holdOrders.length >= 6 && !activeOrderId)}
                         title="Lưu hóa đơn chờ (F3)"
                         aria-label="Lưu hóa đơn chờ"
                     >

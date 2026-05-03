@@ -21,7 +21,7 @@ const POSPage = () => {
     // ── Order & cart state ──────────────────────────────────────
     const [cartItems, setCartItems] = useState([]);
     const [pulseProductId, setPulseProductId] = useState(null);
-    const [cartBounce, setCartBounce] = useState(false);
+    const [, setCartBounce] = useState(false);
 
     // ── Customer state ──────────────────────────────────────────
     const [isWalkIn, setIsWalkIn] = useState(true);
@@ -225,6 +225,12 @@ const POSPage = () => {
         setCashReceived(0);
     }, []);
 
+    const refreshHoldOrders = useCallback(() => {
+        return posAPI.listHoldOrders()
+            .then(res => { setHoldOrders(res?.data ?? []); return res?.data ?? []; })
+            .catch(() => { return []; });
+    }, []);
+
     // ── Checkout ────────────────────────────────────────────────
     const handleCheckout = useCallback(async () => {
         if (cartItems.length === 0) return;
@@ -243,22 +249,24 @@ const POSPage = () => {
                 customerName,
                 customerPhone,
                 couponId: appliedCoupon?.couponId || null,
-                paymentMethod: paymentMethod.toUpperCase(), // CASH | CARD | BANK_TRANSFER | PENDING
+                paymentMethod: paymentMethod.toUpperCase(), // CASH | CARD | BANK_TRANSFER
                 cashReceived: cashReceived || 0,
+                clientCouponDiscountAmount: appliedCoupon ? discountAmount : null,
+                clientFinalAmount: appliedCoupon ? totalAmount : null,
                 items: cartItems.map(item => ({
                     variantId: item.variantId,
                     quantity: item.quantity,
                 })),
             };
 
-            const res = await posAPI.checkout(request);
+            const res = activeOrderId
+                ? await posAPI.checkoutHoldOrder(activeOrderId, request)
+                : await posAPI.checkout(request);
             const order = res.data; // POSCheckoutResponse from ApiResponse.data
 
-            // If checking out a hold order, delete it from backend
             if (activeOrderId) {
-                try { await posAPI.deleteHoldOrder(activeOrderId); } catch { /* ignore */ }
                 setActiveOrderId(null);
-                refreshHoldOrders();
+                await refreshHoldOrders();
             }
 
             setSuccessOrder(order);
@@ -288,15 +296,9 @@ const POSPage = () => {
         } finally {
             setIsCheckingOut(false);
         }
-    }, [cartItems, isWalkIn, guestName, guestPhone, selectedCustomer, appliedCoupon, cashReceived]);
+    }, [cartItems, isWalkIn, guestName, guestPhone, selectedCustomer, appliedCoupon, paymentMethod, cashReceived, discountAmount, totalAmount, activeOrderId, refreshHoldOrders, showToast]);
 
     // ── Hold order actions ──────────────────────────────────────
-    const refreshHoldOrders = useCallback(() => {
-        return posAPI.listHoldOrders()
-            .then(res => { setHoldOrders(res?.data ?? []); return res?.data ?? []; })
-            .catch(() => { return []; });
-    }, []);
-
     const handleNewOrder = useCallback(() => {
         setSuccessOrder(null);
         clearCart();
@@ -328,11 +330,11 @@ const POSPage = () => {
         }
         setIsSavingHold(true);
         try {
-            // If editing an existing hold, delete the old one first
             if (activeOrderId) {
-                try { await posAPI.deleteHoldOrder(activeOrderId); } catch { /* ignore */ }
+                await posAPI.updateHoldOrder(activeOrderId, buildHoldPayload());
+            } else {
+                await posAPI.saveHoldOrder(buildHoldPayload());
             }
-            await posAPI.saveHoldOrder(buildHoldPayload());
             clearCart();
             setPaymentMethod('cash');
             setActiveOrderId(null);
@@ -344,24 +346,6 @@ const POSPage = () => {
             setIsSavingHold(false);
         }
     }, [cartItems, holdOrders.length, activeOrderId, buildHoldPayload, clearCart, refreshHoldOrders, showToast]);
-
-    // Auto-save current cart, returning true if saved (or nothing to save)
-    const autoSaveCurrentCart = useCallback(async () => {
-        if (cartItems.length === 0) return true;
-        setIsSavingHold(true);
-        try {
-            if (activeOrderId) {
-                try { await posAPI.deleteHoldOrder(activeOrderId); } catch { /* ignore */ }
-            }
-            await posAPI.saveHoldOrder(buildHoldPayload());
-            return true;
-        } catch {
-            showToast('Không thể lưu đơn hiện tại', 'error');
-            return false;
-        } finally {
-            setIsSavingHold(false);
-        }
-    }, [cartItems, activeOrderId, buildHoldPayload, showToast]);
 
     // Restore a hold order's data into the cart
     const restoreHoldData = useCallback((holdOrder) => {
@@ -417,9 +401,10 @@ const POSPage = () => {
             // Auto-save current cart if it has items
             if (cartItems.length > 0) {
                 if (currentActiveId) {
-                    try { await posAPI.deleteHoldOrder(currentActiveId); } catch { /* ignore */ }
+                    await posAPI.updateHoldOrder(currentActiveId, buildHoldPayload());
+                } else {
+                    await posAPI.saveHoldOrder(buildHoldPayload());
                 }
-                await posAPI.saveHoldOrder(buildHoldPayload());
             }
 
             if (holdOrderOrNull === null) {
@@ -455,9 +440,10 @@ const POSPage = () => {
         try {
             if (cartItems.length > 0) {
                 if (currentActiveId) {
-                    try { await posAPI.deleteHoldOrder(currentActiveId); } catch { /* ignore */ }
+                    await posAPI.updateHoldOrder(currentActiveId, buildHoldPayload());
+                } else {
+                    await posAPI.saveHoldOrder(buildHoldPayload());
                 }
-                await posAPI.saveHoldOrder(buildHoldPayload());
             }
 
             clearCart();
@@ -612,7 +598,6 @@ const POSPage = () => {
                     onRequestCheckout={() => setShowCheckoutConfirm(true)}
                     onCheckout={handleCheckout}
                     isCheckingOut={isCheckingOut}
-                    cartBounce={cartBounce}
                     holdOrders={holdOrders}
                     isSavingHold={isSavingHold}
                     onSaveHold={handleSaveHoldOrder}
