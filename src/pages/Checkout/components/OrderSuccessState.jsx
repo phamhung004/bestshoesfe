@@ -493,11 +493,7 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                             </div>
 
                             <p className="co-success-msg">Cảm ơn bạn đã mua hàng tại BestShoes!</p>
-                            <p className="co-success-msg-sub">
-                                Chúng tôi đã gửi email xác nhận đến{' '}
-                                <span className="co-success-email">{orderData.email || 'email của bạn'}</span>.
-                                <br />Đơn hàng sẽ được xử lý trong vòng 2 giờ.
-                            </p>
+                            
 
                             {/* Order summary */}
                             <div className="co-success-summary">
@@ -598,27 +594,6 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                                 </div>
                             </div>
 
-                            {/* What's next */}
-                            <div className="co-success-steps">
-                                <div className="co-success-step">
-                                    <div className="co-success-step-icon">✉</div>
-                                    <p className="co-success-step-title">Xác nhận email</p>
-                                    <p className="co-success-step-desc">Kiểm tra hộp thư</p>
-                                    <div className="co-success-step-line" />
-                                </div>
-                                <div className="co-success-step">
-                                    <div className="co-success-step-icon">📦</div>
-                                    <p className="co-success-step-title">Đóng gói</p>
-                                    <p className="co-success-step-desc">Trong vòng 2–4 giờ</p>
-                                    <div className="co-success-step-line" />
-                                </div>
-                                <div className="co-success-step">
-                                    <div className="co-success-step-icon">🚚</div>
-                                    <p className="co-success-step-title">Giao hàng</p>
-                                    <p className="co-success-step-desc">3–5 ngày làm việc</p>
-                                </div>
-                            </div>
-
                             {/* Actions */}
                             <div className="co-success-actions">
                                 {isLoggedIn ? (
@@ -648,15 +623,6 @@ const OrderSuccessState = ({ orderData, items, total, isLoggedIn }) => {
                                 )}
                             </div>
 
-                            {/* Share */}
-                            <div className="co-success-share">
-                                <p className="co-success-share-text">Chia sẻ với bạn bè:</p>
-                                <div className="co-success-share-btns">
-                                    <button className="co-success-share-btn" title="Facebook">📘</button>
-                                    <button className="co-success-share-btn" title="Zalo">💬</button>
-                                    <button className="co-success-share-btn" title="Copy link">🔗</button>
-                                </div>
-                            </div>
                         </>
                     )}
 

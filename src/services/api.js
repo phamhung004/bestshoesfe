@@ -18,6 +18,7 @@ const apiCall = async (endpoint, options = {}) => {
   const { _skipContentType, ...restOptions } = options;
   const config = {
     headers,
+    cache: restOptions.method && String(restOptions.method).toUpperCase() !== 'GET' ? 'no-store' : 'no-store',
     ...restOptions,
   };
 

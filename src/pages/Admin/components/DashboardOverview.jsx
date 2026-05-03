@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  AreaChart, Area, BarChart, Bar, LineChart, Line,
+  AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
@@ -44,17 +44,19 @@ const buildDateString = (date) => {
   if (!date) return '';
   const d = new Date(date);
   if (Number.isNaN(d.getTime())) return '';
-  return d.toISOString().slice(0, 10);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 const getCurrentMonthRange = () => {
   const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const today = buildDateString(now);
   return {
-    startDate: buildDateString(start),
-    endDate: buildDateString(end),
-    label: `${start.toLocaleDateString('vi-VN', { month: '2-digit', year: 'numeric' })}`,
+    startDate: today,
+    endDate: today,
+    label: `${now.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`,
   };
 };
 
@@ -63,16 +65,6 @@ const formatDateLabel = (dateStr) => {
   const d = new Date(dateStr);
   if (Number.isNaN(d.getTime())) return dateStr;
   return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-};
-
-const normalizeOrderStatus = (status) => {
-  const s = String(status || '').toLowerCase();
-  if (s.includes('hủy') || s.includes('cancel')) return { key: 'cancelled', icon: '❌', label: 'Đã hủy' };
-  if (s.includes('hoàn') || s.includes('delivered') || s.includes('đã giao')) return { key: 'delivered', icon: '✅', label: 'Hoàn thành' };
-  if (s.includes('xử lý') || s.includes('confirm')) return { key: 'processing', icon: '⚙️', label: 'Đang xử lý' };
-  if (s.includes('chờ')) return { key: 'pending', icon: '⏳', label: 'Chờ xử lý' };
-  if (s.includes('giao') || s.includes('ship')) return { key: 'shipped', icon: '🚚', label: 'Đang giao' };
-  return { key: 'pending', icon: '⏳', label: status || 'Chờ xử lý' };
 };
 
 // Stat Card Component
@@ -104,12 +96,10 @@ const AlertCard = ({ type, icon, title, message, time }) => {
 
 // DashboardOverview Component
 const DashboardOverview = () => {
-  const todayStr = buildDateString(new Date());
   const currentMonthRange = getCurrentMonthRange();
   const [startDate, setStartDate] = useState(currentMonthRange.startDate);
   const [endDate, setEndDate] = useState(currentMonthRange.endDate);
   const [loading, setLoading] = useState(true);
-  const [dashboardError, setDashboardError] = useState('');
   const [appliedStartDate, setAppliedStartDate] = useState(currentMonthRange.startDate);
   const [appliedEndDate, setAppliedEndDate] = useState(currentMonthRange.endDate);
   const [revenueData, setRevenueData] = useState([]);
@@ -118,25 +108,43 @@ const DashboardOverview = () => {
   const [bestSellingProducts, setBestSellingProducts] = useState([]);
   const [lowStock, setLowStock] = useState({ threshold: 10, totalLowStockVariants: 0, items: [] });
   const [returnKpi, setReturnKpi] = useState(null);
-  const [monthSummary, setMonthSummary] = useState({ revenue: 0, deliveredOrders: 0, cancelledOrders: 0, soldQuantity: 0 });
+  const [monthlyKpi, setMonthlyKpi] = useState({ revenue: 0, deliveredOrders: 0, cancelledOrders: 0, soldQuantity: 0 });
+  const [rangeKpi, setRangeKpi] = useState({ revenue: 0, soldQuantity: 0 });
+  const [refreshTick, setRefreshTick] = useState(0);
+  const triggerRefresh = useCallback(() => setRefreshTick((v) => v + 1), []);
 
   useEffect(() => {
-    setStartDate(todayStr);
-    setEndDate(todayStr);
-    setAppliedStartDate(todayStr);
-    setAppliedEndDate(todayStr);
-  }, []);
+    setStartDate(currentMonthRange.startDate);
+    setEndDate(currentMonthRange.endDate);
+    setAppliedStartDate(currentMonthRange.startDate);
+    setAppliedEndDate(currentMonthRange.endDate);
+  }, [currentMonthRange.startDate, currentMonthRange.endDate]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        triggerRefresh();
+      }
+    };
+
+    window.addEventListener('focus', triggerRefresh);
+    document.addEventListener('visibilitychange', handleVisibility);
+    const intervalId = window.setInterval(triggerRefresh, 60000);
+
+    return () => {
+      window.removeEventListener('focus', triggerRefresh);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.clearInterval(intervalId);
+    };
+  }, [triggerRefresh]);
 
   // Fetch dashboard data
   useEffect(() => {
     let cancelled = false;
     const hasCustomRange = Boolean(appliedStartDate && appliedEndDate);
-    const defaultMonthRange = getCurrentMonthRange();
 
     const load = async () => {
       setLoading(true);
-      setDashboardError('');
-
       const results = await Promise.allSettled([
         returnAPI.getKpi(),
         orderAPI.getMonthSummary(currentMonthRange.startDate.slice(0, 7)),
@@ -180,24 +188,29 @@ const DashboardOverview = () => {
 
       if (monthSummaryRes.status === 'fulfilled') {
         const data = monthSummaryRes.value?.data ?? monthSummaryRes.value ?? {};
-        setMonthSummary({
+        setMonthlyKpi({
           revenue: Number(data.revenue || 0),
           deliveredOrders: Number(data.deliveredOrders || 0),
           cancelledOrders: Number(data.cancelledOrders || 0),
           soldQuantity: Number(data.soldQuantity || 0),
         });
       } else {
-        setMonthSummary({ revenue: 0, deliveredOrders: 0, cancelledOrders: 0, soldQuantity: 0 });
+        setMonthlyKpi({ revenue: 0, deliveredOrders: 0, cancelledOrders: 0, soldQuantity: 0 });
       }
+
+      let rangeRevenue = 0;
+      let rangeSoldQuantity = 0;
 
       if (timeseriesRes.status === 'fulfilled') {
         const ts = timeseriesRes.value?.data ?? timeseriesRes.value ?? {};
         const points = Array.isArray(ts.points) ? ts.points : [];
-        setRevenueData(points.map(p => ({
+        const mappedRevenueData = points.map(p => ({
           date: formatDateLabel(p.date),
           revenue: Number(p.revenue || 0),
           orders: Number(p.orderCount || 0),
-        })));
+        }));
+        rangeRevenue = mappedRevenueData.reduce((sum, item) => sum + Number(item.revenue || 0), 0);
+        setRevenueData(mappedRevenueData);
       } else {
         setRevenueData([]);
       }
@@ -234,12 +247,14 @@ const DashboardOverview = () => {
       if (bestSellingRes.status === 'fulfilled') {
         const data = bestSellingRes.value?.data ?? bestSellingRes.value ?? [];
         const items = Array.isArray(data) ? data : [];
-        setBestSellingProducts(items.map((it, idx) => ({
+        const mappedBestSelling = items.map((it, idx) => ({
           rank: idx + 1,
           name: it.productName || '—',
           quantitySold: Number(it.quantitySold || 0),
           revenue: Number(it.revenue || 0),
-        })));
+        }));
+        rangeSoldQuantity = mappedBestSelling.reduce((sum, item) => sum + Number(item.quantitySold || 0), 0);
+        setBestSellingProducts(mappedBestSelling);
       } else {
         setBestSellingProducts([]);
       }
@@ -250,29 +265,29 @@ const DashboardOverview = () => {
         setLowStock({ threshold: 10, totalLowStockVariants: 0, items: [] });
       }
 
-      const allRejected = results.every(r => r.status === 'rejected');
-      if (allRejected) {
-        setDashboardError('Không thể tải dữ liệu dashboard từ máy chủ.');
-      }
+      setRangeKpi({
+        revenue: rangeRevenue,
+        soldQuantity: rangeSoldQuantity,
+      });
 
       setLoading(false);
     };
 
     load();
     return () => { cancelled = true; };
-  }, [appliedStartDate, appliedEndDate]);
+  }, [appliedStartDate, appliedEndDate, refreshTick]);
 
   // Calculate summary stats
   const stats = useMemo(() => {
-    const totalRevenue = Number(monthSummary.revenue || 0);
-    const totalOrders = Number(monthSummary.deliveredOrders || 0);
+    const totalRevenue = Number(monthlyKpi.revenue || 0);
+    const totalOrders = Number(monthlyKpi.deliveredOrders || 0);
     const revenueChange = 0;
     const orderChange = 0;
 
     const pendingCount = 0;
-    const cancelledCount = Number(monthSummary.cancelledOrders || 0);
+    const cancelledCount = Number(monthlyKpi.cancelledOrders || 0);
     const returnRate = Number(returnKpi?.returnRate ?? 0);
-    const soldQuantity = Number(monthSummary.soldQuantity || 0);
+    const soldQuantity = Number(monthlyKpi.soldQuantity || 0);
 
     return {
       totalRevenue,
@@ -285,7 +300,7 @@ const DashboardOverview = () => {
       returnKpi,
       soldQuantity,
     };
-  }, [monthSummary, returnKpi]);
+  }, [monthlyKpi, returnKpi]);
 
   if (loading) {
     return (
@@ -314,44 +329,54 @@ const DashboardOverview = () => {
 
   return (
     <div className="dashboard-overview">
+      {/* KPI Cards */}
+      <div className="stats-grid animate-fade-in">
+        <StatCard title="Doanh thu tháng này" value={monthlyKpi.revenue || 0} icon="💰" type="revenue" formatter={formatCurrency} />
+        <StatCard title="Đơn đã giao tháng này" value={monthlyKpi.deliveredOrders || 0} icon="📦" type="orders" formatter={formatNumber} />
+        <StatCard title="Đơn đã hủy tháng này" value={monthlyKpi.cancelledOrders || 0} icon="❌" type="cancelled" formatter={formatNumber} />
+        <StatCard title="Số lượng đã bán tháng này" value={monthlyKpi.soldQuantity || 0} icon="🛍️" type="sold" formatter={formatNumber} />
+      </div>
+
       {/* Filters */}
       <div className="dashboard-header">
         <div className="header-left">
           <h1>Tổng quan</h1>
           <p>Tháng hiện tại: {currentMonthRange.label}</p>
         </div>
-        <div className="header-actions">
-          <div className="filter-controls date-range-controls">
-            <input
-              type="date"
-              className="filter-select date-input"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-            <input
-              type="date"
-              className="filter-select date-input"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-            <button className="chart-btn active" onClick={handleApplyRange}>
-              Áp dụng
-            </button>
-          </div>
-          <div className="quick-range-buttons">
-            <button className="chart-btn" onClick={() => handleQuickRange(7)}>7 ngày</button>
-            <button className="chart-btn" onClick={() => handleQuickRange(30)}>30 ngày</button>
-            <button className="chart-btn" onClick={() => handleQuickRange(90)}>90 ngày</button>
-          </div>
+      </div>
+
+      <div className="header-actions" style={{ marginBottom: 20 }}>
+        <button className="chart-btn" onClick={triggerRefresh}>
+          Làm mới dữ liệu
+        </button>
+        <div className="filter-controls date-range-controls">
+          <input
+            type="date"
+            className="filter-select date-input"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+          <input
+            type="date"
+            className="filter-select date-input"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+          <button className="chart-btn active" onClick={handleApplyRange}>
+            Áp dụng
+          </button>
+        </div>
+        <div className="quick-range-buttons">
+          <button className="chart-btn" onClick={() => handleQuickRange(7)}>7 ngày</button>
+          <button className="chart-btn" onClick={() => handleQuickRange(30)}>30 ngày</button>
+          <button className="chart-btn" onClick={() => handleQuickRange(90)}>90 ngày</button>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="stats-grid animate-fade-in">
-        <StatCard title="Doanh thu tháng này" value={monthSummary.revenue || 0} icon="💰" type="revenue" formatter={formatCurrency} />
-        <StatCard title="Đơn đã giao" value={monthSummary.deliveredOrders || 0} icon="📦" type="orders" formatter={formatNumber} />
-        <StatCard title="Đơn đã hủy" value={monthSummary.cancelledOrders || 0} icon="❌" type="cancelled" formatter={formatNumber} />
-        <StatCard title="Số lượng đã bán" value={monthSummary.soldQuantity || 0} icon="🛍️" type="sold" formatter={formatNumber} />
+      {/* Range KPI Cards */}
+      <div className="stats-grid animate-fade-in" style={{ marginTop: 16 }}>
+        <StatCard title="Doanh thu theo khoảng ngày" value={rangeKpi.revenue || 0} icon="📈" type="revenue" formatter={formatCurrency} />
+        <StatCard title="Số lượng đã bán theo khoảng ngày" value={rangeKpi.soldQuantity || 0} icon="🛒" type="sold" formatter={formatNumber} />
       </div>
 
       {/* Charts */}
@@ -512,7 +537,6 @@ const DashboardOverview = () => {
                 <th>#</th>
                 <th>Sản phẩm</th>
                 <th>Số lượng bán</th>
-                <th>Doanh thu</th>
               </tr>
             </thead>
             <tbody>
@@ -521,7 +545,6 @@ const DashboardOverview = () => {
                   <td><span className="order-id">{item.rank}</span></td>
                   <td>{item.name}</td>
                   <td>{formatNumber(item.quantitySold)}</td>
-                  <td><span className="order-total">{formatCurrency(item.revenue)}</span></td>
                 </tr>
               ))}
             </tbody>

@@ -22,7 +22,6 @@ const AccountSidebar = ({ activeTab, onTabChange, customer, stats }) => {
     const totalSpend = stats?.totalSpend || 0;
     const tier = getTierFromSpend(totalSpend);
     const tierEmoji = getTierEmoji(tier.id);
-    const tierLabel = `${tierEmoji} Thành viên ${tier.label}`;
     const displayName = customer?.fullName || 'Khách hàng';
     const initial = displayName.charAt(0).toUpperCase();
     const email = customer?.email || '';
@@ -52,7 +51,9 @@ const AccountSidebar = ({ activeTab, onTabChange, customer, stats }) => {
                     </div>
                     <div className="acc-profile-name">{displayName}</div>
                     <div className="acc-profile-email">{email}</div>
-                    <div className="acc-tier-badge">{tierLabel}</div>
+                    {tier.id !== 'silver' && (
+                        <div className="acc-tier-badge">{`${tierEmoji} Thành viên ${tier.label}`}</div>
+                    )}
                     <div className="acc-member-since">{formatMemberSince(createdAt)}</div>
 
                     <div className="acc-stats-row">
