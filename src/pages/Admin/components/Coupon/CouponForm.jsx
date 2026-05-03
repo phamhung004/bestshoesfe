@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, Copy, Ticket } from 'lucide-react';
+import { X, Check, Ticket } from 'lucide-react';
 import { couponAPI } from '../../../../services/api';
+import { buildCouponPayload, normalizeCouponCode, validateCouponForm } from './couponFormUtils';
 
 const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
     const [formData, setFormData] = useState({
@@ -12,7 +13,6 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
         minimumAmount: '',
         maximumDiscount: '',
         usageLimit: '',
-        perCustomerLimit: '1',
         startDate: '',
         endDate: '',
         status: true,
@@ -31,7 +31,6 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
                 minimumAmount: coupon.minimumAmount || '',
                 maximumDiscount: coupon.maximumDiscount || '',
                 usageLimit: coupon.usageLimit || '',
-                perCustomerLimit: coupon.perCustomerLimit != null ? String(coupon.perCustomerLimit) : '1',
                 startDate: coupon.startDate ? coupon.startDate.slice(0, 16) : '',
                 endDate: coupon.endDate ? coupon.endDate.slice(0, 16) : '',
                 status: coupon.status !== undefined ? coupon.status : true,
@@ -41,7 +40,6 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
                 code: '', name: '', description: '', type: 'Percentage',
                 value: '', minimumAmount: '', maximumDiscount: '',
                 usageLimit: '', startDate: '', endDate: '', status: true,
-                perCustomerLimit: '1',
             });
         }
         setErrors({});
@@ -49,7 +47,11 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-        const newValue = type === 'checkbox' ? checked : value;
+        const newValue = type === 'checkbox'
+            ? checked
+            : name === 'code'
+                ? normalizeCouponCode(value)
+                : value;
         setFormData((prev) => ({ ...prev, [name]: newValue }));
         if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
 
@@ -64,59 +66,7 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
     };
 
     const validateForm = () => {
-        const newErrors = {};
-
-        if (!formData.code.trim()) {
-            newErrors.code = 'Mã giảm giá là bắt buộc';
-        } else if (!/^[A-Z0-9]+$/.test(formData.code)) {
-            newErrors.code = 'Mã giảm giá chỉ được chứa chữ cái in hoa và số';
-        } else if (formData.code.length < 3 || formData.code.length > 50) {
-            newErrors.code = 'Mã giảm giá phải có độ dài từ 3 đến 50 ký tự';
-        }
-
-        if (!formData.name.trim()) {
-            newErrors.name = 'Tên mã giảm giá là bắt buộc';
-        } else if (formData.name.length > 255) {
-            newErrors.name = 'Tên mã giảm giá không được vượt quá 255 ký tự';
-        }
-
-        if (formData.description && formData.description.length > 1000) {
-            newErrors.description = 'Mô tả không được vượt quá 1000 ký tự';
-        }
-
-        if (!formData.value || formData.value <= 0) {
-            newErrors.value = 'Giá trị giảm giá phải lớn hơn 0';
-        } else if (formData.type === 'Percentage' && formData.value > 100) {
-            newErrors.value = 'Phần trăm giảm giá không được vượt quá 100%';
-        } else if (formData.type === 'Fixed Amount' && formData.value > 10000000) {
-            newErrors.value = 'Số tiền giảm giá tối đa là 10,000,000 VND';
-        }
-
-        if (formData.minimumAmount && formData.minimumAmount < 0) {
-            newErrors.minimumAmount = 'Đơn hàng tối thiểu không được âm';
-        }
-
-        if (formData.maximumDiscount && formData.maximumDiscount < 0) {
-            newErrors.maximumDiscount = 'Giảm giá tối đa không được âm';
-        }
-
-        if (formData.usageLimit && formData.usageLimit < 0) {
-            newErrors.usageLimit = 'Số lần sử dụng không được âm';
-        }
-
-        if (formData.perCustomerLimit && formData.perCustomerLimit < 1) {
-            newErrors.perCustomerLimit = 'Giới hạn mỗi khách phải từ 1 trở lên';
-        }
-
-        if (!formData.startDate) newErrors.startDate = 'Ngày bắt đầu là bắt buộc';
-        if (!formData.endDate) newErrors.endDate = 'Ngày kết thúc là bắt buộc';
-
-        if (formData.startDate && formData.endDate) {
-            const start = new Date(formData.startDate);
-            const end = new Date(formData.endDate);
-            if (start >= end) newErrors.endDate = 'Ngày kết thúc phải sau ngày bắt đầu';
-        }
-
+        const newErrors = validateCouponForm(formData);
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -129,21 +79,7 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
             const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || '{}');
             const createdBy = user.userId || user.id || 1;
 
-            const couponData = {
-                code: formData.code.trim().toUpperCase(),
-                name: formData.name.trim(),
-                description: formData.description.trim(),
-                type: formData.type,
-                value: parseFloat(formData.value),
-                minimumAmount: formData.minimumAmount ? parseFloat(formData.minimumAmount) : null,
-                maximumDiscount: formData.maximumDiscount ? parseFloat(formData.maximumDiscount) : null,
-                usageLimit: formData.usageLimit ? parseInt(formData.usageLimit) : null,
-                perCustomerLimit: formData.perCustomerLimit ? parseInt(formData.perCustomerLimit) : null,
-                startDate: formData.startDate,
-                endDate: formData.endDate,
-                status: formData.status,
-                createdBy: createdBy,
-            };
+            const couponData = buildCouponPayload(formData, createdBy);
 
             let result;
             if (isEditing && coupon) {
@@ -369,25 +305,6 @@ const CouponForm = ({ coupon, onSave, onCancel, isEditing = false }) => {
                                 />
                                 {errors.usageLimit && <span className="cm-form-error">{errors.usageLimit}</span>}
                                 <span className="cm-form-hint">Để trống nếu không giới hạn số lần sử dụng</span>
-                            </div>
-
-                            {/* per customer limit */}
-                            <div className="cm-form-group">
-                                <label className="cm-form-label" htmlFor="cm-per-cust">
-                                    Giới hạn mỗi khách hàng
-                                </label>
-                                <input
-                                    id="cm-per-cust"
-                                    className={`cm-form-input ${errors.perCustomerLimit ? 'error' : ''}`}
-                                    type="number"
-                                    name="perCustomerLimit"
-                                    value={formData.perCustomerLimit}
-                                    onChange={handleInputChange}
-                                    placeholder="1"
-                                    min="1"
-                                />
-                                {errors.perCustomerLimit && <span className="cm-form-error">{errors.perCustomerLimit}</span>}
-                                <span className="cm-form-hint">Mỗi khách chỉ dùng tối đa N lần. Để trống = không giới hạn</span>
                             </div>
 
                             {/* start date */}
