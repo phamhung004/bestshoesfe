@@ -4,7 +4,7 @@ import { formatVND, formatDate } from '../mockAccountData';
 import { RETURN_STATUS_CONFIG } from '../../../constants/returnConstants';
 import { getMyReturns, cancelReturnRequest } from '../../../api/returnApi';
 
-const ALL_STATUSES = ['Tất cả', 'Chờ duyệt', 'Đã duyệt', 'Đã nhận hàng', 'Hoàn tiền', 'Từ chối'];
+const ALL_STATUSES = ['Tất cả', 'Chờ duyệt', 'Đã duyệt', 'Đã nhận hàng', 'Đã kiểm định', 'Hoàn tiền', 'Từ chối'];
 
 const StatusBadge = ({ status }) => {
     const cfg = RETURN_STATUS_CONFIG[status] || { cls: '', label: status };

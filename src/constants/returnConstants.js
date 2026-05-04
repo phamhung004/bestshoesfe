@@ -28,6 +28,7 @@ export const RETURN_STATUS_CONFIG = {
     'Chờ duyệt':   { cls: 'acc-badge-yellow',  label: 'Chờ duyệt'   },
     'Đã duyệt':    { cls: 'acc-badge-blue',     label: 'Đã duyệt'    },
     'Đã nhận hàng':{ cls: 'acc-badge-purple',   label: 'Đã nhận hàng'},
+    'Đã kiểm định':{ cls: 'acc-badge-blue',     label: 'Đã kiểm định'},
     'Hoàn tiền':   { cls: 'acc-badge-green',    label: 'Hoàn tiền'   },
     'Từ chối':     { cls: 'acc-badge-red',      label: 'Từ chối'     },
 };
