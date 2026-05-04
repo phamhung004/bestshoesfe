@@ -94,9 +94,6 @@ const CouponSection = ({
         // remaining is "after applying this coupon" — the current remaining uses on this order
         // After successful apply, remaining = perCustomerLimit - usedCount (before this order)
         // So remaining === 1 means "this is the last time"
-        const remainingLabel = hasLimit && remaining != null
-            ? (remaining <= 1 ? 'Đây là lần cuối cùng' : `Còn ${remaining} lượt`)
-            : null;
         const isLastUse = hasLimit && remaining != null && remaining <= 1;
 
         return (
@@ -123,29 +120,7 @@ const CouponSection = ({
                             {coupon.endDate && (
                                 <span className="co-coupon-ticket-expiry">HSD: {formatDate(coupon.endDate)}</span>
                             )}
-                            {remainingLabel && (
-                                <span
-                                    className="co-coupon-ticket-remaining"
-                                    style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '3px',
-                                        fontSize: '11px',
-                                        fontWeight: 600,
-                                        padding: '2px 7px',
-                                        borderRadius: '999px',
-                                        background: isLastUse ? '#fff7ed' : '#f0fdf4',
-                                        color: isLastUse ? '#c2410c' : '#15803d',
-                                        border: `1px solid ${isLastUse ? '#fed7aa' : '#bbf7d0'}`,
-                                    }}
-                                >
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                        <circle cx="12" cy="7" r="4"/>
-                                    </svg>
-                                    {remainingLabel}
-                                </span>
-                            )}
+                            
                         </div>
                         {countdown && (
                             <div className="co-coupon-countdown">

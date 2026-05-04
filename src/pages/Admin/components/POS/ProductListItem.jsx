@@ -12,6 +12,8 @@ const ProductListItem = ({ product, onCardClick, onQuickAdd, pulseId }) => {
     const activeVariants = product.variants.filter(v => v.status === 'ACTIVE');
     const brandName = getBrandName(product.brandId);
     const priceRange = getPriceRange(activeVariants);
+    const promoVariant = activeVariants.find(v => v.discountPercentage != null && v.discountPercentage > 0);
+    const promoLabel = promoVariant ? `-${Math.round(Number(promoVariant.discountPercentage))}%` : null;
     const hasPromo = hasPromotion(activeVariants);
     const totalStock = activeVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
     const lowStock = totalStock > 0 && totalStock < 5;
@@ -50,7 +52,10 @@ const ProductListItem = ({ product, onCardClick, onQuickAdd, pulseId }) => {
                     Mã SP: {product.code || product.productCode || '—'}
                 </span>
             </div>
-            <div className={`pos-list-item-price${hasPromo ? ' has-promo' : ''}`}>{priceRange}</div>
+            <div className={`pos-list-item-price${hasPromo ? ' has-promo' : ''}`}>
+                {hasPromo && <span className="pos-card-promo-badge inline">{promoLabel || 'KM'}</span>}
+                {priceRange}
+            </div>
             <div className="pos-list-item-stock">
                 {totalStock === 0 ? (
                     <span className="stock-empty">Hết</span>

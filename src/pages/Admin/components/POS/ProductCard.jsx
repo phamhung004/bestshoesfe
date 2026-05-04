@@ -13,6 +13,8 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
     const activeVariants = product.variants.filter(v => v.status === 'ACTIVE');
     const brandName = getBrandName(product.brandId);
     const priceRange = getPriceRange(activeVariants);
+    const promoVariant = activeVariants.find(v => v.discountPercentage != null && v.discountPercentage > 0);
+    const promoLabel = promoVariant ? `-${Math.round(Number(promoVariant.discountPercentage))}%` : null;
     const hasPromo = hasPromotion(activeVariants);
     const totalStock = activeVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
     const lowStock = totalStock > 0 && totalStock < 5;
@@ -43,7 +45,7 @@ const ProductCard = ({ product, onCardClick, onQuickAdd, pulseId }) => {
             aria-label={`Xem chi tiết ${product.name}`}
             onKeyDown={(e) => e.key === 'Enter' && onCardClick(product)}
         >
-            {hasPromo && <span className="pos-card-promo-badge">KM</span>}
+            {hasPromo && <span className="pos-card-promo-badge">{promoLabel || 'KM'}</span>}
             {lowStock && (
                 <span className="pos-card-stock-badge low">
                     <AlertTriangle size={10} /> Còn {totalStock}
