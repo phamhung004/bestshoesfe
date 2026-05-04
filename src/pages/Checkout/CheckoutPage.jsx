@@ -312,8 +312,9 @@ const CheckoutPage = () => {
     // ── Calculations ────────────────────────────────────
     const subtotal = checkoutItems.reduce((sum, item) => sum + getEffectivePrice(item) * item.quantity, 0);
     const shippingCost = state.deliveryMethod === 'In-store' ? 0 : (state.shippingFee?.total || 0);
-    const discountAmount = state.couponState?.discountAmount || 0;
-    const total = subtotal + shippingCost - discountAmount;
+    const rawDiscountAmount = Number(state.couponState?.discountAmount || 0);
+    const discountAmount = Math.min(Math.max(rawDiscountAmount, 0), subtotal);
+    const total = Math.max(subtotal - discountAmount, 0) + shippingCost;
 
     // ── Handlers ────────────────────────────────────────
     const handleFormChange = useCallback((field, value) => {

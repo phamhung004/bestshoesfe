@@ -71,7 +71,8 @@ const POSPage = () => {
         () => cartItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0),
         [cartItems]
     );
-    const totalAmount = Math.max(0, subtotal - discountAmount);
+    const effectiveDiscountAmount = Math.min(Math.max(Number(discountAmount || 0), 0), subtotal);
+    const totalAmount = Math.max(0, subtotal - effectiveDiscountAmount);
 
     // ── Re-validate coupon when subtotal changes ────────────────
     const prevSubtotalRef = useRef(subtotal);
@@ -101,7 +102,7 @@ const POSPage = () => {
                 const data = res.data;
                 if (data.valid) {
                     setAppliedCoupon(data);
-                    setDiscountAmount(data.discountAmount || 0);
+                    setDiscountAmount(Math.min(Math.max(Number(data.discountAmount || 0), 0), subtotal));
                 } else {
                     setAppliedCoupon(null);
                     setDiscountAmount(0);
@@ -251,7 +252,7 @@ const POSPage = () => {
                 couponId: appliedCoupon?.couponId || null,
                 paymentMethod: paymentMethod.toUpperCase(), // CASH | CARD | BANK_TRANSFER
                 cashReceived: cashReceived || 0,
-                clientCouponDiscountAmount: appliedCoupon ? discountAmount : null,
+                clientCouponDiscountAmount: appliedCoupon ? effectiveDiscountAmount : null,
                 clientFinalAmount: appliedCoupon ? totalAmount : null,
                 items: cartItems.map(item => ({
                     variantId: item.variantId,
@@ -296,7 +297,7 @@ const POSPage = () => {
         } finally {
             setIsCheckingOut(false);
         }
-    }, [cartItems, isWalkIn, guestName, guestPhone, selectedCustomer, appliedCoupon, paymentMethod, cashReceived, discountAmount, totalAmount, activeOrderId, refreshHoldOrders, showToast]);
+    }, [cartItems, isWalkIn, guestName, guestPhone, selectedCustomer, appliedCoupon, paymentMethod, cashReceived, effectiveDiscountAmount, totalAmount, activeOrderId, refreshHoldOrders, showToast]);
 
     // ── Hold order actions ──────────────────────────────────────
     const handleNewOrder = useCallback(() => {
@@ -575,7 +576,7 @@ const POSPage = () => {
                 <OrderCart
                     cartItems={cartItems}
                     subtotal={subtotal}
-                    discountAmount={discountAmount}
+                    discountAmount={effectiveDiscountAmount}
                     totalAmount={totalAmount}
                     onUpdateQty={updateCartQty}
                     onRemoveItem={removeCartItem}
