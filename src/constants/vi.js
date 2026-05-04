@@ -26,7 +26,7 @@ export const ORDER_STATUS_LABEL = {
   'Đang giao':     'Đang giao',
   'Đã giao':       'Đã giao',
   'Đã hủy':        'Đã hủy',
-  'Chờ POS':       'Chờ POS',
+  'Chờ POS':       'Hóa đơn chờ',
 };
 
 // ─────────────────────────────────────────────────────────────────

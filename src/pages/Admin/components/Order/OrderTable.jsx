@@ -267,7 +267,7 @@ const OrderTable = ({
                                             style={{ background: statusCfg.bg, color: statusCfg.color }}
                                         >
                                             <span className="om-badge-dot" style={{ background: statusCfg.color }} />
-                                            {order.status}
+                                            {statusCfg.label || order.status}
                                         </span>
                                     </td>
 

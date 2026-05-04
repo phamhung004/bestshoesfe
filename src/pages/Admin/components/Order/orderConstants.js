@@ -7,6 +7,7 @@ export const STATUS_CONFIG = {
     'Đã giao':            { color: '#22C55E', bg: '#DCFCE7', label: 'Đã giao' },
     'Trả hàng/Hoàn tiền': { color: '#F97316', bg: '#FFF7ED', label: 'Trả hàng/Hoàn tiền' },
     'Đã hủy':             { color: '#EF4444', bg: '#FEE2E2', label: 'Đã hủy' },
+    'Chờ POS':            { color: '#0D9488', bg: '#CCFBF1', label: 'Hóa đơn chờ' },
 };
 
 export const PAYMENT_CONFIG = {
@@ -34,6 +35,7 @@ export const ALL_STATUSES = [
     'Đã giao',
     'Trả hàng/Hoàn tiền',
     'Đã hủy',
+    'Chờ POS',
 ];
 
 /**
