@@ -124,6 +124,9 @@ const OrderCart = ({
                     appliedCoupon={appliedCoupon}
                     setAppliedCoupon={setAppliedCoupon}
                     setDiscountAmount={setDiscountAmount}
+                    isWalkIn={isWalkIn}
+                    selectedCustomer={selectedCustomer}
+                    guestPhone={guestPhone}
                 />
 
                 {/* Summary */}

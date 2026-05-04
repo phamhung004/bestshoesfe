@@ -3,45 +3,25 @@ import { formatVND } from '../../../../utils/formatPrice';
 import {
     formatDate, relativeTime, getInitials,
 } from './orderHelpers';
-import { STATUS_CONFIG, PAYMENT_CONFIG, isTerminalStatus } from './orderConstants';
+import { STATUS_CONFIG, PAYMENT_CONFIG } from './orderConstants';
 
 /**
- * OrderTable: data table with sorting, bulk select, action buttons
- * Props:
- *  - orders: filtered/paginated array
- *  - selectedIds: Set of selected order_ids
- *  - onToggleSelect: (id) => void
- *  - onToggleSelectAll: () => void
- *  - onRowClick: (order) => void
- *  - sortConfig: { key, dir }
- *  - onSort: (key) => void
- *  - onCopyOrderNum: (orderNumber) => void
- *  - onPrintOrder: (order) => void
- *  - onCancelOrder: (order) => void
- *  - allSelected: boolean
- *  - loading: boolean
+ * OrderTable: data table with sorting and row-level actions.
  */
 const OrderTable = ({
     orders,
-    selectedIds,
-    onToggleSelect,
-    onToggleSelectAll,
     onRowClick,
     sortConfig,
     onSort,
     onCopyOrderNum,
     onPrintOrder,
     onCancelOrder,
-    allSelected,
     loading,
     isManager,
 }) => {
-    // Track which row's "more" dropdown is open
     const [openMore, setOpenMore] = useState(null);
 
-    // Column definitions for sortable headers
     const columns = [
-        { key: 'checkbox', label: '', sortable: false, width: 40 },
         { key: 'order_number', label: 'Mã đơn', sortable: true },
         { key: 'customer_name', label: 'Khách hàng', sortable: true },
         { key: 'items', label: 'Sản phẩm', sortable: false },
@@ -53,7 +33,6 @@ const OrderTable = ({
         { key: 'actions', label: 'Thao tác', sortable: false },
     ];
 
-    // Sort arrow indicator
     const renderSortArrow = (colKey) => {
         if (!sortConfig || sortConfig.key !== colKey) {
             return <span className="sort-arrow">↕</span>;
@@ -65,14 +44,12 @@ const OrderTable = ({
         );
     };
 
-    // Skeleton loading rows
     if (loading) {
         return (
             <div className="om-table-wrap">
                 <div className="om-skeleton" style={{ padding: 20 }}>
                     {[...Array(5)].map((_, i) => (
                         <div key={i} className="om-skeleton-row">
-                            <div className="om-skeleton-block" style={{ width: 30, height: 16 }} />
                             <div className="om-skeleton-block" style={{ width: 120, height: 16 }} />
                             <div className="om-skeleton-block" style={{ width: 150, height: 16 }} />
                             <div className="om-skeleton-block" style={{ width: 180, height: 16 }} />
@@ -89,7 +66,6 @@ const OrderTable = ({
         );
     }
 
-    // Empty state
     if (!orders || orders.length === 0) {
         return (
             <div className="om-table-wrap">
@@ -119,27 +95,14 @@ const OrderTable = ({
                                             : undefined
                                     }
                                 >
-                                    {col.key === 'checkbox' ? (
-                                        <input
-                                            type="checkbox"
-                                            className="om-checkbox"
-                                            checked={allSelected}
-                                            onChange={onToggleSelectAll}
-                                            aria-label="Chọn tất cả"
-                                        />
-                                    ) : (
-                                        <>
-                                            {col.label}
-                                            {col.sortable && renderSortArrow(col.key)}
-                                        </>
-                                    )}
+                                    {col.label}
+                                    {col.sortable && renderSortArrow(col.key)}
                                 </th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {orders.map((order) => {
-                            const isSelected = selectedIds.has(order.order_id);
                             const statusCfg = STATUS_CONFIG[order.status] || {};
                             const paymentCfg = PAYMENT_CONFIG[order.payment_status] || {};
                             const firstItem = order.items?.[0];
@@ -148,27 +111,13 @@ const OrderTable = ({
                             return (
                                 <tr
                                     key={order.order_id}
-                                    className={isSelected ? 'selected' : ''}
                                     onClick={(e) => {
-                                        // Don't open slide-over if clicking checkbox or action buttons
-                                        if (e.target.closest('.om-actions') || e.target.closest('.om-checkbox')) return;
+                                        if (e.target.closest('.om-actions')) return;
                                         onRowClick(order);
                                     }}
                                     tabIndex={0}
                                     onKeyDown={(e) => e.key === 'Enter' && onRowClick(order)}
                                 >
-                                    {/* Checkbox */}
-                                    <td onClick={(e) => e.stopPropagation()}>
-                                        <input
-                                            type="checkbox"
-                                            className="om-checkbox"
-                                            checked={isSelected}
-                                            onChange={() => onToggleSelect(order.order_id)}
-                                            aria-label={`Chọn đơn ${order.order_number}`}
-                                        />
-                                    </td>
-
-                                    {/* Order number */}
                                     <td>
                                         <span
                                             className="om-order-num"
@@ -182,7 +131,6 @@ const OrderTable = ({
                                         </span>
                                     </td>
 
-                                    {/* Customer */}
                                     <td>
                                         <div className="om-customer-cell">
                                             <div className="om-avatar">{getInitials(order.customer_name)}</div>
@@ -193,7 +141,6 @@ const OrderTable = ({
                                         </div>
                                     </td>
 
-                                    {/* Product */}
                                     <td>
                                         {firstItem ? (
                                             <div className="om-product-cell">
@@ -218,12 +165,10 @@ const OrderTable = ({
                                         ) : null}
                                     </td>
 
-                                    {/* Total amount */}
                                     <td>
                                         <span className="om-amount">{formatVND(order.total_amount)}</span>
                                     </td>
 
-                                    {/* Payment status */}
                                     <td>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                                             <span
@@ -260,7 +205,6 @@ const OrderTable = ({
                                         </div>
                                     </td>
 
-                                    {/* Order status */}
                                     <td>
                                         <span
                                             className="om-badge"
@@ -271,14 +215,12 @@ const OrderTable = ({
                                         </span>
                                     </td>
 
-                                    {/* Order type */}
                                     <td>
                                         <span className={`om-type-chip ${order.order_type === 'Online' ? 'online' : 'instore'}`}>
                                             {order.order_type === 'Online' ? 'Trực tuyến' : 'Tại quầy'}
                                         </span>
                                     </td>
 
-                                    {/* Date */}
                                     <td>
                                         <div className="om-date-cell" title={relativeTime(order.created_at)}>
                                             {formatDate(order.created_at)}
@@ -286,7 +228,6 @@ const OrderTable = ({
                                         </div>
                                     </td>
 
-                                    {/* Actions */}
                                     <td onClick={(e) => e.stopPropagation()}>
                                         <div className="om-actions">
                                             <button
@@ -314,7 +255,6 @@ const OrderTable = ({
                                                 🖨️
                                             </button>
 
-                                            {/* More dropdown */}
                                             <div className="om-more-dropdown-wrap">
                                                 <button
                                                     className="om-action-btn"

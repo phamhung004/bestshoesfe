@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { formatVND } from '../../../../utils/formatPrice';
 import { normalizeOrder } from './orderMappers';
 import { STATUS_CONFIG } from './orderConstants';
 import { orderAPI } from '../../../../services/api';
@@ -43,20 +42,12 @@ const OrderManagement = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    // Selection state
-    const [selectedIds, setSelectedIds] = useState(new Set());
-
-    // Slide-over state
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [selectedOrderDetail, setSelectedOrderDetail] = useState(null);
 
     // Toast state
     const [toast, setToast] = useState(null);
 
-    // Confirm dialog state
-    const [confirmDialog, setConfirmDialog] = useState(null);
-
-    // Status counts (computed from a separate full query or tracked)
     const [statusCounts, setStatusCounts] = useState({ 'Tất cả': 0 });
 
     // Ref to prevent race conditions
@@ -177,27 +168,6 @@ const OrderManagement = () => {
             key,
             dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc',
         }));
-    }, []);
-
-    const handleToggleSelect = useCallback((id) => {
-        setSelectedIds((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            return next;
-        });
-    }, []);
-
-    const handleToggleSelectAll = useCallback(() => {
-        if (selectedIds.size === orders.length) {
-            setSelectedIds(new Set());
-        } else {
-            setSelectedIds(new Set(orders.map((o) => o.order_id)));
-        }
-    }, [orders, selectedIds]);
-
-    const handleDeselectAll = useCallback(() => {
-        setSelectedIds(new Set());
     }, []);
 
     const showToast = useCallback((message) => {
@@ -355,51 +325,6 @@ const OrderManagement = () => {
             throw err;
         }
     }, [showToast, fetchOrders, selectedOrderDetail, selectedOrder]);
-    // ── Bulk confirm (API) ────────────────────────────────────────
-    const handleBulkConfirm = useCallback(async () => {
-        try {
-            await orderAPI.bulkConfirm({ orderIds: [...selectedIds] });
-            showToast(`Đã xác nhận ${selectedIds.size} đơn hàng`);
-            setSelectedIds(new Set());
-            fetchOrders();
-            fetchStatusCounts();
-        } catch (err) {
-            const data = err?.response?.data;
-            if (err?.response?.status === 422 && data?.errorCode === 'BULK_ORDER_ITEM_INACTIVE') {
-                setInactiveOrderIssue({
-                    mode: 'bulk',
-                    orders: data.orders || [],
-                });
-                return;
-            }
-            const backendMsg = err?.response?.data?.message;
-            showToast('❌ Lỗi: ' + (backendMsg || 'Không thể xác nhận hàng loạt'));
-        }
-    }, [selectedIds, showToast, fetchOrders, fetchStatusCounts]);
-
-    // ── Bulk cancel (API) ─────────────────────────────────────────
-    const handleBulkCancel = useCallback(() => {
-        setConfirmDialog({
-            title: 'Hủy nhiều đơn hàng?',
-            message: `Bạn có chắc chắn muốn hủy ${selectedIds.size} đơn hàng đã chọn?`,
-            onConfirm: async () => {
-                try {
-                    await orderAPI.bulkCancel({ orderIds: [...selectedIds] });
-                    showToast(`Đã hủy ${selectedIds.size} đơn hàng`);
-                    setSelectedIds(new Set());
-                    setConfirmDialog(null);
-                    fetchOrders();
-                    fetchStatusCounts();
-                } catch (err) {
-                    const backendMsg = err?.response?.data?.message;
-                    showToast('❌ Lỗi: ' + (backendMsg || 'Không thể hủy hàng loạt'));
-                    setConfirmDialog(null);
-                }
-            },
-            onCancel: () => setConfirmDialog(null),
-        });
-    }, [selectedIds, showToast, fetchOrders, fetchStatusCounts]);
-
     // ── Export CSV (API) ──────────────────────────────────────────
     const handleExportCsv = useCallback(async () => {
         try {
@@ -427,7 +352,7 @@ const OrderManagement = () => {
             a.remove();
             window.URL.revokeObjectURL(url);
             showToast('✅ Đã xuất CSV thành công');
-        } catch (err) {
+        } catch {
             showToast('❌ Lỗi khi xuất CSV');
         }
     }, [filters, activeTab, showToast]);
@@ -465,43 +390,15 @@ const OrderManagement = () => {
                 resultCount={totalElements}
             />
 
-            {/* Bulk actions bar */}
-            {selectedIds.size > 0 && (
-                <div className="om-bulk-bar">
-                    <span className="om-bulk-label">Đã chọn {selectedIds.size} đơn hàng</span>
-                    <button className="om-btn om-btn-primary om-btn-sm" onClick={handleBulkConfirm}>
-                        ✅ Xác nhận hàng loạt
-                    </button>
-                    <button className="om-btn om-btn-outline om-btn-sm" onClick={handlePrintOrder}>
-                        🖨️ In hóa đơn
-                    </button>
-                    <button className="om-btn om-btn-outline om-btn-sm" onClick={handleExportCsv}>
-                        📊 Xuất Excel
-                    </button>
-                    {isManager && (
-                        <button className="om-btn om-btn-danger-outline om-btn-sm" onClick={handleBulkCancel}>
-                            ❌ Hủy đơn
-                        </button>
-                    )}
-                    <button className="om-clear-link" onClick={handleDeselectAll}>
-                        Bỏ chọn tất cả
-                    </button>
-                </div>
-            )}
-
             {/* Orders table */}
             <OrderTable
                 orders={orders}
-                selectedIds={selectedIds}
-                onToggleSelect={handleToggleSelect}
-                onToggleSelectAll={handleToggleSelectAll}
                 onRowClick={fetchOrderDetail}
                 sortConfig={sortConfig}
                 onSort={handleSort}
                 onCopyOrderNum={handleCopyOrderNum}
                 onPrintOrder={handlePrintOrder}
                 onCancelOrder={handleCancelOrder}
-                allSelected={selectedIds.size > 0 && selectedIds.size === orders.length}
                 loading={loading}
                 isManager={isManager}
             />
@@ -608,23 +505,6 @@ const OrderManagement = () => {
                 onCancel={() => setCancelDialogOrder(null)}
             />
 
-            {/* Confirm dialog */}
-            {confirmDialog && (
-                <div className="om-confirm-overlay">
-                    <div className="om-confirm-dialog">
-                        <h3>{confirmDialog.title}</h3>
-                        <p>{confirmDialog.message}</p>
-                        <div className="om-confirm-actions">
-                            <button className="om-btn om-btn-outline" onClick={confirmDialog.onCancel}>
-                                Hủy bỏ
-                            </button>
-                            <button className="om-btn om-btn-danger-outline" onClick={confirmDialog.onConfirm}>
-                                Xác nhận hủy
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

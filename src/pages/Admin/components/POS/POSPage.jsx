@@ -71,18 +71,34 @@ const POSPage = () => {
         () => cartItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0),
         [cartItems]
     );
+    const customerIdentity = useMemo(() => ({
+        customerId: isWalkIn ? null : (selectedCustomer?.customerId ?? null),
+        customerPhone: isWalkIn ? (guestPhone || '').trim() : (selectedCustomer?.phone || '').trim(),
+    }), [isWalkIn, selectedCustomer?.customerId, selectedCustomer?.phone, guestPhone]);
     const effectiveDiscountAmount = Math.min(Math.max(Number(discountAmount || 0), 0), subtotal);
     const totalAmount = Math.max(0, subtotal - effectiveDiscountAmount);
 
-    // ── Re-validate coupon when subtotal changes ────────────────
-    const prevSubtotalRef = useRef(subtotal);
+    // ── Re-validate coupon when subtotal/customer identity changes ────────────────
+    const prevCouponValidationKeyRef = useRef(null);
     useEffect(() => {
         if (!appliedCoupon) return;
-        if (prevSubtotalRef.current === subtotal) return;
-        prevSubtotalRef.current = subtotal;
+        const validationKey = [
+            appliedCoupon.code,
+            subtotal,
+            customerIdentity.customerId ?? '',
+            customerIdentity.customerPhone,
+        ].join('|');
+        if (prevCouponValidationKeyRef.current === validationKey) return;
+        prevCouponValidationKeyRef.current = validationKey;
 
         // If cart is now empty, auto-remove coupon
         if (cartItems.length === 0 || subtotal === 0) {
+            setAppliedCoupon(null);
+            setDiscountAmount(0);
+            return;
+        }
+
+        if (!customerIdentity.customerId && !customerIdentity.customerPhone) {
             setAppliedCoupon(null);
             setDiscountAmount(0);
             return;
@@ -98,7 +114,7 @@ const POSPage = () => {
         // Re-validate to recalculate discount for new subtotal
         const revalidate = async () => {
             try {
-                const res = await posAPI.validateCoupon(appliedCoupon.code, subtotal);
+                const res = await posAPI.validateCoupon(appliedCoupon.code, subtotal, customerIdentity);
                 const data = res.data;
                 if (data.valid) {
                     setAppliedCoupon(data);
@@ -114,7 +130,7 @@ const POSPage = () => {
 
         const timer = setTimeout(revalidate, 300);
         return () => clearTimeout(timer);
-    }, [subtotal, appliedCoupon, cartItems.length, setAppliedCoupon, setDiscountAmount]);
+    }, [subtotal, appliedCoupon, customerIdentity, cartItems.length, setAppliedCoupon, setDiscountAmount]);
 
     // ── Cart actions ────────────────────────────────────────────
     const performAddToCart = useCallback((product, variant, qty = 1) => {
@@ -235,6 +251,10 @@ const POSPage = () => {
     // ── Checkout ────────────────────────────────────────────────
     const handleCheckout = useCallback(async () => {
         if (cartItems.length === 0) return;
+        if (appliedCoupon && !selectedCustomer?.customerId && !guestPhone.trim()) {
+            showToast('Vui lòng chọn khách hàng hoặc nhập SĐT khách lẻ khi áp dụng mã giảm giá', 'warning');
+            return;
+        }
         setIsCheckingOut(true);
 
         try {

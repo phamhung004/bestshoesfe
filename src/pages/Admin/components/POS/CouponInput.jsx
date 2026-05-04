@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Tag, X, Ticket, Clock } from 'lucide-react';
 import { formatVND } from './posUtils';
 import { posAPI, couponAPI } from '../../../../services/api';
@@ -9,7 +9,15 @@ import CouponPickerDrawer from '../../../../components/common/CouponPickerDrawer
  * Collapsed: shows a small "Mã giảm giá" toggle or applied badge.
  * Expanded: shows input row + picker.
  */
-const CouponInput = ({ subtotal, appliedCoupon, setAppliedCoupon, setDiscountAmount }) => {
+const CouponInput = ({
+    subtotal,
+    appliedCoupon,
+    setAppliedCoupon,
+    setDiscountAmount,
+    isWalkIn,
+    selectedCustomer,
+    guestPhone,
+}) => {
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
     const [validating, setValidating] = useState(false);
@@ -17,6 +25,12 @@ const CouponInput = ({ subtotal, appliedCoupon, setAppliedCoupon, setDiscountAmo
     const [countdown, setCountdown] = useState('');
     const [expanded, setExpanded] = useState(false);
     const errorTimerRef = useRef(null);
+    const customerIdentity = useMemo(() => ({
+        customerId: isWalkIn ? null : (selectedCustomer?.customerId ?? null),
+        customerPhone: isWalkIn ? (guestPhone || '').trim() : (selectedCustomer?.phone || '').trim(),
+    }), [isWalkIn, selectedCustomer?.customerId, selectedCustomer?.phone, guestPhone]);
+    const hasCouponIdentity = Boolean(customerIdentity.customerId || customerIdentity.customerPhone);
+    const identityRequiredMessage = 'Vui lòng chọn khách hàng hoặc nhập SĐT khách lẻ khi áp dụng mã giảm giá';
 
     // ── Expiry countdown & auto-remove ────────────────────
     useEffect(() => {
@@ -73,10 +87,14 @@ const CouponInput = ({ subtotal, appliedCoupon, setAppliedCoupon, setDiscountAmo
         setError('');
         const trimmed = code.trim().toUpperCase();
         if (!trimmed) return;
+        if (!hasCouponIdentity) {
+            setError(identityRequiredMessage);
+            return;
+        }
 
         setValidating(true);
         try {
-            const res = await posAPI.validateCoupon(trimmed, subtotal);
+            const res = await posAPI.validateCoupon(trimmed, subtotal, customerIdentity);
             const couponData = res.data;
 
             if (!couponData.valid) {
@@ -100,10 +118,14 @@ const CouponInput = ({ subtotal, appliedCoupon, setAppliedCoupon, setDiscountAmo
     const handlePickerSelect = useCallback(async (coupon) => {
         setShowPicker(false);
         setError('');
+        if (!hasCouponIdentity) {
+            setError(identityRequiredMessage);
+            return;
+        }
         setValidating(true);
 
         try {
-            const res = await posAPI.validateCoupon(coupon.code, subtotal);
+            const res = await posAPI.validateCoupon(coupon.code, subtotal, customerIdentity);
             const couponData = res.data;
 
             if (!couponData.valid) {
@@ -114,12 +136,12 @@ const CouponInput = ({ subtotal, appliedCoupon, setAppliedCoupon, setDiscountAmo
             setAppliedCoupon(couponData);
             setDiscountAmount(couponData.discountAmount || 0);
             setCode('');
-        } catch (err) {
+        } catch {
             setError('Không thể áp dụng mã giảm giá');
         } finally {
             setValidating(false);
         }
-    }, [subtotal, setAppliedCoupon, setDiscountAmount]);
+    }, [subtotal, setAppliedCoupon, setDiscountAmount, hasCouponIdentity, identityRequiredMessage, customerIdentity]);
 
     // ── Fetch coupons for picker (POS uses admin API) ─────
     const fetchCoupons = useCallback(async (orderAmount) => {
@@ -131,11 +153,6 @@ const CouponInput = ({ subtotal, appliedCoupon, setAppliedCoupon, setDiscountAmo
         setDiscountAmount(0);
         setError('');
         setCountdown('');
-    };
-
-    const formatDate = (d) => {
-        if (!d) return '';
-        return new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
     };
 
     return (

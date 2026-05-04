@@ -721,18 +721,6 @@ export const orderAPI = {
     body: JSON.stringify(data),
   }),
 
-  // Bulk confirm orders
-  bulkConfirm: (data) => apiCall('/admin/orders/bulk-confirm', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
-
-  // Bulk cancel orders
-  bulkCancel: (data) => apiCall('/admin/orders/bulk-cancel', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
-
   // Get KPI dashboard data
   getKpi: () => apiCall('/admin/orders/kpi'),
 
@@ -866,9 +854,14 @@ export const posAPI = {
     apiCall(`/admin/pos/recent-orders?limit=${limit}`),
 
   // Validate a coupon code for POS
-  validateCoupon: (code, orderAmount) => apiCall('/admin/pos/validate-coupon', {
+  validateCoupon: (code, orderAmount, customer = {}) => apiCall('/admin/pos/validate-coupon', {
     method: 'POST',
-    body: JSON.stringify({ code, orderAmount }),
+    body: JSON.stringify({
+      code,
+      orderAmount,
+      customerId: customer.customerId ?? null,
+      customerPhone: customer.customerPhone ?? '',
+    }),
   }),
 
   // Revalidate a coupon for POS (stale-check before checkout)
