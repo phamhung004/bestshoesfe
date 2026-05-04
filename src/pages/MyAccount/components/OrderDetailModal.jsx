@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, MapPin, Package, CreditCard, Printer, ShoppingBag, RotateCcw, ChevronRight, Edit3, Ban } from 'lucide-react';
 import { formatVND, formatDate } from '../mockAccountData';
 import ChangeAddressModal from './ChangeAddressModal';
+import { getTimelineStepState } from './orderTimelineState';
 
 const STATUS_STEPS = {
     'Chờ xác nhận': ['Đặt hàng', 'Xác nhận', 'Đóng gói', 'Bàn giao ĐVVC', 'Đang giao', 'Đã giao'],
@@ -80,9 +81,14 @@ const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdated, onCanc
                         <h4 className="acc-section-label">Trạng thái đơn hàng</h4>
                         <div className="acc-timeline">
                             {steps.map((step, i) => {
-                                const isCompleted = i < activeStep;
-                                const isCurrent = i === activeStep;
-                                const isPending = i > activeStep;
+                                const { isCompleted, isCurrent, isPending, timeLabel } = getTimelineStepState({
+                                    stepIndex: i,
+                                    activeStep,
+                                    orderStatus: order.status,
+                                    updatedAt: order.updatedAt,
+                                    createdAt: order.createdAt,
+                                    formatDate,
+                                });
                                 return (
                                     <div key={step} className="acc-timeline-item">
                                         <div className="acc-timeline-left">
@@ -98,9 +104,7 @@ const OrderDetailModal = ({ order: initialOrder, onClose, onOrderUpdated, onCanc
                                             <span className={`acc-timeline-label${isCurrent ? ' active' : isPending ? ' pending' : ''}`}>{step}</span>
                                             {!isPending && (
                                                 <span className="acc-timeline-time">
-                                                    {i === 0 ? formatDate(order.createdAt)
-                                                        : i === 1 ? formatDate(order.updatedAt)
-                                                            : isCurrent ? 'Đang cập nhật...' : formatDate(order.updatedAt)}
+                                                    {isCurrent ? 'Đang cập nhật...' : timeLabel}
                                                 </span>
                                             )}
                                         </div>
