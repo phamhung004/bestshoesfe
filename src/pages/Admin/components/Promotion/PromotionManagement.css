@@ -1119,6 +1119,39 @@
     cursor: pointer;
 }
 
+.pm-discount-mode-toggle {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 4px;
+    border: 2px solid var(--gray-200);
+    border-radius: 8px;
+    background: var(--gray-50);
+}
+
+.pm-discount-mode-option {
+    min-height: 38px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--gray-600);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.pm-discount-mode-option:hover {
+    background: #fff;
+    color: var(--gray-900);
+}
+
+.pm-discount-mode-option.active {
+    background: var(--primary-500);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.22);
+}
+
 .pm-form-hint {
     font-size: 12px;
     color: var(--gray-500);

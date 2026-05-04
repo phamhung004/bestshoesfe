@@ -1,36 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Zap, Snowflake, Tag, Star } from 'lucide-react';
 import { promotionAPI } from '../../../../services/api';
+import {
+    DISCOUNT_MODES,
+    getInitialPromotionFormData,
+    validatePromotionForm,
+    buildPromotionPayload,
+} from './promotionFormUtils';
 
 const PromotionForm = ({ promotion, onSave, onCancel, onConflict, onManageVariants, isEditing = false }) => {
-    const [formData, setFormData] = useState({
-        name: '', description: '', type: 'seasonal',
-        discountPercentage: '', discountAmount: '',
-        startDate: '', endDate: '', isActive: true,
-    });
+    const [formData, setFormData] = useState(getInitialPromotionFormData());
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [conflicts, setConflicts] = useState([]);
 
     useEffect(() => {
-        if (promotion) {
-            setFormData({
-                name: promotion.name || '',
-                description: promotion.description || '',
-                type: promotion.type || 'seasonal',
-                discountPercentage: promotion.discountPercentage || '',
-                discountAmount: promotion.discountAmount || '',
-                startDate: promotion.startDate ? promotion.startDate.slice(0, 16) : '',
-                endDate: promotion.endDate ? promotion.endDate.slice(0, 16) : '',
-                isActive: promotion.isActive !== undefined ? promotion.isActive : true,
-            });
-        } else {
-            setFormData({
-                name: '', description: '', type: 'seasonal',
-                discountPercentage: '', discountAmount: '',
-                startDate: '', endDate: '', isActive: true,
-            });
-        }
+        setFormData(getInitialPromotionFormData(promotion));
         setErrors({});
         setConflicts([]);
     }, [promotion]);
@@ -43,25 +28,7 @@ const PromotionForm = ({ promotion, onSave, onCancel, onConflict, onManageVarian
     };
 
     const validateForm = () => {
-        const newErrors = {};
-        if (!formData.name.trim()) newErrors.name = 'Tên đợt giảm giá là bắt buộc';
-        if (!formData.discountPercentage && !formData.discountAmount) {
-            newErrors.discountPercentage = 'Vui lòng nhập ít nhất một loại giảm giá';
-            newErrors.discountAmount = 'Vui lòng nhập ít nhất một loại giảm giá';
-        }
-        if (formData.discountPercentage && parseFloat(formData.discountPercentage) <= 0)
-            newErrors.discountPercentage = 'Phần trăm giảm giá phải lớn hơn 0';
-        else if (formData.discountPercentage && parseFloat(formData.discountPercentage) > 100)
-            newErrors.discountPercentage = 'Phần trăm giảm giá không được vượt quá 100%';
-        if (formData.discountAmount && parseFloat(formData.discountAmount) <= 0)
-            newErrors.discountAmount = 'Số tiền giảm phải lớn hơn 0';
-        if (!formData.startDate) newErrors.startDate = 'Ngày bắt đầu là bắt buộc';
-        if (!formData.endDate) newErrors.endDate = 'Ngày kết thúc là bắt buộc';
-        if (formData.startDate && formData.endDate) {
-            const start = new Date(formData.startDate);
-            const end = new Date(formData.endDate);
-            if (start >= end) newErrors.endDate = 'Ngày kết thúc phải sau ngày bắt đầu';
-        }
+        const newErrors = validatePromotionForm(formData);
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -72,15 +39,7 @@ const PromotionForm = ({ promotion, onSave, onCancel, onConflict, onManageVarian
         setLoading(true);
         try {
             setConflicts([]);
-            const promotionData = {
-                ...formData,
-                name: formData.name.trim(),
-                description: formData.description.trim(),
-                discountPercentage: formData.discountPercentage ? parseFloat(formData.discountPercentage) : null,
-                discountAmount: formData.discountAmount ? parseFloat(formData.discountAmount) : null,
-                startDate: formData.startDate,
-                endDate: formData.endDate,
-            };
+            const promotionData = buildPromotionPayload(formData);
             let result;
             if (isEditing && promotion) {
                 result = await promotionAPI.update(promotion.promotionId, promotionData);
@@ -190,39 +149,77 @@ const PromotionForm = ({ promotion, onSave, onCancel, onConflict, onManageVarian
                                 <span className="pm-form-hint">{getTypeDescription(formData.type)}</span>
                             </div>
 
-                            {/* discount percentage */}
-                            <div className="pm-form-group">
-                                <label className="pm-form-label" htmlFor="pm-pct">Phần trăm giảm (%)</label>
-                                <input
-                                    id="pm-pct"
-                                    className={`pm-form-input ${errors.discountPercentage ? 'error' : ''}`}
-                                    type="number"
-                                    name="discountPercentage"
-                                    value={formData.discountPercentage}
-                                    onChange={handleInputChange}
-                                    placeholder="Ví dụ: 20"
-                                    min="0" max="100" step="0.01"
-                                />
-                                {errors.discountPercentage && <span className="pm-form-error">{errors.discountPercentage}</span>}
-                                <span className="pm-form-hint">Để trống nếu không áp dụng giảm theo phần trăm</span>
+                            {/* discount mode */}
+                            <div className="pm-form-group full-width">
+                                <label className="pm-form-label">Hình thức giảm giá</label>
+                                <div className="pm-discount-mode-toggle" role="radiogroup" aria-label="Hình thức giảm giá">
+                                    <button
+                                        type="button"
+                                        className={`pm-discount-mode-option ${formData.discountMode === DISCOUNT_MODES.PERCENTAGE ? 'active' : ''}`}
+                                        onClick={() => {
+                                            setFormData((prev) => ({ ...prev, discountMode: DISCOUNT_MODES.PERCENTAGE }));
+                                            setErrors((prev) => ({ ...prev, discountAmount: null }));
+                                        }}
+                                        role="radio"
+                                        aria-checked={formData.discountMode === DISCOUNT_MODES.PERCENTAGE}
+                                    >
+                                        Theo phần trăm
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`pm-discount-mode-option ${formData.discountMode === DISCOUNT_MODES.AMOUNT ? 'active' : ''}`}
+                                        onClick={() => {
+                                            setFormData((prev) => ({ ...prev, discountMode: DISCOUNT_MODES.AMOUNT }));
+                                            setErrors((prev) => ({ ...prev, discountPercentage: null }));
+                                        }}
+                                        role="radio"
+                                        aria-checked={formData.discountMode === DISCOUNT_MODES.AMOUNT}
+                                    >
+                                        Theo số tiền
+                                    </button>
+                                </div>
+                                <span className="pm-form-hint">Chỉ một hình thức giảm giá được áp dụng cho mỗi đợt</span>
                             </div>
 
+                            {/* discount percentage */}
+                            {formData.discountMode === DISCOUNT_MODES.PERCENTAGE && (
+                                <div className="pm-form-group">
+                                    <label className="pm-form-label" htmlFor="pm-pct">
+                                        Phần trăm giảm (%) <span className="required">*</span>
+                                    </label>
+                                    <input
+                                        id="pm-pct"
+                                        className={`pm-form-input ${errors.discountPercentage ? 'error' : ''}`}
+                                        type="number"
+                                        name="discountPercentage"
+                                        value={formData.discountPercentage}
+                                        onChange={handleInputChange}
+                                        placeholder="Ví dụ: 20"
+                                        min="0" max="100" step="0.01"
+                                    />
+                                    {errors.discountPercentage && <span className="pm-form-error">{errors.discountPercentage}</span>}
+                                </div>
+                            )}
+
                             {/* discount amount */}
-                            <div className="pm-form-group">
-                                <label className="pm-form-label" htmlFor="pm-amt">Số tiền giảm (VND)</label>
-                                <input
-                                    id="pm-amt"
-                                    className={`pm-form-input ${errors.discountAmount ? 'error' : ''}`}
-                                    type="number"
-                                    name="discountAmount"
-                                    value={formData.discountAmount}
-                                    onChange={handleInputChange}
-                                    placeholder="Ví dụ: 50000"
-                                    min="0" step="1000"
-                                />
-                                {errors.discountAmount && <span className="pm-form-error">{errors.discountAmount}</span>}
-                                <span className="pm-form-hint">Để trống nếu không áp dụng giảm theo số tiền</span>
-                            </div>
+                            {formData.discountMode === DISCOUNT_MODES.AMOUNT && (
+                                <div className="pm-form-group">
+                                    <label className="pm-form-label" htmlFor="pm-amt">
+                                        Số tiền giảm (VND) <span className="required">*</span>
+                                    </label>
+                                    <input
+                                        id="pm-amt"
+                                        className={`pm-form-input ${errors.discountAmount ? 'error' : ''}`}
+                                        type="number"
+                                        name="discountAmount"
+                                        value={formData.discountAmount}
+                                        onChange={handleInputChange}
+                                        placeholder="Ví dụ: 50000"
+                                        min="0" step="1000"
+                                    />
+                                    {errors.discountAmount && <span className="pm-form-error">{errors.discountAmount}</span>}
+                                </div>
+                            )}
 
                             {/* start date */}
                             <div className="pm-form-group">
