@@ -11,6 +11,7 @@ const CheckoutSuccessModal = ({ order, onNewOrder, onClose }) => {
     const handlePrint = () => {
         window.print();
     };
+    const paymentMethodLabel = order.paymentMethod || 'Tiền mặt';
 
     return (
         <>
@@ -33,7 +34,7 @@ const CheckoutSuccessModal = ({ order, onNewOrder, onClose }) => {
                             )}
                             <div className="pos-success-row">
                                 <span>Thanh toán:</span>
-                                <strong>Tiền mặt</strong>
+                                <strong>{paymentMethodLabel}</strong>
                             </div>
                             <div className="pos-success-row">
                                 <span>Thời gian:</span>
@@ -100,7 +101,7 @@ const CheckoutSuccessModal = ({ order, onNewOrder, onClose }) => {
                     <div className="pos-receipt-row"><span>Giảm giá:</span><span>−{formatVND(order.couponDiscountAmount)}</span></div>
                 )}
                 <div className="pos-receipt-row pos-receipt-total"><span>TỔNG CỘNG:</span><span>{formatVND(order.totalAmount)}</span></div>
-                <div className="pos-receipt-row"><span>Thanh toán:</span><span>Tiền mặt</span></div>
+                <div className="pos-receipt-row"><span>Thanh toán:</span><span>{paymentMethodLabel}</span></div>
                 {order.cashReceived > 0 && (
                     <div className="pos-receipt-row"><span>Tiền thừa:</span><span>{formatVND(order.changeAmount || 0)}</span></div>
                 )}

@@ -2,31 +2,41 @@ import React from 'react';
 import { Banknote, CreditCard, Building2 } from 'lucide-react';
 import { formatVND } from './posUtils';
 
-/**
- * PaymentSelector — cash-only payment with change calculation.
- */
+const PAYMENT_METHODS = [
+    { value: 'cash', label: 'Tiền mặt', icon: Banknote },
+    { value: 'card', label: 'Thẻ', icon: CreditCard },
+    { value: 'bank_transfer', label: 'Chuyển khoản', icon: Building2 },
+];
+
 const PaymentSelector = ({ paymentMethod, setPaymentMethod, totalAmount, cashReceived, setCashReceived }) => {
     const change = cashReceived ? cashReceived - totalAmount : 0;
+    const isCash = paymentMethod === 'cash';
+
+    const handleSelect = (method) => {
+        setPaymentMethod(method);
+        if (method !== 'cash') {
+            setCashReceived(0);
+        }
+    };
 
     return (
         <div className="pos-payment-section">
             <div className="pos-payment-label">Phương thức thanh toán</div>
             <div className="pos-payment-methods">
-                <button className="pos-payment-btn active">
-                    <Banknote size={16} />
-                    <span>Tiền mặt</span>
-                </button>
-                <button className="pos-payment-btn" disabled title="Sắp ra mắt">
-                    <CreditCard size={16} />
-                    <span>Thẻ</span>
-                </button>
-                <button className="pos-payment-btn" disabled title="Sắp ra mắt">
-                    <Building2 size={16} />
-                    <span>Chuyển khoản</span>
-                </button>
+                {PAYMENT_METHODS.map(({ value, label, icon: Icon }) => (
+                    <button
+                        key={value}
+                        type="button"
+                        className={`pos-payment-btn ${paymentMethod === value ? 'active' : ''}`}
+                        onClick={() => handleSelect(value)}
+                    >
+                        <Icon size={16} />
+                        <span>{label}</span>
+                    </button>
+                ))}
             </div>
 
-            <div className="pos-cash-section">
+            {isCash && <div className="pos-cash-section">
                 <input
                     className="pos-cash-input"
                     type="number"
@@ -41,7 +51,7 @@ const PaymentSelector = ({ paymentMethod, setPaymentMethod, totalAmount, cashRec
                         Tiền thừa: {formatVND(change)}
                     </div>
                 )}
-            </div>
+            </div>}
         </div>
     );
 };
