@@ -16,11 +16,6 @@ const formatDate = (dateString) => {
     });
 };
 
-const formatCurrency = (amount) => {
-    if (amount == null) return '-';
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-};
-
 const TYPE_CONFIG = {
     flash_sale: { label: 'Flash Sale', icon: Zap, className: 'flash-sale' },
     seasonal: { label: 'Theo mùa', icon: Snowflake, className: 'seasonal' },
@@ -185,10 +180,7 @@ const PromotionTable = ({
                                     {/* discount */}
                                     <td>
                                         <span className="pm-discount">
-                                            {promo.discountPercentage ? `${promo.discountPercentage}%` : ''}
-                                            {promo.discountPercentage && promo.discountAmount ? ' / ' : ''}
-                                            {promo.discountAmount ? formatCurrency(promo.discountAmount) : ''}
-                                            {!promo.discountPercentage && !promo.discountAmount ? '-' : ''}
+                                            {promo.discountPercentage ? `${promo.discountPercentage}%` : '-'}
                                         </span>
                                     </td>
 

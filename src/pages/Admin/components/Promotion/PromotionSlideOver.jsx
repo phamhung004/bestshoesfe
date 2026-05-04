@@ -153,12 +153,6 @@ const PromotionSlideOver = ({
                                 <span className="pm-so-info-value pm-discount">{promotion.discountPercentage}%</span>
                             </div>
                         )}
-                        {promotion.discountAmount != null && promotion.discountAmount > 0 && (
-                            <div className="pm-so-info-row">
-                                <span className="pm-so-info-label">Số tiền giảm</span>
-                                <span className="pm-so-info-value pm-discount">{formatCurrency(promotion.discountAmount)}</span>
-                            </div>
-                        )}
                         <div className="pm-so-info-row">
                             <span className="pm-so-info-label">Bắt đầu</span>
                             <span className="pm-so-info-value">{formatDate(promotion.startDate)}</span>
@@ -234,9 +228,7 @@ const PromotionSlideOver = ({
                                             <span className="promo-price">
                                                 {v.promotionPrice != null
                                                     ? formatCurrency(v.promotionPrice)
-                                                    : v.fixedPrice != null
-                                                        ? formatCurrency(v.fixedPrice)
-                                                        : '-'}
+                                                    : '-'}
                                             </span>
                                         </div>
                                     </div>

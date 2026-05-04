@@ -11,7 +11,6 @@ const validBaseForm = {
     name: 'Summer sale',
     description: '',
     type: 'seasonal',
-    discountMode: 'percentage',
     discountPercentage: '10',
     discountAmount: '',
     startDate: '2026-05-05T10:00',
@@ -19,15 +18,15 @@ const validBaseForm = {
     isActive: true,
 };
 
-test('new promotion defaults to percentage discount mode', () => {
+test('new promotion only uses percentage discount fields', () => {
     const formData = getInitialPromotionFormData();
 
-    assert.equal(formData.discountMode, 'percentage');
     assert.equal(formData.discountPercentage, '');
     assert.equal(formData.discountAmount, '');
+    assert.equal(Object.hasOwn(formData, 'discountMode'), false);
 });
 
-test('existing fixed amount promotion opens amount mode and preserves value', () => {
+test('existing fixed amount promotion does not reopen fixed amount editing', () => {
     const formData = getInitialPromotionFormData({
         name: 'Fixed campaign',
         description: '',
@@ -39,51 +38,29 @@ test('existing fixed amount promotion opens amount mode and preserves value', ()
         isActive: true,
     });
 
-    assert.equal(formData.discountMode, 'amount');
-    assert.equal(formData.discountAmount, 10000000);
     assert.equal(formData.discountPercentage, '');
+    assert.equal(formData.discountAmount, '');
+    assert.equal(Object.hasOwn(formData, 'discountMode'), false);
 });
 
-test('validates only the selected discount mode', () => {
-    const percentageErrors = validatePromotionForm({
+test('validates percentage and ignores fixed amount fields', () => {
+    const errors = validatePromotionForm({
         ...validBaseForm,
-        discountMode: 'percentage',
         discountPercentage: '',
         discountAmount: '10000000',
     });
-    assert.equal(percentageErrors.discountPercentage, 'Vui lòng nhập phần trăm giảm giá');
-    assert.equal(percentageErrors.discountAmount, undefined);
 
-    const amountErrors = validatePromotionForm({
-        ...validBaseForm,
-        discountMode: 'amount',
-        discountPercentage: '10',
-        discountAmount: '',
-    });
-    assert.equal(amountErrors.discountAmount, 'Vui lòng nhập số tiền giảm');
-    assert.equal(amountErrors.discountPercentage, undefined);
+    assert.equal(errors.discountPercentage, 'Vui lòng nhập phần trăm giảm giá');
+    assert.equal(errors.discountAmount, undefined);
 });
 
-test('build payload keeps unchanged fixed amount when editing old amount promotion', () => {
+test('build payload always clears fixed amount discounts', () => {
     const payload = buildPromotionPayload({
         ...validBaseForm,
-        discountMode: 'amount',
-        discountPercentage: '',
         discountAmount: 10000000,
     });
 
-    assert.equal(payload.discountPercentage, null);
-    assert.equal(payload.discountAmount, 10000000);
-});
-
-test('build payload clears unselected amount when percentage mode is chosen', () => {
-    const payload = buildPromotionPayload({
-        ...validBaseForm,
-        discountMode: 'percentage',
-        discountPercentage: '15',
-        discountAmount: '10000000',
-    });
-
-    assert.equal(payload.discountPercentage, 15);
+    assert.equal(payload.discountPercentage, 10);
     assert.equal(payload.discountAmount, null);
+    assert.equal(Object.hasOwn(payload, 'discountMode'), false);
 });

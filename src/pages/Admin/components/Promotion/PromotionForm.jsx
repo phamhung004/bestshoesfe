@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { X, Check, Zap, Snowflake, Tag, Star } from 'lucide-react';
 import { promotionAPI } from '../../../../services/api';
 import {
-    DISCOUNT_MODES,
     getInitialPromotionFormData,
     validatePromotionForm,
     buildPromotionPayload,
@@ -149,77 +148,24 @@ const PromotionForm = ({ promotion, onSave, onCancel, onConflict, onManageVarian
                                 <span className="pm-form-hint">{getTypeDescription(formData.type)}</span>
                             </div>
 
-                            {/* discount mode */}
-                            <div className="pm-form-group full-width">
-                                <label className="pm-form-label">Hình thức giảm giá</label>
-                                <div className="pm-discount-mode-toggle" role="radiogroup" aria-label="Hình thức giảm giá">
-                                    <button
-                                        type="button"
-                                        className={`pm-discount-mode-option ${formData.discountMode === DISCOUNT_MODES.PERCENTAGE ? 'active' : ''}`}
-                                        onClick={() => {
-                                            setFormData((prev) => ({ ...prev, discountMode: DISCOUNT_MODES.PERCENTAGE }));
-                                            setErrors((prev) => ({ ...prev, discountAmount: null }));
-                                        }}
-                                        role="radio"
-                                        aria-checked={formData.discountMode === DISCOUNT_MODES.PERCENTAGE}
-                                    >
-                                        Theo phần trăm
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={`pm-discount-mode-option ${formData.discountMode === DISCOUNT_MODES.AMOUNT ? 'active' : ''}`}
-                                        onClick={() => {
-                                            setFormData((prev) => ({ ...prev, discountMode: DISCOUNT_MODES.AMOUNT }));
-                                            setErrors((prev) => ({ ...prev, discountPercentage: null }));
-                                        }}
-                                        role="radio"
-                                        aria-checked={formData.discountMode === DISCOUNT_MODES.AMOUNT}
-                                    >
-                                        Theo số tiền
-                                    </button>
-                                </div>
-                                <span className="pm-form-hint">Chỉ một hình thức giảm giá được áp dụng cho mỗi đợt</span>
-                            </div>
-
                             {/* discount percentage */}
-                            {formData.discountMode === DISCOUNT_MODES.PERCENTAGE && (
-                                <div className="pm-form-group">
-                                    <label className="pm-form-label" htmlFor="pm-pct">
-                                        Phần trăm giảm (%) <span className="required">*</span>
-                                    </label>
-                                    <input
-                                        id="pm-pct"
-                                        className={`pm-form-input ${errors.discountPercentage ? 'error' : ''}`}
-                                        type="number"
-                                        name="discountPercentage"
-                                        value={formData.discountPercentage}
-                                        onChange={handleInputChange}
-                                        placeholder="Ví dụ: 20"
-                                        min="0" max="100" step="0.01"
-                                    />
-                                    {errors.discountPercentage && <span className="pm-form-error">{errors.discountPercentage}</span>}
-                                </div>
-                            )}
-
-                            {/* discount amount */}
-                            {formData.discountMode === DISCOUNT_MODES.AMOUNT && (
-                                <div className="pm-form-group">
-                                    <label className="pm-form-label" htmlFor="pm-amt">
-                                        Số tiền giảm (VND) <span className="required">*</span>
-                                    </label>
-                                    <input
-                                        id="pm-amt"
-                                        className={`pm-form-input ${errors.discountAmount ? 'error' : ''}`}
-                                        type="number"
-                                        name="discountAmount"
-                                        value={formData.discountAmount}
-                                        onChange={handleInputChange}
-                                        placeholder="Ví dụ: 50000"
-                                        min="0" step="1000"
-                                    />
-                                    {errors.discountAmount && <span className="pm-form-error">{errors.discountAmount}</span>}
-                                </div>
-                            )}
+                            <div className="pm-form-group">
+                                <label className="pm-form-label" htmlFor="pm-pct">
+                                    Phần trăm giảm (%) <span className="required">*</span>
+                                </label>
+                                <input
+                                    id="pm-pct"
+                                    className={`pm-form-input ${errors.discountPercentage ? 'error' : ''}`}
+                                    type="number"
+                                    name="discountPercentage"
+                                    value={formData.discountPercentage}
+                                    onChange={handleInputChange}
+                                    placeholder="Ví dụ: 20"
+                                    min="0" max="100" step="0.01"
+                                />
+                                {errors.discountPercentage && <span className="pm-form-error">{errors.discountPercentage}</span>}
+                                <span className="pm-form-hint">Đợt giảm giá chỉ áp dụng giảm theo phần trăm</span>
+                            </div>
 
                             {/* start date */}
                             <div className="pm-form-group">

@@ -88,16 +88,9 @@ const PromotionVariantPicker = ({ promotionId, initialConflicts = [], onClose, o
             const copy = { ...prev };
             const vid = variant.id || variant.variantId;
             if (copy[vid]) delete copy[vid];
-            else copy[vid] = { variantId: vid, fixedPrice: null };
+            else copy[vid] = { variantId: vid };
             return copy;
         });
-    };
-
-    const updateFixedPrice = (variantId, value) => {
-        setSelected((prev) => ({
-            ...prev,
-            [variantId]: { ...prev[variantId], fixedPrice: value === '' ? null : Number(value) },
-        }));
     };
 
     const handleSelectAllVariants = () => {
@@ -110,7 +103,7 @@ const PromotionVariantPicker = ({ promotionId, initialConflicts = [], onClose, o
             const copy = { ...prev };
             unselected.forEach((v) => {
                 const vid = v.id || v.variantId;
-                copy[vid] = { variantId: vid, fixedPrice: null };
+                copy[vid] = { variantId: vid };
             });
             return copy;
         });
@@ -301,18 +294,6 @@ const PromotionVariantPicker = ({ promotionId, initialConflicts = [], onClose, o
                                                             <span className="pm-picker-variant-stock">
                                                                 Kho: {v.stock ?? '-'}
                                                             </span>
-                                                            {isSelected && (
-                                                                <input
-                                                                    type="number"
-                                                                    className="pm-form-input"
-                                                                    style={{ width: 100, padding: '3px 6px', fontSize: 12 }}
-                                                                    placeholder="Giá cố định"
-                                                                    value={selected[vid]?.fixedPrice ?? ''}
-                                                                    onChange={(e) => updateFixedPrice(vid, e.target.value)}
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                    min="0"
-                                                                />
-                                                            )}
                                                             {isExisting && (
                                                                 <span style={{
                                                                     fontSize: 11, fontWeight: 600, color: 'var(--gray-400)',
