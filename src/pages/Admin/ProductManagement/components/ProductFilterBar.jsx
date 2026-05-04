@@ -63,6 +63,20 @@ const ProductFilterBar = ({
     { value: 'stock_asc',      label: 'Tồn kho ít nhất' },
   ];
 
+  SORT_OPTIONS.splice(
+    0,
+    SORT_OPTIONS.length,
+    { value: 'createdAt_desc', label: 'Ngày tạo mới nhất' },
+    { value: 'createdAt_asc',  label: 'Ngày tạo cũ nhất' },
+    { value: 'updatedAt_desc', label: 'Mới cập nhật' },
+    { value: 'name_asc',       label: 'Tên A-Z' },
+    { value: 'name_desc',      label: 'Tên Z-A' },
+    { value: 'price_asc',      label: 'Giá thấp-cao' },
+    { value: 'price_desc',     label: 'Giá cao-thấp' },
+    { value: 'stock_asc',      label: 'Tồn kho ít nhất' },
+    { value: 'stock_desc',     label: 'Tồn kho nhiều nhất' },
+  );
+
   const sortValue = `${sortConfig.key}_${sortConfig.dir}`;
 
   return (

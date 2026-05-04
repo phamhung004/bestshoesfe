@@ -185,7 +185,7 @@ export const colorAPI = {
 // Product API functions
 export const productAPI = {
   // Get all / search products (server-side filtering & pagination)
-  // filters: { name, brandId, categoryId, materialId, status, pageNum, pageSize }
+  // filters: { name, brandId, categoryId, materialId, status, minPrice, maxPrice, sortBy, sortDir, pageNum, pageSize }
   getAll: (filters = {}) => {
     const { pageNum = 0, pageSize = 10, ...rest } = filters;
     return apiCall('/products/list', {

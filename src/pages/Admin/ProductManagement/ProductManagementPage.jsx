@@ -50,7 +50,7 @@ const initialState = {
   colors: [],
   // UI state
   filters: { ...INITIAL_FILTERS },
-  sortConfig: { key: 'updatedAt', dir: 'desc' },
+  sortConfig: { key: 'createdAt', dir: 'desc' },
   currentPage: 1,
   rowsPerPage: 10,
   selectedIds: new Set(),
@@ -303,9 +303,12 @@ const ProductManagementPage = () => {
   const searchDebounceRef = useRef(null);
 
   /* ── Fetch products from server ─────────────────────────── */
-  const fetchProducts = useCallback(async (filters, page, rowsPerPage) => {
+  const fetchProducts = useCallback(async (filters, sortConfig, page, rowsPerPage) => {
     dispatch({ type: 'FETCH_START' });
     try {
+      const [minPrice, maxPrice] = filters.priceRange
+        ? filters.priceRange.split('-').map(Number)
+        : [undefined, undefined];
       const searchRequest = {
         pageNum: page - 1, // BE is 0-based
         pageSize: rowsPerPage,
@@ -313,6 +316,10 @@ const ProductManagementPage = () => {
         categoryId: filters.categoryId ? Number(filters.categoryId) : undefined,
         brandId: filters.brandId ? Number(filters.brandId) : undefined,
         status: filters.status || undefined,
+        minPrice,
+        maxPrice,
+        sortBy: sortConfig.key,
+        sortDir: sortConfig.dir,
       };
       const res = await productAPI.getAll(searchRequest);
       const pageData = res?.data ?? res;
@@ -359,26 +366,17 @@ const ProductManagementPage = () => {
     // Debounce name search; fire immediately for everything else
     if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     searchDebounceRef.current = setTimeout(() => {
-      fetchProducts(state.filters, state.currentPage, state.rowsPerPage);
+      fetchProducts(state.filters, state.sortConfig, state.currentPage, state.rowsPerPage);
     }, state.filters.search ? 400 : 0);
     return () => {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
     };
-  }, [state.filters, state.currentPage, state.rowsPerPage, fetchProducts]);
+  }, [state.filters, state.sortConfig, state.currentPage, state.rowsPerPage, fetchProducts]);
 
   /* ── Derived state (client-side sort + priceRange on current page) ─ */
-  const priceFilteredProducts = useMemo(() => {
-    if (!state.filters.priceRange) return state.products;
-    const [lo, hi] = state.filters.priceRange.split('-').map(Number);
-    return state.products.filter((p) => {
-      const minP = getMinPrice(p);
-      return minP >= lo && minP <= hi;
-    });
-  }, [state.products, state.filters.priceRange]);
-
   const sortedProducts = useMemo(
-    () => sortProducts(priceFilteredProducts, state.sortConfig),
-    [priceFilteredProducts, state.sortConfig]
+    () => sortProducts(state.products, state.sortConfig),
+    [state.products, state.sortConfig]
   );
 
   // Pagination is handled server-side; use products directly
@@ -490,14 +488,14 @@ const ProductManagementPage = () => {
             dispatch({ type: 'REMOVE_PRODUCT', id: product.id });
             dispatch({ type: 'SHOW_TOAST', message: `Đã xóa "${product.name}"`, toastType: 'info' });
             // Refresh to keep pagination correct
-            fetchProducts(state.filters, state.currentPage, state.rowsPerPage);
+            fetchProducts(state.filters, state.sortConfig, state.currentPage, state.rowsPerPage);
           } catch (e) {
             dispatch({ type: 'SHOW_TOAST', message: `Lỗi xóa: ${e.message}`, toastType: 'error' });
           }
         },
       },
     });
-  }, [state.filters, state.currentPage, state.rowsPerPage, fetchProducts]);
+  }, [state.filters, state.sortConfig, state.currentPage, state.rowsPerPage, fetchProducts]);
 
   const handleBulkDelete = useCallback(() => {
     const count = state.selectedIds.size;
@@ -519,11 +517,11 @@ const ProductManagementPage = () => {
           } else {
             dispatch({ type: 'SHOW_TOAST', message: `Đã xóa ${count} sản phẩm`, toastType: 'info' });
           }
-          fetchProducts(state.filters, state.currentPage, state.rowsPerPage);
+          fetchProducts(state.filters, state.sortConfig, state.currentPage, state.rowsPerPage);
         },
       },
     });
-  }, [state.selectedIds, state.filters, state.currentPage, state.rowsPerPage, fetchProducts]);
+  }, [state.selectedIds, state.filters, state.sortConfig, state.currentPage, state.rowsPerPage, fetchProducts]);
 
   /**
    * handleSaveProduct is the async orchestration handler passed to ProductModal.
@@ -707,8 +705,8 @@ const ProductManagementPage = () => {
       message: isNew ? 'Sản phẩm đã được thêm thành công!' : 'Đã cập nhật sản phẩm',
       toastType: 'success',
     });
-    fetchProducts(state.filters, state.currentPage, state.rowsPerPage);
-  }, [state.filters, state.currentPage, state.rowsPerPage, fetchProducts]);
+    fetchProducts(state.filters, state.sortConfig, state.currentPage, state.rowsPerPage);
+  }, [state.filters, state.sortConfig, state.currentPage, state.rowsPerPage, fetchProducts]);
 
   const handleExportExcel = useCallback(() => {
     dispatch({ type: 'SHOW_TOAST', message: 'Đang xuất Excel...', toastType: 'info' });
@@ -732,7 +730,7 @@ const ProductManagementPage = () => {
           <button
             type="button"
             className="pm-error-dismiss"
-            onClick={() => fetchProducts(state.filters, state.currentPage, state.rowsPerPage)}
+            onClick={() => fetchProducts(state.filters, state.sortConfig, state.currentPage, state.rowsPerPage)}
           >
             Thử lại
           </button>

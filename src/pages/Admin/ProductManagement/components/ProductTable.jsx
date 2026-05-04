@@ -203,9 +203,19 @@ const ProductTable = ({
             const isNew = isNewProduct(product);
 
             return (
-              <tr key={product.id}>
+              <tr
+                key={product.id}
+                className="pm-clickable-row"
+                tabIndex={0}
+                role="button"
+                onClick={() => onView(product)}
+                onKeyDown={(e) => {
+                  if (e.currentTarget !== e.target) return;
+                  if (e.key === 'Enter') onView(product);
+                }}
+              >
                 {/* Checkbox */}
-                <td>
+                <td onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     className="pm-checkbox"
@@ -334,7 +344,7 @@ const ProductTable = ({
                 </td>
 
                 {/* Actions */}
-                <td>
+                <td onClick={(e) => e.stopPropagation()}>
                   <div className="pm-actions">
                     <button
                       className="pm-btn-icon"

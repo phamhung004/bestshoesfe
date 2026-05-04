@@ -483,6 +483,11 @@
 
 .pm-table tbody tr:last-child td { border-bottom: none; }
 .pm-table tbody tr:hover { background: #fafbff; }
+.pm-clickable-row { cursor: pointer; }
+.pm-clickable-row:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: -2px;
+}
 
 /* Checkbox */
 .pm-checkbox {
